@@ -340,8 +340,8 @@ const es = {
       sala1: { label: "Zona de entrenamiento", detail: "Máquinas y mancuernas" },
       triceps: { label: "Máquina de tríceps", detail: "Trabajo de brazo" },
       pantorrilla: { label: "Máquina de pantorrilla", detail: "Tren inferior" },
-      abs: { label: "Zona de abdominales", detail: "Core y fondos" },
-      dip: { label: "Máquina de abdominales", detail: "Trabajo de abdomen" },
+      abs: { label: "Zona de abdominales", detail: "Banco de abdominales y barras" },
+      dip: { label: "Paralelas para fondos", detail: "Pecho, tríceps y hombro" },
     },
   },
 
