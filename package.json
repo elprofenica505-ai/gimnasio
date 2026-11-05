@@ -6,6 +6,8 @@
   "scripts": {
     "build": "next build",
     "build:sql": "node scripts/build-sql.mjs",
+    "build:install": "node scripts/build-install-sql.mjs",
+    "build:install:check": "node scripts/build-install-sql.mjs --check",
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",

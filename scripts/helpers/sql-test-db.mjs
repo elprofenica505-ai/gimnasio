@@ -26,9 +26,11 @@ const authShim = `
   grant select on auth.current_user to anon, authenticated;
 `;
 
+// Catálogo base: el fixture neutro reemplaza a 00002_seed.sql (vaciada).
+// Mismos ids estables que las suites referencian; sin clases programadas.
 const first = [
   "supabase/migrations/00001_schema.sql",
-  "supabase/migrations/00002_seed.sql",
+  "tests/fixtures/base-catalog.sql",
   "tests/fixtures/finance-bank-accounts.sql",
   "supabase/migrations/00012_profiles_self_read.sql",
   "supabase/migrations/00020_clients_crm.sql",

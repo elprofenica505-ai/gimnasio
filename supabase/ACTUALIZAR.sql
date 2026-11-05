@@ -1,10 +1,12 @@
 -- ============================================================
---  STRONG FITNESS GYM — PONER LA BASE AL DÍA
+--  PONER LA BASE AL DÍA (sin tocar datos del gimnasio)
 -- ============================================================
 --
 --  ESTE ARCHIVO ES PARA UN PROYECTO QUE YA ESTÁ FUNCIONANDO.
---  Reemplaza los datos de ejemplo de la primera carga por los
---  datos reales del gimnasio y corrige la grilla de clases.
+--  Aplica las correcciones estructurales (precio opcional, color
+--  por defecto, generador de horarios con la grilla vacía).
+--  Ya NO reemplaza datos: las semillas del gimnasio anterior están
+--  vaciadas; disciplinas, planes y horarios se cargan desde el panel.
 --  Si todavía no tenés la Fase 1 (caja), también la instala.
 --
 --  CÓMO USARLO (se hace todo desde el celular)
@@ -23,32 +25,33 @@
 
 
 -- ============================================================
---  Strong Fitness Gym — 00003 · Datos reales del gimnasio
+--  00003 · Datos del gimnasio — SEMILLA VACIADA
 -- ============================================================
---  QUÉ HACE ESTE ARCHIVO
---  ---------------------
---  La primera carga de la base traía disciplinas, entrenadores y
---  precios de ejemplo. Esta migración los reemplaza por los datos
---  reales del gimnasio y deja la grilla de clases correcta:
+--  Esta migración reemplazaba los datos de ejemplo por los datos
+--  reales del gimnasio anterior (tarifas, disciplinas, grilla de
+--  boxeo y limpiezas). En este repositorio queda VACIADA: sólo se
+--  conservan las partes ESTRUCTURALES, que sirven para cualquier
+--  gimnasio:
 --
---    · Disciplinas: pesas y máquinas, boxeo, zumba (antes eran 9).
---    · Entrenadores de ejemplo: se eliminan (eran inventados).
---    · Planes: Boxeo $20/mes + dos planes "a consultar".
---    · Grilla: boxeo martes, miércoles y jueves a las 06:00,
---      17:30 y 20:00. El domingo el gimnasio cierra.
+--    1. El precio de un plan puede quedar sin publicar (nullable).
+--    2. El color por defecto de disciplinas y entrenadores.
+--    3. generate_week_sessions() con la GRILLA VACÍA: no crea nada
+--       hasta que el gimnasio cargue sus horarios en el panel.
+--
+--  Los pasos de datos (limpiar la grilla vieja, borrar entrenadores
+--  de ejemplo, reemplazar disciplinas y planes, borrar mensajes y
+--  generar 4 semanas) están ANULADOS: un gimnasio nuevo carga lo
+--  suyo desde el panel y nada de eso se hereda por SQL.
 --
 --  SE PUEDE CORRER VARIAS VECES
 --  ----------------------------
---  Todo está escrito para ser idempotente: si la corrés dos veces
---  el resultado es el mismo.
+--  Es idempotente y ya no inserta ni borra datos de nadie.
 --
---  NO BORRA DATOS DE SOCIOS
---  ------------------------
---  Las cuentas, los perfiles y las reservas no se tocan.
---  · Las clases ya pasadas quedan intactas (son historial).
---  · Si una clase futura tenía gente anotada, NO se borra: se marca
---    como cancelada para que el socio la siga viendo en su cuenta.
---  · Sólo se borran las clases futuras a las que nadie se anotó.
+--  OJO — MARCAS INTACTAS
+--  ---------------------
+--  Los bloques entre las marcas «PLANTILLA SEMANAL» y «SALAS» los
+--  reescribe scripts/build-sql.mjs desde src/lib/data/demo-sessions.ts.
+--  No borrar las marcas: el generador falla si faltan.
 --
 --  CÓMO CORRERLA
 --  -------------
@@ -82,12 +85,12 @@ update public.coaches set color = '#d81a22' where color = '#cbf73f';
 
 
 -- ------------------------------------------------------------
---  3. Grilla semanal nueva
+--  3. Generador de semana con la grilla vacía
 -- ------------------------------------------------------------
---  Volvemos a crear la función que arma las clases de una semana,
---  ahora con la grilla real. El bloque marcado lo genera
---  scripts/build-sql.mjs a partir de src/lib/data/demo-sessions.ts,
---  así la web y la base nunca se desincronizan.
+--  La función se vuelve a crear leyendo una plantilla que está
+--  VACÍA. El bloque marcado lo genera scripts/build-sql.mjs a
+--  partir de src/lib/data/demo-sessions.ts; mientras el gimnasio
+--  no cargue sus horarios, la función no crea ninguna clase.
 
 create or replace function public.generate_week_sessions(p_monday date)
 returns integer
@@ -116,22 +119,15 @@ begin
 -- >>> PLANTILLA SEMANAL (generada por scripts/build-sql.mjs — no editar a mano) >>>
       -- Misma grilla que src/lib/data/demo-sessions.ts (la web).
       -- día (0 = lunes), hora local del gimnasio, disciplina
-      -- Lunes: sin clases dirigidas (sala abierta)
-      -- Martes
-      (1, '06:00'::time, 'boxeo'),
-      (1, '17:30'::time, 'boxeo'),
-      (1, '20:00'::time, 'boxeo'),
-      -- Miércoles
-      (2, '06:00'::time, 'boxeo'),
-      (2, '17:30'::time, 'boxeo'),
-      (2, '20:00'::time, 'boxeo'),
-      -- Jueves
-      (3, '06:00'::time, 'boxeo'),
-      (3, '17:30'::time, 'boxeo'),
-      (3, '20:00'::time, 'boxeo')
-      -- Viernes: sin clases dirigidas (sala abierta)
-      -- Sábado: sin clases dirigidas (sala abierta)
-      -- Domingo: CERRADO
+      -- Lunes: sin clases
+      -- Martes: sin clases
+      -- Miércoles: sin clases
+      -- Jueves: sin clases
+      -- Viernes: sin clases
+      -- Sábado: sin clases
+      -- Domingo: sin clases
+      -- Grilla vacía a propósito: el gimnasio carga sus horarios en el panel.
+      (null::integer, null::time, null::text)
 -- <<< PLANTILLA SEMANAL <<<
     ) as t(day_offset, start_time, slug)
   loop
@@ -167,9 +163,7 @@ begin
       v_class.capacity,
       case v_class.slug
 -- >>> SALAS >>>
-        when 'boxeo' then 'Área de boxeo'
-        when 'musculacion' then 'Sala de máquinas'
-        when 'zumba' then 'Salón de clases'
+        when null then null  -- sin salas por disciplina: todo en «Salón principal»
 -- <<< SALAS <<<
         else 'Salón principal'
       end
@@ -187,168 +181,53 @@ grant execute on function public.generate_week_sessions(date) to authenticated;
 
 
 -- ------------------------------------------------------------
---  4. Limpiar las clases futuras de la grilla vieja
+--  4. ANULADO — Limpiar las clases futuras de la grilla vieja
 -- ------------------------------------------------------------
---  Primero protegemos lo que tiene gente anotada: esas clases no se
---  borran, se marcan como canceladas.
-
-update public.sessions s
-   set status = 'cancelled'
- where s.starts_at >= now()
-   and s.status <> 'cancelled'
-   and exists (
-     select 1 from public.bookings b
-      where b.session_id = s.id
-        and b.status in ('confirmed', 'attended')
-   );
-
---  Y ahora sí borramos las clases futuras a las que nadie se anotó.
---  Las de la grilla nueva se vuelven a crear en el paso 8.
-
-delete from public.sessions s
- where s.starts_at >= now()
-   and not exists (select 1 from public.bookings b where b.session_id = s.id);
+--  Cancelaba/borraba las clases futuras de la grilla anterior.
+--  En un gimnasio nuevo no hay grilla vieja que limpiar, y correr
+--  esto sobre horarios legítimos creados desde el panel los
+--  borraría. Se anula a propósito.
 
 
 -- ------------------------------------------------------------
---  5. Entrenadores de ejemplo
+--  5. ANULADO — Entrenadores de ejemplo
 -- ------------------------------------------------------------
---  Los seis entrenadores de la carga inicial eran inventados.
---  Al borrarlos, las clases que los tenían asignados quedan
---  simplemente sin profe (la FK es ON DELETE SET NULL).
---
---  Cuando el gimnasio pase los nombres reales, se cargan con el
---  bloque de ejemplo que está en 00002_seed.sql.
-
-delete from public.coaches
- where id in ('cch_diego', 'cch_sofia', 'cch_nicolas',
-              'cch_valentina', 'cch_marcos', 'cch_julieta');
+--  Borraba seis entrenadores inventados por ids del gimnasio
+--  anterior. Acá no existe ninguno: los entrenadores reales se
+--  cargan desde el panel.
 
 
 -- ------------------------------------------------------------
---  6. Disciplinas reales
+--  6. ANULADO — Disciplinas reales
 -- ------------------------------------------------------------
-
-insert into public.classes
-  (id, slug, name_es, name_en, description_es, description_en, intensity, duration_min, capacity, color, sort_order)
-values
-  ('cls_musculacion', 'musculacion', 'Pesas y máquinas', 'Weights & Machines',
-   'Sala completa con máquinas modernas y pesas libres: pecho, espalda, pierna, tríceps, pantorrilla y abdominales. Entrás en el horario que quieras, sin reservar.',
-   'A full floor of modern machines and free weights: chest, back, legs, triceps, calves and abs. Walk in whenever you like, no booking needed.',
-   'medium', 60, 40, '#0c0c0e', 1),
-
-  ('cls_boxeo', 'boxeo', 'Boxeo', 'Boxing',
-   'Clases de boxeo para todas las edades, con entrenador en cada sesión. Técnica, saco y acondicionamiento. Martes, miércoles y jueves, con tres horarios al día.',
-   'Boxing classes for all ages, with a coach in every session. Technique, heavy bag and conditioning. Tuesday, Wednesday and Thursday, three time slots a day.',
-   'high', 60, 20, '#d81a22', 2),
-
-  ('cls_zumba', 'zumba', 'Zumba y bailoterapia', 'Zumba & Dance Cardio',
-   'Cardio bailando ritmos latinos. Quemás calorías sin aburrirte y en grupo. Consultá el horario vigente por WhatsApp.',
-   'Dance cardio to Latin rhythms. Burn calories without getting bored, in a group. Ask for the current schedule on WhatsApp.',
-   'medium', 60, 30, '#8f0f15', 3)
-on conflict (id) do update set
-  slug = excluded.slug,
-  name_es = excluded.name_es,
-  name_en = excluded.name_en,
-  description_es = excluded.description_es,
-  description_en = excluded.description_en,
-  intensity = excluded.intensity,
-  duration_min = excluded.duration_min,
-  capacity = excluded.capacity,
-  color = excluded.color,
-  sort_order = excluded.sort_order,
-  is_active = true;
-
---  Las disciplinas viejas (spinning, yoga, pilates, hiit, funcional,
---  cross-training, stretching) salen de la web.
---  Las que todavía tienen clases pasadas quedan guardadas pero
---  desactivadas, para no romper el historial de nadie.
-
-update public.classes
-   set is_active = false
- where slug not in ('musculacion', 'boxeo', 'zumba');
-
-delete from public.classes c
- where c.slug not in ('musculacion', 'boxeo', 'zumba')
-   and not exists (select 1 from public.sessions s where s.class_id = c.id);
+--  Insertaba el catálogo real del gimnasio anterior (pesas y
+--  máquinas, boxeo, zumba) y desactivaba/borraba las demás.
+--  Las disciplinas del gimnasio nuevo se crean en el panel.
 
 
 -- ------------------------------------------------------------
---  7. Planes reales
+--  7. ANULADO — Planes reales
 -- ------------------------------------------------------------
---  price = NULL significa "a consultar": la web muestra un botón de
---  WhatsApp en vez de un precio inventado.
-
-insert into public.plans
-  (id, slug, name_es, name_en, tagline_es, tagline_en, price, period, features_es, features_en, is_popular, sort_order)
-values
-  ('pln_boxeo', 'boxeo', 'Boxeo', 'Boxing',
-   'Para todas las edades, con entrenador', 'All ages, coach included',
-   20, 'month',
-   array['Martes, miércoles y jueves', '3 sesiones al día a elegir', 'Entrenador en cada clase', 'Para todas las edades'],
-   array['Tuesday, Wednesday and Thursday', '3 daily sessions to choose from', 'A coach in every class', 'Open to all ages'],
-   true, 1),
-
-  ('pln_gimnasio', 'gimnasio-mensual', 'Gimnasio mensual', 'Monthly Gym',
-   'Pesas y máquinas todo el mes', 'Weights and machines all month',
-   null, 'month',
-   array['Máquinas modernas y pesas libres', 'Acceso en todo el horario de atención', 'Orientación del personal para usar los equipos', 'Consultá el precio por WhatsApp'],
-   array['Modern machines and free weights', 'Access during all opening hours', 'Staff guidance on how to use the equipment', 'Ask for the price on WhatsApp'],
-   false, 2),
-
-  ('pln_dia', 'pase-del-dia', 'Pase del día', 'Day Pass',
-   'Una visita para conocernos', 'A single visit to try us out',
-   null, 'session',
-   array['Una visita, sin compromiso', 'Ideal para probar la sala', 'Consultá el precio por WhatsApp'],
-   array['One visit, no commitment', 'Great for trying the gym floor', 'Ask for the price on WhatsApp'],
-   false, 3)
-on conflict (id) do update set
-  slug = excluded.slug,
-  name_es = excluded.name_es,
-  name_en = excluded.name_en,
-  tagline_es = excluded.tagline_es,
-  tagline_en = excluded.tagline_en,
-  price = excluded.price,
-  period = excluded.period,
-  features_es = excluded.features_es,
-  features_en = excluded.features_en,
-  is_popular = excluded.is_popular,
-  sort_order = excluded.sort_order,
-  is_active = true;
-
-delete from public.plans
- where id in ('pln_basico', 'pln_full', 'pln_duo', 'pln_personal');
-
---  Si algún socio tenía asignado uno de esos planes, le dejamos el
---  plan vacío para que no apunte a algo que ya no existe.
---  La cuenta, el historial y las reservas no se tocan.
-
-update public.profiles
-   set plan_id = null
- where plan_id is not null
-   and plan_id not in (select id from public.plans);
+--  Insertaba los planes con las tarifas del gimnasio anterior y
+--  borraba los planes viejos. Los planes base sin precio los crea
+--  supabase/PERSONALIZAR-GIMNASIO.sql; los precios se cargan en
+--  Administración → Planes.
 
 
 -- ------------------------------------------------------------
---  8. Mensajes de ejemplo
+--  8. ANULADO — Mensajes de ejemplo
 -- ------------------------------------------------------------
---  La carga inicial traía dos consultas de prueba en el buzón del
---  panel. Las sacamos para que no se confundan con consultas reales.
-
-delete from public.messages
- where email in ('andrea.solis@example.com', 'kevin.ramirez@example.com');
+--  Borraba dos consultas de prueba del buzón. En una instalación
+--  nueva el buzón ya nace vacío.
 
 
 -- ------------------------------------------------------------
---  9. Clases de las próximas 4 semanas
+--  9. ANULADO — Clases de las próximas 4 semanas
 -- ------------------------------------------------------------
---  Se arma la grilla nueva desde el lunes de esta semana.
---  Son 9 clases por semana → 36 en total.
-
-select public.generate_week_sessions(current_date - (extract(isodow from current_date)::int - 1));
-select public.generate_week_sessions(current_date - (extract(isodow from current_date)::int - 1) + 7);
-select public.generate_week_sessions(current_date - (extract(isodow from current_date)::int - 1) + 14);
-select public.generate_week_sessions(current_date - (extract(isodow from current_date)::int - 1) + 21);
+--  Llamaba a generate_week_sessions() cuatro veces para materializar
+--  la grilla del gimnasio anterior. Con la grilla vacía no tiene
+--  sentido: las semanas se generan desde el panel cuando el
+--  gimnasio carga sus horarios.
 
 
 commit;
@@ -357,27 +236,18 @@ commit;
 -- ============================================================
 --  COMPROBAR QUE SALIÓ BIEN
 -- ============================================================
---  Pegá esta consulta aparte y tocá Run. Tiene que devolver
---  exactamente estas cuatro filas:
+--  Esta migración ya no cambia datos. Para comprobar:
 --
---    disciplinas activas          | 3
---    entrenadores                 | 0
---    planes                       | 3
---    clases cargadas (4 semanas)  | 36
+--    select count(*)::text as generador
+--      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+--     where n.nspname = 'public'
+--       and p.proname = 'generate_week_sessions';
 --
---  select 'disciplinas activas' as dato, count(*)::text as valor
---    from public.classes where is_active
---  union all
---  select 'entrenadores', count(*)::text from public.coaches
---  union all
---  select 'planes', count(*)::text from public.plans where is_active
---  union all
---  select 'clases cargadas (4 semanas)', count(*)::text
---    from public.sessions s
---    join public.classes c on c.id = s.class_id
---   where c.is_active
---     and s.status = 'scheduled'
---     and s.starts_at >= date_trunc('week', now());
+--  Tiene que devolver 1. Y con la grilla vacía:
+--
+--    select public.generate_week_sessions(current_date);
+--
+--  Tiene que devolver 0 sin crear clases.
 -- ============================================================
 
 
@@ -388,7 +258,7 @@ commit;
 -- ############################################################
 
 -- ============================================================
---  Strong Fitness Gym — FASE 1: Contabilidad, caja y pagos
+--  FASE 1: Contabilidad, caja y finanzas
 -- ============================================================
 --  Este archivo crea todo el sistema de caja, ingresos, egresos,
 --  cuentas por cobrar y métodos de pago del gimnasio.
@@ -1048,13 +918,20 @@ grant execute on function public.record_payment to authenticated;
 
 
 -- ============================================================
---  Strong Fitness Gym — FASE 1: Datos de ejemplo (seed)
+--  FASE 1: Catálogo base (sin datos de ejemplo)
 -- ============================================================
---  Genera 40 socios ficticios con nombres nicaragüenses, 3 coaches,
---  los métodos de pago que el gimnasio acepta (efectivo, transferencia,
---  tarjeta, SINPE Móvil y billetera móvil), las cuentas del gimnasio,
---  categorías de gastos, planes y 60+ transacciones del mes en curso
---  para que el panel se vea con vida desde el primer login.
+--  De la migración original se conservan SÓLO dos bloques genéricos:
+--    · los métodos de pago (efectivo, transferencia, tarjeta, billetera)
+--    · las categorías de gasto (alquiler, luz, agua, salarios…)
+--
+--  ANULADO (antes venía acá y eran datos del gimnasio anterior):
+--    · las cuentas bancarias y billeteras con sus números reales
+--    · los entrenadores con nombre y biografía
+--    · las transacciones de ejemplo del mes
+--    · la apertura de caja inicial
+--
+--  Las cuentas reales se agregan en Administración → Dinero; las
+--  dos cajas de efectivo las crea supabase/PERSONALIZAR-GIMNASIO.sql.
 --
 --  Es SEGURO correrlo varias veces: usa ON CONFLICT e ids estables.
 --
@@ -1080,6 +957,9 @@ end $$;
 -- ------------------------------------------------------------
 --  1. MÉTODOS DE PAGO
 -- ------------------------------------------------------------
+--  Catálogo genérico de lo que un gimnasio en Nicaragua puede
+--  aceptar. Los números de cuenta NO vienen acá: cada gimnasio
+--  configura los suyos en Administración → Dinero.
 
 insert into public.payment_methods
   (id, slug, kind, name_es, name_en, details_es, details_en,
@@ -1096,18 +976,18 @@ values
    false, true,  'DollarSign', 2),
 
   ('pm_bac_nio',   'transferencia-bac', 'bank_transfer', 'Transferencia BAC NIO','Bank transfer (BAC, NIO)',
-   'Banco BAC · Cuenta C$ 123-456789 · Titular: Strong Fitness Gym S.A.',
-   'BAC Bank · Account NIO 123-456789 · Account holder: Strong Fitness Gym S.A.',
+   'Transferencia bancaria en córdobas · configurá tu cuenta en Administración → Dinero',
+   'Bank transfer in córdobas · set your account in Admin → Money',
    true,  false, 'Building2', 3),
 
   ('pm_bac_usd',   'transferencia-bac-usd', 'bank_transfer', 'Transferencia BAC USD','Bank transfer (BAC, USD)',
-   'Banco BAC · Cuenta US$ 987-654321 · Titular: Strong Fitness Gym S.A.',
-   'BAC Bank · Account USD 987-654321 · Account holder: Strong Fitness Gym S.A.',
+   'Transferencia bancaria en dólares · configurá tu cuenta en Administración → Dinero',
+   'Bank transfer in US dollars · set your account in Admin → Money',
    false, true,  'Building2', 4),
 
   ('pm_lafi_nio',  'transferencia-lafise', 'bank_transfer', 'Transferencia LAFISE', 'Bank transfer (LAFISE)',
-   'Banco LAFISE · Cuenta C$ 555-444-333',
-   'LAFISE Bank · Account NIO 555-444-333',
+   'Transferencia bancaria · configurá el número de cuenta en Administración → Dinero',
+   'Bank transfer · set the account number in Admin → Money',
    true,  false, 'Building2', 5),
 
   ('pm_card_local','tarjeta-pos', 'debit_card',   'Tarjeta POS',          'Card (POS)',
@@ -1116,23 +996,23 @@ values
    true,  true,  'CreditCard', 6),
 
   ('pm_sinpe',     'sinpe-movil',  'sinpe_movil',   'SINPE Móvil',          'SINPE Móvil',
-   'Transferencia inmediata desde cualquier banco al 8888-1234.',
-   'Instant transfer from any bank to 8888-1234.',
+   'Transferencia inmediata · configurá el número en Administración → Dinero',
+   'Instant bank transfer · set the number in Admin → Money',
    true,  false, 'Smartphone', 7),
 
   ('pm_tigo_money','tigo-money',   'mobile_wallet', 'Tigo Money',           'Tigo Money',
-   'Billetera móvil Tigo. Número 8500-1234. Comisión: 2%.',
-   'Tigo mobile wallet. Number 8500-1234. 2% fee.',
+   'Billetera móvil · configurá el número en Administración → Dinero',
+   'Mobile wallet · set the number in Admin → Money',
    true,  false, 'Wallet', 8),
 
   ('pm_claro_pay', 'claro-pay',    'mobile_wallet', 'Claro Pay',            'Claro Pay',
-   'Billetera móvil Claro. Número 8500-5678. Comisión: 2%.',
-   'Claro mobile wallet. Number 8500-5678. 2% fee.',
+   'Billetera móvil · configurá el número en Administración → Dinero',
+   'Mobile wallet · set the number in Admin → Money',
    true,  false, 'Wallet', 9),
 
   ('pm_crypto',    'cripto-usdt',  'crypto',        'Cripto (USDT)',        'Crypto (USDT)',
-   'USDT en red TRC-20 a la wallet TQrX9wK... (consultar al admin).',
-   'USDT on TRC-20 network to wallet TQrX9wK... (ask the admin).',
+   'USDT en red TRC-20 · consultá la wallet en Administración → Dinero',
+   'USDT on TRC-20 network · ask for the wallet address in Admin → Money',
    false, true,  'Bitcoin', 10)
 on conflict (id) do update set
   name_es = excluded.name_es,
@@ -1157,8 +1037,8 @@ insert into public.expense_categories (id, slug, name_es, name_en, icon, sort_or
   ('exp_equipment',  'mantenimiento','Mantenimiento equipos','Equipment maintenance','Wrench',    7),
   ('exp_supplements','compra-suplementos','Compra de suplementos','Supplements restock','Package',8),
   ('exp_marketing',  'marketing',    'Marketing y redes',   'Marketing & social','Megaphone',     9),
-  ('exp_tax',        'impuestos',    'Impuestos y tasas',   'Taxes & fees',      'FileText',      10),
-  ('exp_misc',       'varios',       'Otros gastos',        'Other expenses',    'Receipt',       99)
+  ('exp_tax',        'impuestos',    'Impuestos y tasas',   'Taxes & fees',      'FileText',     10),
+  ('exp_misc',       'varios',       'Otros gastos',        'Other expenses',    'Receipt',      99)
 on conflict (id) do update set
   name_es = excluded.name_es,
   name_en = excluded.name_en,
@@ -1169,136 +1049,66 @@ on conflict (id) do update set
 -- ------------------------------------------------------------
 --  3. CUENTAS DEL GIMNASIO
 -- ------------------------------------------------------------
-
-insert into public.accounts (id, slug, name, kind, currency, bank_name, account_number, holder_name) values
-  ('acc_cash_nio', 'caja-fuerte-cordobas', 'Caja fuerte (C$)',    'cash',   'NIO', null,      null,        'Strong Fitness Gym'),
-  ('acc_cash_usd', 'caja-fuerte-dolares',  'Caja fuerte (US$)',   'cash',   'USD', null,      null,        'Strong Fitness Gym'),
-  ('acc_bac_nio',  'bac-cordobas',         'BAC Córdobas',        'bank',   'NIO', 'BAC',     '123-456789','Strong Fitness Gym S.A.'),
-  ('acc_bac_usd',  'bac-dolares',          'BAC Dólares',         'bank',   'USD', 'BAC',     '987-654321','Strong Fitness Gym S.A.'),
-  ('acc_tigo',     'tigo-money',           'Tigo Money',          'wallet', 'NIO', 'Tigo',    '8500-1234', 'Strong Fitness Gym')
-on conflict (id) do update set
-  name = excluded.name,
-  account_number = excluded.account_number;
+--  ANULADO. Acá se insertaban las cuentas del gimnasio anterior:
+--  cajas fuertes, cuentas bancarias con su número y titular, y
+--  billetera móvil. Una instalación nueva NO hereda cuentas de
+--  nadie: las dos cajas de efectivo las crea
+--  supabase/PERSONALIZAR-GIMNASIO.sql y los bancos reales se
+--  agregan en Administración → Dinero.
 
 
 -- ------------------------------------------------------------
---  4. COACHES (3 con datos de ejemplo)
+--  4. COACHES
 -- ------------------------------------------------------------
-
-insert into public.coaches
-  (id, slug, name, role_es, role_en, bio_es, bio_en, specialties, initials, color, sort_order, is_active)
-values
-  ('coa_dg',  'douglas',  'Douglas Hernández', 'Head Coach', 'Head Coach',
-   '10 años entrenando boxeo y pesas. Excampeón nacional amateur.',
-   '10 years coaching boxing and weights. Former national amateur champion.',
-   array['boxeo', 'musculacion', 'funcional'], 'DH', '#d81a22', 1, true),
-
-  ('coa_mr',  'maria',    'María Rodríguez',   'Coordinadora de Bailoterapia', 'Zumba Coordinator',
-   'Instructora certificada de Zumba y bailoterapia. 6 años de experiencia.',
-   'Certified Zumba and dance fitness instructor. 6 years of experience.',
-   array['zumba', 'bailoterapia', 'stretching'], 'MR', '#0c0c0e', 2, true),
-
-  ('coa_jl',  'jose',     'José Luis Pérez',   'Coach de Pesas', 'Weights Coach',
-   'Especialista en hipertrofia y fuerza. Certificación NSCA-CPT.',
-   'Hypertrophy and strength specialist. NSCA-CPT certified.',
-   array['musculacion', 'fuerza', 'powerlifting'], 'JL', '#9a9a9a', 3, true)
-on conflict (id) do update set
-  name = excluded.name,
-  role_es = excluded.role_es,
-  role_en = excluded.role_en,
-  bio_es = excluded.bio_es,
-  bio_en = excluded.bio_en,
-  specialties = excluded.specialties,
-  initials = excluded.initials,
-  color = excluded.color;
+--  ANULADO. Acá se insertaban entrenadores con nombre, biografía
+--  y especialidades del gimnasio anterior. Los entrenadores reales
+--  se cargan desde el panel (Administración → Entrenadores).
 
 
 -- ============================================================
---  5. SOCIOS DE EJEMPLO (FASE 1: solo se insertan al registrar)
+--  5. SOCIOS DE EJEMPLO
 -- ============================================================
---  Importante: en producción los socios se crean desde el sitio
---  (Supabase Auth crea el usuario y un trigger copia los datos a
---  profiles). Los 40 socios de ejemplo del panel demo se generan
---  en TypeScript (src/lib/data/seed/demo-finance.ts) y viven en
---  localStorage, no en Supabase.
---
---  Esto evita romper la FK profiles.id → auth.users.id cuando
---  el seed se corre en un Postgres sin Auth.
--- ============================================================
+--  ANULADO (la migración original ya no los insertaba; sólo
+--  documentaba que vivían en el modo demo). Un gimnasio nuevo
+--  arranca sin socios: se registran ellos mismos desde la web.
 
 
 -- ============================================================
---  6. TRANSACCIONES DE EJEMPLO (sin member_id, solo gastos fijos)
+--  6. TRANSACCIONES DE EJEMPLO
 -- ============================================================
---  Para que la caja del panel se vea con vida apenas se conecte a
---  Supabase, dejamos cargados los gastos fijos del mes en curso
---  (alquiler, luz, agua, internet, sueldos, etc). Los ingresos
---  se generan cuando el admin cobra una mensualidad desde el panel.
---
---  Si más adelante se quieren ingresos también de seed, agregar
---  member_id pero SOLO después de crear esos usuarios en auth.users.
-
-do $$
-declare
-  v_fx      constant numeric := 36.50;
-begin
-  -- Limpia transacciones generadas por este seed (idempotencia)
-  delete from public.transactions where concept like '[SEED-GASTO]%';
-
-  -- GASTOS FIJOS DEL MES
-  insert into public.transactions (occurred_at, direction, status, amount, currency, fx_rate, base_amount, payment_method_id, account_id, expense_category_id, concept, created_by)
-  values
-    (current_date - interval '28 days', 'expense', 'completed', 25000, 'NIO', v_fx, 25000, 'pm_bac_nio', 'acc_bac_nio', 'exp_rent',       '[SEED-GASTO] Alquiler del local', null),
-    (current_date - interval '20 days', 'expense', 'completed', 4500,  'NIO', v_fx, 4500,  'pm_bac_nio', 'acc_bac_nio', 'exp_electricity','[SEED-GASTO] Factura de luz (oct)', null),
-    (current_date - interval '18 days', 'expense', 'completed', 850,   'NIO', v_fx, 850,   'pm_cash_nio','acc_cash_nio','exp_water',      '[SEED-GASTO] Factura de agua', null),
-    (current_date - interval '15 days', 'expense', 'completed', 2200,  'NIO', v_fx, 2200,  'pm_bac_nio', 'acc_bac_nio', 'exp_internet',   '[SEED-GASTO] Internet + cable', null),
-    (current_date - interval '30 days', 'expense', 'completed', 18000, 'NIO', v_fx, 18000, 'pm_cash_nio','acc_cash_nio','exp_coaches',    '[SEED-GASTO] Sueldo Douglas (medio mes)', null),
-    (current_date - interval '14 days', 'expense', 'completed', 16000, 'NIO', v_fx, 16000, 'pm_cash_nio','acc_cash_nio','exp_coaches',    '[SEED-GASTO] Sueldo María', null),
-    (current_date - interval '14 days', 'expense', 'completed', 15000, 'NIO', v_fx, 15000, 'pm_cash_nio','acc_cash_nio','exp_coaches',    '[SEED-GASTO] Sueldo José Luis', null),
-    (current_date - interval '10 days', 'expense', 'completed', 1200,  'NIO', v_fx, 1200,  'pm_cash_nio','acc_cash_nio','exp_cleaning',   '[SEED-GASTO] Artículos de limpieza', null),
-    (current_date - interval '6 days',  'expense', 'completed', 3500,  'NIO', v_fx, 3500,  'pm_bac_nio', 'acc_bac_nio', 'exp_equipment',  '[SEED-GASTO] Mantenimiento caminadora', null),
-    (current_date - interval '4 days',  'expense', 'completed', 28000, 'NIO', v_fx, 28000, 'pm_bac_nio', 'acc_bac_nio', 'exp_supplements','[SEED-GASTO] Restock de suplementos', null),
-    (current_date - interval '3 days',  'expense', 'completed', 1500,  'NIO', v_fx, 1500,  'pm_cash_nio','acc_cash_nio','exp_marketing',  '[SEED-GASTO] Publicidad en Facebook', null),
-    (current_date - interval '2 days',  'expense', 'completed', 3200,  'NIO', v_fx, 3200,  'pm_bac_nio', 'acc_bac_nio', 'exp_tax',        '[SEED-GASTO] Pago de tasa municipal', null),
-    (current_date - interval '1 day',   'expense', 'completed', 850,   'NIO', v_fx, 850,   'pm_cash_nio','acc_cash_nio','exp_misc',       '[SEED-GASTO] Botiquín e insumos', null);
-end $$;
+--  ANULADO. Acá se insertaban los gastos fijos del mes del
+--  gimnasio anterior (alquiler, luz, sueldos…). La caja de una
+--  instalación nueva arranca en cero y los movimientos reales se
+--  registran desde el panel.
 
 
 -- ------------------------------------------------------------
 --  8. APERTURA DE CAJA INICIAL
 -- ------------------------------------------------------------
---  Caja abierta hoy. El admin la cierra al final del día desde el panel.
-
-insert into public.cash_registers (opened_at, opening_amount, notes)
-values (current_date, 5000, 'Apertura inicial con C$ 5,000 en caja')
-on conflict do nothing;
+--  ANULADO. La caja se abre el primer día de operación real,
+--  desde el panel, con el efectivo que haya en el local.
 
 
 -- ============================================================
---  FIN DEL SEED
+--  FIN DEL ARCHIVO
 -- ============================================================
---  Resumen:
+--  Resumen de lo que SÍ carga (todo genérico, sirve para cualquier
+--  gimnasio):
 --    · 10 métodos de pago (efectivo C$ y US$, transferencias BAC y
 --      LAFISE, tarjeta POS, SINPE Móvil, Tigo Money, Claro Pay y
---      cripto USDT). La idea es mostrar todas las opciones que
---      un gimnasio en Nicaragua puede aceptar.
+--      cripto USDT) SIN números de cuenta: se configuran en el panel.
 --    · 11 categorías de gastos.
---    · 5 cuentas (caja fuerte C$ + US$, BAC C$ + US$, Tigo Money).
---    · 3 coaches.
---    · 13 gastos fijos del mes (alquiler, luz, agua, internet,
---      sueldos, limpieza, mantenimiento, restock suplementos,
---      marketing, impuestos, etc).
---    · Caja abierta con C$ 5,000.
 --
---  Los 40 socios de ejemplo y los ingresos del mes se generan en
---  TypeScript (modo demo, localStorage) y/o en producción cuando
---  el admin carga un pago desde el panel.
+--  Lo que NO carga (anulado a propósito):
+--    · Cuentas bancarias ni billeteras con números reales.
+--    · Entrenadores con nombre y biografía.
+--    · Transacciones de ejemplo ni apertura de caja.
 -- ============================================================
 
 
 -- Corrección de lectura del perfil propio (00012_profiles_self_read.sql)
 -- ============================================================
--- Strong Gym: permitir la lectura del perfil propio con RLS.
+-- Permitir la lectura del perfil propio con RLS.
 -- ============================================================
 -- Ejecutar en el SQL Editor del proyecto que usa el sitio.
 -- Caso observado: profiles.role = admin como dueño, pero el usuario
@@ -1555,7 +1365,7 @@ returns trigger language plpgsql security definer set search_path = public, pg_t
 begin
   if new.role='member' then
     insert into public.gym_clients(profile_id,full_name,phone,email,plan_id)
-      values(new.id,coalesce(nullif(trim(new.full_name),''),'Cliente Strong'),new.phone,new.email,new.plan_id)
+      values(new.id,coalesce(nullif(trim(new.full_name),''),'Cliente'),new.phone,new.email,new.plan_id)
       on conflict(profile_id) do nothing;
   end if;
   return new;
@@ -1563,7 +1373,7 @@ end $$;
 drop trigger if exists crm_profile_created on public.profiles;
 create trigger crm_profile_created after insert on public.profiles for each row execute function public.crm_profile_created();
 insert into public.gym_clients(profile_id,full_name,phone,email,plan_id)
-  select id,coalesce(nullif(trim(full_name),''),'Cliente Strong'),phone,email,plan_id from public.profiles where role='member'
+  select id,coalesce(nullif(trim(full_name),''),'Cliente'),phone,email,plan_id from public.profiles where role='member'
   on conflict(profile_id) do nothing;
 insert into public.client_cards(client_id) select id from public.gym_clients on conflict(client_id) do nothing;
 

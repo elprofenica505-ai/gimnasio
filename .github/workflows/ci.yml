@@ -78,6 +78,9 @@ jobs:
       - name: El SQL tiene que estar sincronizado con la web
         run: node scripts/build-sql.mjs --check
 
+      - name: El SQL de instalación tiene que estar sincronizado y sin datos ajenos
+        run: node scripts/build-install-sql.mjs --check
+
       - name: Probar el SQL con PGlite (una conexión)
         run: npm run test:sql
 

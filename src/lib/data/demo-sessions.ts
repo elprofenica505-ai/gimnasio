@@ -4,27 +4,23 @@ import { demoClasses, demoCoaches } from "./demo-content";
 
 /**
  * ============================================================
- *  Grilla semanal de clases — STRONG FITNESS GYM
+ *  Grilla semanal de clases — VACÍA (gimnasio nuevo)
  * ============================================================
  *  FUENTE DE VERDAD de los horarios. De acá sale el SQL:
  *  después de tocar WEEKLY_TEMPLATE hay que correr
  *      node scripts/build-sql.mjs
- *  y se regeneran 00001_schema.sql y supabase/SETUP.sql.
+ *  y se regeneran 00001_schema.sql, 00003_datos_reales.sql y
+ *  supabase/SETUP.sql / ACTUALIZAR.sql.
  *
- *  Clases con cupo y reserva:
- *    · Boxeo — martes, miércoles y jueves, tres sesiones al día
- *      (06:00, 17:30 y 20:00), para todas las edades.
+ *  Está VACÍA a propósito: este repositorio es la instalación de
+ *  un gimnasio nuevo y no hereda la grilla de nadie. Cuando el
+ *  dueño pase los horarios reales (o se carguen desde el panel),
+ *  se completan acá las clases con cupo y reserva, día por día
+ *  (0 = lunes … 6 = domingo), y se vuelve a correr el generador.
  *
- *  NO van en la grilla:
- *    · Pesas y máquinas → acceso libre dentro del horario de
- *      atención (lunes a viernes 06:00–21:00, sábado 08:00–12:00
- *      y 13:00–18:00). No se reserva.
- *    · Zumba y bailoterapia → el gimnasio todavía no confirmó los
- *      horarios fijos. Hasta que los pase, se consulta por
- *      WhatsApp. No inventamos horarios.
- *
- *  El gimnasio CIERRA LOS DOMINGOS: el día 6 va vacío a propósito.
- *  Total: 9 clases por semana (36 en 4 semanas).
+ *  Con la grilla vacía:
+ *    · generate_week_sessions() en SQL no crea ninguna clase.
+ *    · El modo demo de la web muestra la agenda vacía.
  * ============================================================
  */
 
@@ -36,38 +32,26 @@ interface Slot {
 }
 
 const WEEKLY_TEMPLATE: Record<number, Slot[]> = {
-  // Lunes — sala abierta, sin clases dirigidas
+  // Lunes
   0: [],
   // Martes
-  1: [
-    { time: "06:00", slug: "boxeo" },
-    { time: "17:30", slug: "boxeo" },
-    { time: "20:00", slug: "boxeo" },
-  ],
+  1: [],
   // Miércoles
-  2: [
-    { time: "06:00", slug: "boxeo" },
-    { time: "17:30", slug: "boxeo" },
-    { time: "20:00", slug: "boxeo" },
-  ],
+  2: [],
   // Jueves
-  3: [
-    { time: "06:00", slug: "boxeo" },
-    { time: "17:30", slug: "boxeo" },
-    { time: "20:00", slug: "boxeo" },
-  ],
-  // Viernes — sala abierta, sin clases dirigidas
+  3: [],
+  // Viernes
   4: [],
-  // Sábado — sala abierta, sin clases dirigidas
+  // Sábado
   5: [],
-  // Domingo — CERRADO
+  // Domingo
   6: [],
 };
 
+/** Sala por disciplina. Vacío: la función SQL usa «Salón principal». */
 const ROOMS: Record<string, string> = {
-  boxeo: "Área de boxeo",
-  musculacion: "Sala de máquinas",
-  zumba: "Salón de clases",
+  // Sin salas por disciplina a propósito: la web y el SQL usan «Salón
+  // principal» para todo (la rama else del case en generate_week_sessions).
 };
 
 const classesBySlug = new Map<string, GymClass>(demoClasses.map((c) => [c.slug, c]));

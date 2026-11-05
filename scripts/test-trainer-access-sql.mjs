@@ -16,7 +16,7 @@ await db.exec(`create schema auth; create role anon nologin; create role authent
   create function auth.jwt() returns jsonb language sql stable as $$select jsonb_build_object('aal', aal) from auth.current_user limit 1$$;
   grant usage on schema auth to anon, authenticated; grant select on auth.current_user to anon, authenticated;`);
 
-for (const f of ['supabase/migrations/00001_schema.sql', 'supabase/migrations/00002_seed.sql', 'tests/fixtures/finance-bank-accounts.sql',
+for (const f of ['supabase/migrations/00001_schema.sql', 'tests/fixtures/base-catalog.sql', 'tests/fixtures/finance-bank-accounts.sql',
   'supabase/migrations/00012_profiles_self_read.sql', 'supabase/migrations/00020_clients_crm.sql', 'supabase/migrations/00022_crm_finance_compat.sql',
   'supabase/migrations/00023_finance_read_bank_accounts.sql', 'supabase/migrations/00024_finance_movements.sql',
   'supabase/migrations/00025_account_assigned_plan.sql', 'supabase/migrations/00026_booking_read_policy.sql',

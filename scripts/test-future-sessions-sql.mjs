@@ -27,7 +27,7 @@ try {
 
   for (const file of [
     "supabase/migrations/00001_schema.sql",
-    "supabase/migrations/00002_seed.sql",
+    "tests/fixtures/base-catalog.sql",
     "tests/fixtures/finance-bank-accounts.sql",
     "supabase/migrations/00012_profiles_self_read.sql",
     "supabase/migrations/00020_clients_crm.sql",
@@ -146,6 +146,12 @@ try {
       (await dataSnapshot()) === beforeSecondApply,
   );
 
+  // La plantilla base ya no trae la grilla incrustada en la función (los
+  // datos del gimnasio anterior se desarmaron): la grilla vive en
+  // class_schedule_slots y 00072 la carga y pasa el generador a leerla de
+  // la tabla, igual que en la cadena real de migraciones.
+  await db.exec(sql("supabase/migrations/00072_grilla_horarios.sql"));
+
   const functions = (await db.query(
     `select proname, prosecdef, coalesce(array_to_string(proconfig, ','), '') as config,
             pg_get_functiondef(oid) as definition,
@@ -168,9 +174,13 @@ try {
       wrapper.definition.includes("public.generate_week_sessions") &&
       wrapper.definition.includes("INVALID_FUTURE_WEEKS"),
   );
+  // Modelo real desde 00072: la función es definer y queda cerrada a anon,
+  // pero authenticated sí puede EJECUTARLA; lo que la blinda es su guardia
+  // interna (sólo admin/staff) y los rechazos conductuales de más abajo.
   check(
-    "generate_week_sessions sigue cerrada a anon y authenticated",
-    generator?.prosecdef && !generator.auth_exec && !generator.anon_exec,
+    "generate_week_sessions es definer, cerrada a anon y con guardia interna de staff",
+    generator?.prosecdef && !generator.anon_exec && generator.auth_exec &&
+      generator.definition.includes("AUTH: sólo el staff puede generar horarios"),
   );
 
   const classesAndBookingsBefore = JSON.stringify({
@@ -243,6 +253,26 @@ try {
   await denied(
     "anónimo ni siquiera puede ejecutar la RPC",
     as(null, null, "select public.admin_generate_future_sessions(4)", [], "anon"),
+    /permission denied/,
+  );
+  await denied(
+    "cliente no puede usar el generador directo: la guardia interna lo rechaza",
+    as(
+      member,
+      "aal2",
+      "select public.generate_week_sessions(((now() at time zone 'America/Managua')::date + 28))",
+    ),
+    /AUTH/,
+  );
+  await denied(
+    "anónimo no puede usar el generador directo",
+    as(
+      null,
+      null,
+      "select public.generate_week_sessions(((now() at time zone 'America/Managua')::date + 28))",
+      [],
+      "anon",
+    ),
     /permission denied/,
   );
   check("todos los rechazos dejaron las sesiones iguales", (await dataSnapshot()) === beforeRepeat);

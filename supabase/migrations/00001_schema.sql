@@ -1,5 +1,5 @@
 -- ============================================================
---  Strong Fitness Gym — Esquema de base de datos (Supabase / PostgreSQL)
+--  Esquema de base de datos (Supabase / PostgreSQL)
 -- ============================================================
 --  Cómo usarlo:
 --    1. Entrá a tu proyecto en https://supabase.com
@@ -435,22 +435,15 @@ begin
 -- >>> PLANTILLA SEMANAL (generada por scripts/build-sql.mjs — no editar a mano) >>>
       -- Misma grilla que src/lib/data/demo-sessions.ts (la web).
       -- día (0 = lunes), hora local del gimnasio, disciplina
-      -- Lunes: sin clases dirigidas (sala abierta)
-      -- Martes
-      (1, '06:00'::time, 'boxeo'),
-      (1, '17:30'::time, 'boxeo'),
-      (1, '20:00'::time, 'boxeo'),
-      -- Miércoles
-      (2, '06:00'::time, 'boxeo'),
-      (2, '17:30'::time, 'boxeo'),
-      (2, '20:00'::time, 'boxeo'),
-      -- Jueves
-      (3, '06:00'::time, 'boxeo'),
-      (3, '17:30'::time, 'boxeo'),
-      (3, '20:00'::time, 'boxeo')
-      -- Viernes: sin clases dirigidas (sala abierta)
-      -- Sábado: sin clases dirigidas (sala abierta)
-      -- Domingo: CERRADO
+      -- Lunes: sin clases
+      -- Martes: sin clases
+      -- Miércoles: sin clases
+      -- Jueves: sin clases
+      -- Viernes: sin clases
+      -- Sábado: sin clases
+      -- Domingo: sin clases
+      -- Grilla vacía a propósito: el gimnasio carga sus horarios en el panel.
+      (null::integer, null::time, null::text)
 -- <<< PLANTILLA SEMANAL <<<
     ) as t(day_offset, start_time, slug)
   loop
@@ -486,9 +479,7 @@ begin
       v_class.capacity,
       case v_class.slug
 -- >>> SALAS >>>
-        when 'boxeo' then 'Área de boxeo'
-        when 'musculacion' then 'Sala de máquinas'
-        when 'zumba' then 'Salón de clases'
+        when null then null  -- sin salas por disciplina: todo en «Salón principal»
 -- <<< SALAS <<<
         else 'Salón principal'
       end

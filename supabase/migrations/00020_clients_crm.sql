@@ -228,7 +228,7 @@ returns trigger language plpgsql security definer set search_path = public, pg_t
 begin
   if new.role='member' then
     insert into public.gym_clients(profile_id,full_name,phone,email,plan_id)
-      values(new.id,coalesce(nullif(trim(new.full_name),''),'Cliente Strong'),new.phone,new.email,new.plan_id)
+      values(new.id,coalesce(nullif(trim(new.full_name),''),'Cliente'),new.phone,new.email,new.plan_id)
       on conflict(profile_id) do nothing;
   end if;
   return new;
@@ -236,7 +236,7 @@ end $$;
 drop trigger if exists crm_profile_created on public.profiles;
 create trigger crm_profile_created after insert on public.profiles for each row execute function public.crm_profile_created();
 insert into public.gym_clients(profile_id,full_name,phone,email,plan_id)
-  select id,coalesce(nullif(trim(full_name),''),'Cliente Strong'),phone,email,plan_id from public.profiles where role='member'
+  select id,coalesce(nullif(trim(full_name),''),'Cliente'),phone,email,plan_id from public.profiles where role='member'
   on conflict(profile_id) do nothing;
 insert into public.client_cards(client_id) select id from public.gym_clients on conflict(client_id) do nothing;
 

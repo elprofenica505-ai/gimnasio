@@ -234,8 +234,13 @@ test("sin configurar conserva demo local explícita", async () => {
     "@/lib/supabase/server":
       "export const getSupabaseServerClient=async()=>null;",
   })("lib/data/queries.ts");
-  assert.ok((await demo.getClasses()).length > 0);
-  assert.ok((await demo.getSessionsForWeek()).sessions.length > 0);
+  // Instalación vacía: el demo local se sigue usando como fallback, pero
+  // está vacío a propósito (cero datos inventados del gimnasio anterior).
+  // La prueba exige que devuelva EXACTAMENTE lo que declara el módulo
+  // local: ni más (tarjetas ficticias resucitadas) ni un error de conexión.
+  const { demoClasses } = await load("lib/data/demo-content.ts");
+  assert.deepEqual(await demo.getClasses(), demoClasses.filter((c) => c.is_active));
+  assert.deepEqual((await demo.getSessionsForWeek()).sessions, []);
   assert.deepEqual(await demo.getMyBookings(), []);
 });
 for (const [file, fn, section] of [

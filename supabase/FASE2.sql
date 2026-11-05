@@ -1,6 +1,6 @@
 -- ACTUALIZACIÓN FASE 2. Base con Fase 1 y fix 00012 aplicados.
 -- Sólo estructura CRM y vinculación de perfiles existentes; no borra ni carga ejemplos.
--- Seed opcional separado: migrations/00021_clients_seed.sql.
+-- Seed opcional (vaciada: no carga fichas): migrations/00021_clients_seed.sql.
 
 -- FASE 2: CRM de clientes + recepción manual/QR. Aplicar después de 00012.
 -- profiles sigue siendo la tabla de identidades/login. gym_clients es una
@@ -232,7 +232,7 @@ returns trigger language plpgsql security definer set search_path = public, pg_t
 begin
   if new.role='member' then
     insert into public.gym_clients(profile_id,full_name,phone,email,plan_id)
-      values(new.id,coalesce(nullif(trim(new.full_name),''),'Cliente Strong'),new.phone,new.email,new.plan_id)
+      values(new.id,coalesce(nullif(trim(new.full_name),''),'Cliente'),new.phone,new.email,new.plan_id)
       on conflict(profile_id) do nothing;
   end if;
   return new;
@@ -240,7 +240,7 @@ end $$;
 drop trigger if exists crm_profile_created on public.profiles;
 create trigger crm_profile_created after insert on public.profiles for each row execute function public.crm_profile_created();
 insert into public.gym_clients(profile_id,full_name,phone,email,plan_id)
-  select id,coalesce(nullif(trim(full_name),''),'Cliente Strong'),phone,email,plan_id from public.profiles where role='member'
+  select id,coalesce(nullif(trim(full_name),''),'Cliente'),phone,email,plan_id from public.profiles where role='member'
   on conflict(profile_id) do nothing;
 insert into public.client_cards(client_id) select id from public.gym_clients on conflict(client_id) do nothing;
 

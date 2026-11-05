@@ -16,10 +16,10 @@ await db.exec(`create schema auth; create role anon nologin; create role authent
   create function auth.jwt() returns jsonb language sql stable as $$select jsonb_build_object('aal', aal) from auth.current_user limit 1$$;
   grant usage on schema auth to anon, authenticated; grant select on auth.current_user to anon, authenticated;`);
 
-for (const f of ['00001_schema.sql', '00002_seed.sql', '00010_finance.sql', '00012_profiles_self_read.sql', '00020_clients_crm.sql',
+for (const f of ['00001_schema.sql', '../tests/fixtures/base-catalog.sql', '00010_finance.sql', '00012_profiles_self_read.sql', '00020_clients_crm.sql',
   '00022_crm_finance_compat.sql', '00023_finance_read_bank_accounts.sql', '00025_account_assigned_plan.sql',
   '00026_booking_read_policy.sql', '00027_client_finance_read.sql', '00030_access_hardening.sql']) {
-  await db.exec(sql(`supabase/migrations/${f}`));
+  await db.exec(sql(f.startsWith('../') ? f.slice(3) : `supabase/migrations/${f}`));
 }
 // Estado de producción antes de Fase A: crm_is_staff (00031) y 00032.
 await db.exec(`create or replace function public.crm_is_staff() returns boolean language sql stable security definer set search_path = public, pg_temp as $$
