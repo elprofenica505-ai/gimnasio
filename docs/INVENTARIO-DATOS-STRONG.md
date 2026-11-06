@@ -327,3 +327,35 @@ no siembra cuentas) y `test-access-hardening-sql.mjs` crea su propia sesión.
 - Generadores: `build:sql --check` y `build:install:check` PASS; greps de
   verificación sobre SETUP/ACTUALIZAR/FASE2/INSTALAR-BASE: 0 apariciones de
   cuentas, wallets, tarifas, nombres, grilla o marca de Strong.
+
+### 8.7 Hueco #5 (CRÍTICO, encontrado por la suite de INSTALAR-BASE): el archivo no se puede aplicar sobre una base vacía
+
+La suite nueva `scripts/test-instalar-base-sql.mjs` (aplica el
+`INSTALAR-BASE.sql` COMPLETO de una sola vez sobre PGlite limpia, sin la
+cadena curada del helper) falló en su primera corrida y destapó un defecto
+real del kit, anterior a este desarme:
+
+- **Evidencia:** sobre la cadena real (00001 → 00010 → 00011 → 00020 →
+  00022), `crm_finance_layout()` devuelve **`repository`**: `transactions`
+  tiene `direction/fx_rate/base_amount`, `payment_methods` tiene
+  `name_es/accepts_nio` y **ninguna migración crea `bank_accounts`**.
+- **El fallo:** `00024_finance_movements.sql` (y después 00028, 00029…)
+  arrancan con un `DO` guard en tiempo de aplicación:
+  `if crm_finance_layout() <> 'bank_accounts_split' then raise
+  'FINANCE_SCHEMA_UNSUPPORTED'`. Sobre una base vacía, INSTALAR-BASE se
+  corta ahí.
+- **Por qué nadie lo vio:** la base real de Strong tiene el esquema *split*
+  porque se construyó por fuera del repo (de ahí el fixture
+  `tests/fixtures/finance-bank-accounts.sql`, «derivado del diagnóstico
+  remoto recibido 2026-10-15»). Las suites del helper prueban el layout
+  split con ese fixture EN VEZ de 00010. El kit de Strong sólo validaba
+  INSTALAR-BASE con `--check` (sincronización de texto), nunca lo ejecutó.
+- **Consecuencia:** el gimnasio nuevo NO puede instalarse con el kit tal
+  como está: o se crea el esquema financiero *split* como artefacto real del
+  repo (opción A: derivarlo del fixture sin los centinelas de prueba,
+  excluir 00010 en el generador y adaptar la siembra de 00011 a las columnas
+  *split*), o se pierden los módulos de cobros/deudas/vuelto (opción B:
+  viola «cero módulos menos»). **Decisión pendiente del dueño.**
+- La suite queda cableada en `npm run test:instalar` y en el job `sql` del
+  CI: ese paso va a estar EN ROJO hasta resolver el hueco #5. Es a
+  propósito: el rojo es el hallazgo, no se oculta.

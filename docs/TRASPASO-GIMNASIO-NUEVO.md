@@ -56,6 +56,15 @@ Comandos: `npm run build:install` y `npm run build:install:check`.
 > de pago de 00011 (huecos #3 y #4 del inventario). Todo quedó neutralizado en
 > el generador de este repo, con barrido automático de verificación
 > (`scripts/helpers/prohibidas.mjs`): si algo de eso vuelve, la generación falla.
+>
+> **Y la corrección más grande (hueco #5):** el archivo nunca fue aplicable
+> sobre una base vacía. Desde 00024 las migraciones exigen el esquema
+> financiero *split* (`bank_accounts`), que no existe en ninguna migración del
+> repo: la base real de Strong se construyó por fuera. `npm run test:instalar`
+> (suite que aplica el INSTALAR-BASE completo en PGlite limpia) lo reproduce y
+> por eso ese paso del CI está en rojo hasta que se decida cómo crear el
+> esquema *split* como artefacto real. Detalle en
+> `docs/INVENTARIO-DATOS-STRONG.md` §8.7.
 
 - 0 cuentas bancarias (se neutralizaron BAC, LAFISE, Tigo y Claro).
 - 0 nombres de personas.
