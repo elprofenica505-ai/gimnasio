@@ -54,7 +54,7 @@ await db.exec(`create schema auth; create role anon nologin; create role authent
 
 for (const file of [
   "00001_schema.sql",
-  "00002_seed.sql",
+  "fixtures/base-catalog.sql",
   "fixtures/finance-bank-accounts.sql",
   "00012_profiles_self_read.sql",
   "00020_clients_crm.sql",

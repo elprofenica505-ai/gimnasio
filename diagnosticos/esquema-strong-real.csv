@@ -1,0 +1,270 @@
+seccion,objeto,detalle
+00.layout,crm_finance_layout(),bank_accounts_split
+01.tabla,accounts,NO EXISTE
+01.tabla,bank_accounts,existe
+01.tabla,cash_registers,NO EXISTE
+01.tabla,cash_sessions,existe
+01.tabla,coaches,existe
+01.tabla,expense_categories,existe
+01.tabla,finance_entries,existe
+01.tabla,finance_settings_audit,existe
+01.tabla,invoice_items,NO EXISTE
+01.tabla,invoices,NO EXISTE
+01.tabla,member_balances,existe
+01.tabla,payment_methods,existe
+01.tabla,sessions,existe
+01.tabla,transactions,existe
+02.columna,bank_accounts.account_number,"6|text||,|YES|"
+02.columna,bank_accounts.account_type,"3|text||,|NO|"
+02.columna,bank_accounts.balance,"7|numeric||12,2|NO|0"
+02.columna,bank_accounts.bank_name,"5|text||,|YES|"
+02.columna,bank_accounts.currency,"4|text||,|NO|"
+02.columna,bank_accounts.display_order,"9|integer||32,0|NO|0"
+02.columna,bank_accounts.id,"1|text||,|NO|"
+02.columna,bank_accounts.is_active,"8|boolean||,|NO|true"
+02.columna,bank_accounts.name,"2|text||,|NO|"
+02.columna,cash_sessions.close_notes,"17|text||,|YES|"
+02.columna,cash_sessions.close_request_id,"16|uuid||,|YES|"
+02.columna,cash_sessions.closed_at,"5|timestamp with time zone||,|YES|"
+02.columna,cash_sessions.closed_by,"4|uuid||,|YES|"
+02.columna,cash_sessions.closing_balance_nio,"8|numeric||12,2|YES|"
+02.columna,cash_sessions.closing_balance_usd,"9|numeric||12,2|YES|"
+02.columna,cash_sessions.difference_nio,"12|numeric||12,2|YES|"
+02.columna,cash_sessions.difference_usd,"13|numeric||12,2|YES|"
+02.columna,cash_sessions.expected_balance_nio,"10|numeric||12,2|YES|"
+02.columna,cash_sessions.expected_balance_usd,"11|numeric||12,2|YES|"
+02.columna,cash_sessions.id,"1|uuid||,|NO|gen_random_uuid()"
+02.columna,cash_sessions.notes,"14|text||,|YES|"
+02.columna,cash_sessions.open_request_id,"15|uuid||,|YES|"
+02.columna,cash_sessions.opened_at,"3|timestamp with time zone||,|NO|now()"
+02.columna,cash_sessions.opened_by,"2|uuid||,|NO|"
+02.columna,cash_sessions.opening_balance_nio,"6|numeric||12,2|NO|0"
+02.columna,cash_sessions.opening_balance_usd,"7|numeric||12,2|NO|0"
+02.columna,coaches.email,"6|text||,|YES|"
+02.columna,coaches.full_name,"3|text||,|NO|"
+02.columna,coaches.hire_date,"7|date||,|NO|CURRENT_DATE"
+02.columna,coaches.id,"1|text||,|NO|"
+02.columna,coaches.is_active,"8|boolean||,|NO|true"
+02.columna,coaches.monthly_salary,"9|numeric||12,2|YES|0"
+02.columna,coaches.notes,"10|text||,|YES|"
+02.columna,coaches.phone,"5|text||,|YES|"
+02.columna,coaches.profile_id,"2|uuid||,|YES|"
+02.columna,coaches.specialties,"11|ARRAY||,|NO|'{}'::text[]"
+02.columna,coaches.specialty,"4|text||,|YES|"
+02.columna,expense_categories.budget_monthly,"4|numeric||12,2|YES|"
+02.columna,expense_categories.color,"3|text||,|NO|'#888888'::text"
+02.columna,expense_categories.display_order,"5|integer||32,0|NO|0"
+02.columna,expense_categories.id,"1|text||,|NO|"
+02.columna,expense_categories.is_active,"6|boolean||,|NO|true"
+02.columna,expense_categories.name,"2|text||,|NO|"
+02.columna,finance_entries.created_at,"5|timestamp with time zone||,|NO|now()"
+02.columna,finance_entries.payload,"3|jsonb||,|NO|"
+02.columna,finance_entries.receipt,"4|jsonb||,|NO|"
+02.columna,finance_entries.request_id,"2|uuid||,|NO|"
+02.columna,finance_entries.transaction_id,"1|uuid||,|NO|"
+02.columna,finance_settings_audit.action,"4|text||,|NO|"
+02.columna,finance_settings_audit.actor_id,"3|uuid||,|YES|"
+02.columna,finance_settings_audit.at,"2|timestamp with time zone||,|NO|now()"
+02.columna,finance_settings_audit.details,"6|jsonb||,|NO|'{}'::jsonb"
+02.columna,finance_settings_audit.id,"1|uuid||,|NO|gen_random_uuid()"
+02.columna,finance_settings_audit.target,"5|text||,|YES|"
+02.columna,member_balances.credit_nio,"2|numeric||12,2|NO|0"
+02.columna,member_balances.credit_usd,"3|numeric||12,2|NO|0"
+02.columna,member_balances.debt_nio,"4|numeric||12,2|NO|0"
+02.columna,member_balances.debt_usd,"5|numeric||12,2|NO|0"
+02.columna,member_balances.last_payment_date,"6|timestamp with time zone||,|YES|"
+02.columna,member_balances.member_id,"1|uuid||,|NO|"
+02.columna,member_balances.updated_at,"7|timestamp with time zone||,|NO|now()"
+02.columna,payment_methods.currency,"3|text||,|NO|"
+02.columna,payment_methods.display_order,"6|integer||32,0|NO|0"
+02.columna,payment_methods.fee_pct,"4|numeric||5,2|NO|0"
+02.columna,payment_methods.id,"1|text||,|NO|"
+02.columna,payment_methods.is_active,"5|boolean||,|NO|true"
+02.columna,payment_methods.name,"2|text||,|NO|"
+02.columna,sessions.cancel_reason,"15|text||,|YES|"
+02.columna,sessions.cancelled_at,"17|timestamp with time zone||,|YES|"
+02.columna,sessions.cancelled_by,"16|uuid||,|YES|"
+02.columna,sessions.capacity,"6|integer||32,0|NO|"
+02.columna,sessions.class_id,"2|text||,|NO|"
+02.columna,sessions.coach_id,"3|text||,|YES|"
+02.columna,sessions.created_at,"9|timestamp with time zone||,|NO|now()"
+02.columna,sessions.created_by,"12|uuid||,|YES|"
+02.columna,sessions.ends_at,"5|timestamp with time zone||,|NO|"
+02.columna,sessions.id,"1|text||,|NO|(gen_random_uuid())::text"
+02.columna,sessions.note,"11|text||,|YES|"
+02.columna,sessions.origin,"10|text||,|NO|'grid'::text"
+02.columna,sessions.room,"7|text||,|NO|'Salón principal'::text"
+02.columna,sessions.starts_at,"4|timestamp with time zone||,|NO|"
+02.columna,sessions.status,"8|USER-DEFINED||,|NO|'scheduled'::session_status"
+02.columna,sessions.updated_at,"14|timestamp with time zone||,|YES|"
+02.columna,sessions.updated_by,"13|uuid||,|YES|"
+02.columna,transactions.account_id,"5|text||,|NO|"
+02.columna,transactions.amount,"12|numeric||12,2|NO|"
+02.columna,transactions.amount_nio,"14|numeric||12,2|NO|"
+02.columna,transactions.amount_usd,"15|numeric||12,4|NO|"
+02.columna,transactions.category_id,"8|text||,|YES|"
+02.columna,transactions.client_id,"24|uuid||,|YES|"
+02.columna,transactions.coach_id,"10|text||,|YES|"
+02.columna,transactions.concept,"17|text||,|NO|"
+02.columna,transactions.created_at,"22|timestamp with time zone||,|NO|now()"
+02.columna,transactions.created_by,"21|uuid||,|YES|"
+02.columna,transactions.crm_request_id,"25|uuid||,|YES|"
+02.columna,transactions.currency,"13|text||,|NO|"
+02.columna,transactions.destination_account_id,"6|text||,|YES|"
+02.columna,transactions.fx_used,"16|numeric||12,4|NO|"
+02.columna,transactions.id,"1|uuid||,|NO|gen_random_uuid()"
+02.columna,transactions.member_id,"9|uuid||,|YES|"
+02.columna,transactions.method_id,"7|text||,|YES|"
+02.columna,transactions.notes,"20|text||,|YES|"
+02.columna,transactions.occurred_at,"4|timestamp with time zone||,|NO|now()"
+02.columna,transactions.plan_id,"11|text||,|YES|"
+02.columna,transactions.receipt_url,"19|text||,|YES|"
+02.columna,transactions.reference,"18|text||,|YES|"
+02.columna,transactions.status,"3|USER-DEFINED||,|NO|'completed'::transaction_status"
+02.columna,transactions.type,"2|USER-DEFINED||,|NO|"
+02.columna,transactions.updated_at,"23|timestamp with time zone||,|NO|now()"
+03.constraint,bank_accounts.bank_accounts_account_type_check,"CHECK ((account_type = ANY (ARRAY['caja_fuerte'::text, 'banco'::text, 'billetera'::text])))"
+03.constraint,bank_accounts.bank_accounts_currency_check,"CHECK ((currency = ANY (ARRAY['NIO'::text, 'USD'::text])))"
+03.constraint,bank_accounts.bank_accounts_pkey,PRIMARY KEY (id)
+03.constraint,cash_sessions.cash_sessions_closed_by_fkey,FOREIGN KEY (closed_by) REFERENCES profiles(id) ON DELETE SET NULL
+03.constraint,cash_sessions.cash_sessions_opened_by_fkey,FOREIGN KEY (opened_by) REFERENCES profiles(id) ON DELETE RESTRICT
+03.constraint,cash_sessions.cash_sessions_pkey,PRIMARY KEY (id)
+03.constraint,coaches.coaches_pkey,PRIMARY KEY (id)
+03.constraint,coaches.coaches_profile_id_fkey,FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE SET NULL
+03.constraint,coaches.coaches_profile_id_key,UNIQUE (profile_id)
+03.constraint,expense_categories.expense_categories_pkey,PRIMARY KEY (id)
+03.constraint,finance_entries.finance_entries_pkey,PRIMARY KEY (transaction_id)
+03.constraint,finance_entries.finance_entries_request_id_key,UNIQUE (request_id)
+03.constraint,finance_entries.finance_entries_transaction_id_fkey,FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT
+03.constraint,finance_settings_audit.finance_settings_audit_action_check,"CHECK ((action = ANY (ARRAY['account_save'::text, 'method_save'::text, 'category_save'::text, 'transfer_create'::text, 'transfer_void'::text])))"
+03.constraint,finance_settings_audit.finance_settings_audit_actor_id_fkey,FOREIGN KEY (actor_id) REFERENCES profiles(id) ON DELETE SET NULL
+03.constraint,finance_settings_audit.finance_settings_audit_pkey,PRIMARY KEY (id)
+03.constraint,member_balances.member_balances_member_id_fkey,FOREIGN KEY (member_id) REFERENCES profiles(id) ON DELETE CASCADE
+03.constraint,member_balances.member_balances_pkey,PRIMARY KEY (member_id)
+03.constraint,payment_methods.payment_methods_currency_check,"CHECK ((currency = ANY (ARRAY['NIO'::text, 'USD'::text, 'BOTH'::text])))"
+03.constraint,payment_methods.payment_methods_pkey,PRIMARY KEY (id)
+03.constraint,sessions.sessions_cancelled_by_fkey,FOREIGN KEY (cancelled_by) REFERENCES profiles(id) ON DELETE SET NULL
+03.constraint,sessions.sessions_capacity_check,CHECK (((capacity >= 1) AND (capacity <= 200)))
+03.constraint,sessions.sessions_class_id_fkey,FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
+03.constraint,sessions.sessions_created_by_fkey,FOREIGN KEY (created_by) REFERENCES profiles(id) ON DELETE SET NULL
+03.constraint,sessions.sessions_note_chk,CHECK (((note IS NULL) OR ((length(TRIM(BOTH FROM note)) >= 3) AND (length(TRIM(BOTH FROM note)) <= 200))))
+03.constraint,sessions.sessions_origin_chk,"CHECK ((origin = ANY (ARRAY['grid'::text, 'manual'::text])))"
+03.constraint,sessions.sessions_pkey,PRIMARY KEY (id)
+03.constraint,sessions.sessions_time_valid,CHECK ((ends_at > starts_at))
+03.constraint,sessions.sessions_updated_by_fkey,FOREIGN KEY (updated_by) REFERENCES profiles(id) ON DELETE SET NULL
+03.constraint,transactions.transactions_account_id_fkey,FOREIGN KEY (account_id) REFERENCES bank_accounts(id) ON DELETE RESTRICT
+03.constraint,transactions.transactions_category_id_fkey,FOREIGN KEY (category_id) REFERENCES expense_categories(id) ON DELETE SET NULL
+03.constraint,transactions.transactions_client_id_fkey,FOREIGN KEY (client_id) REFERENCES gym_clients(id) ON DELETE RESTRICT
+03.constraint,transactions.transactions_coach_id_fkey,FOREIGN KEY (coach_id) REFERENCES coaches(id) ON DELETE SET NULL
+03.constraint,transactions.transactions_created_by_fkey,FOREIGN KEY (created_by) REFERENCES profiles(id) ON DELETE SET NULL
+03.constraint,transactions.transactions_crm_request_id_key,UNIQUE (crm_request_id)
+03.constraint,transactions.transactions_currency_check,"CHECK ((currency = ANY (ARRAY['NIO'::text, 'USD'::text])))"
+03.constraint,transactions.transactions_destination_account_id_fkey,FOREIGN KEY (destination_account_id) REFERENCES bank_accounts(id) ON DELETE RESTRICT
+03.constraint,transactions.transactions_member_id_fkey,FOREIGN KEY (member_id) REFERENCES profiles(id) ON DELETE SET NULL
+03.constraint,transactions.transactions_method_id_fkey,FOREIGN KEY (method_id) REFERENCES payment_methods(id) ON DELETE SET NULL
+03.constraint,transactions.transactions_pkey,PRIMARY KEY (id)
+03.constraint,transactions.transactions_plan_id_fkey,FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE SET NULL
+04.indice,bank_accounts.bank_accounts_pkey,CREATE UNIQUE INDEX bank_accounts_pkey ON public.bank_accounts USING btree (id)
+04.indice,cash_sessions.cash_sessions_close_request_key,CREATE UNIQUE INDEX cash_sessions_close_request_key ON public.cash_sessions USING btree (close_request_id) WHERE (close_request_id IS NOT NULL)
+04.indice,cash_sessions.cash_sessions_one_open_key,CREATE UNIQUE INDEX cash_sessions_one_open_key ON public.cash_sessions USING btree ((true)) WHERE (closed_at IS NULL)
+04.indice,cash_sessions.cash_sessions_open_request_key,CREATE UNIQUE INDEX cash_sessions_open_request_key ON public.cash_sessions USING btree (open_request_id) WHERE (open_request_id IS NOT NULL)
+04.indice,cash_sessions.cash_sessions_pkey,CREATE UNIQUE INDEX cash_sessions_pkey ON public.cash_sessions USING btree (id)
+04.indice,cash_sessions.idx_cash_sessions_open,CREATE INDEX idx_cash_sessions_open ON public.cash_sessions USING btree (opened_at DESC) WHERE (closed_at IS NULL)
+04.indice,coaches.coaches_pkey,CREATE UNIQUE INDEX coaches_pkey ON public.coaches USING btree (id)
+04.indice,coaches.coaches_profile_id_key,CREATE UNIQUE INDEX coaches_profile_id_key ON public.coaches USING btree (profile_id)
+04.indice,expense_categories.expense_categories_pkey,CREATE UNIQUE INDEX expense_categories_pkey ON public.expense_categories USING btree (id)
+04.indice,finance_entries.finance_entries_pkey,CREATE UNIQUE INDEX finance_entries_pkey ON public.finance_entries USING btree (transaction_id)
+04.indice,finance_entries.finance_entries_request_id_key,CREATE UNIQUE INDEX finance_entries_request_id_key ON public.finance_entries USING btree (request_id)
+04.indice,finance_settings_audit.finance_settings_audit_at_idx,CREATE INDEX finance_settings_audit_at_idx ON public.finance_settings_audit USING btree (at DESC)
+04.indice,finance_settings_audit.finance_settings_audit_pkey,CREATE UNIQUE INDEX finance_settings_audit_pkey ON public.finance_settings_audit USING btree (id)
+04.indice,member_balances.member_balances_pkey,CREATE UNIQUE INDEX member_balances_pkey ON public.member_balances USING btree (member_id)
+04.indice,payment_methods.payment_methods_pkey,CREATE UNIQUE INDEX payment_methods_pkey ON public.payment_methods USING btree (id)
+04.indice,sessions.sessions_class_idx,"CREATE INDEX sessions_class_idx ON public.sessions USING btree (class_id, starts_at)"
+04.indice,sessions.sessions_pkey,CREATE UNIQUE INDEX sessions_pkey ON public.sessions USING btree (id)
+04.indice,sessions.sessions_starts_at_idx,CREATE INDEX sessions_starts_at_idx ON public.sessions USING btree (starts_at)
+04.indice,transactions.idx_transactions_account,CREATE INDEX idx_transactions_account ON public.transactions USING btree (account_id)
+04.indice,transactions.idx_transactions_member,CREATE INDEX idx_transactions_member ON public.transactions USING btree (member_id) WHERE (member_id IS NOT NULL)
+04.indice,transactions.idx_transactions_occurred_at,CREATE INDEX idx_transactions_occurred_at ON public.transactions USING btree (occurred_at DESC)
+04.indice,transactions.idx_transactions_type,CREATE INDEX idx_transactions_type ON public.transactions USING btree (type)
+04.indice,transactions.transactions_client_idx,"CREATE INDEX transactions_client_idx ON public.transactions USING btree (client_id, occurred_at DESC)"
+04.indice,transactions.transactions_crm_request_id_key,CREATE UNIQUE INDEX transactions_crm_request_id_key ON public.transactions USING btree (crm_request_id)
+04.indice,transactions.transactions_occurred_id_idx,"CREATE INDEX transactions_occurred_id_idx ON public.transactions USING btree (occurred_at DESC, id DESC)"
+04.indice,transactions.transactions_pkey,CREATE UNIQUE INDEX transactions_pkey ON public.transactions USING btree (id)
+05.politica,bank_accounts.Authenticated can read bank_accounts,SELECT|roles=authenticated|using=true|check=
+05.politica,bank_accounts.Staff can write bank_accounts,ALL|roles=authenticated|using=is_staff()|check=is_staff()
+05.politica,bank_accounts.cashier_account_balances_restrictive,SELECT|roles=authenticated|using=(is_admin() OR (is_cashier() AND finance_permission_enabled('cashier_can_view_account_balances'::text)))|check=
+05.politica,bank_accounts.security_bank_accounts_staff_read,SELECT|roles=authenticated|using=crm_is_staff()|check=
+05.politica,coaches.profes: el admin escribe,ALL|roles=authenticated|using=is_admin()|check=is_admin()
+05.politica,expense_categories.Authenticated can read expense_categories,SELECT|roles=authenticated|using=true|check=
+05.politica,expense_categories.Staff can write expense_categories,ALL|roles=authenticated|using=is_staff()|check=is_staff()
+05.politica,finance_entries.finance_entries_staff_read,SELECT|roles=authenticated|using=crm_is_staff()|check=
+05.politica,member_balances.Members see own balance,SELECT|roles=authenticated|using=((member_id = auth.uid()) OR is_staff())|check=
+05.politica,member_balances.Staff can write member_balances,ALL|roles=authenticated|using=is_staff()|check=is_staff()
+05.politica,member_balances.cashier_receivables_member_balances,SELECT|roles=authenticated|using=((member_id = ( SELECT auth.uid() AS uid)) OR is_admin() OR (is_cashier() AND finance_permission_enabled('cashier_can_view_receivables'::text)))|check=
+05.politica,member_balances.security_finance_own_or_staff,SELECT|roles=authenticated|using=((member_id = ( SELECT auth.uid() AS uid)) OR ( SELECT crm_is_staff() AS crm_is_staff))|check=
+05.politica,payment_methods.Authenticated can read payment_methods,SELECT|roles=authenticated|using=true|check=
+05.politica,payment_methods.Staff can write payment_methods,ALL|roles=authenticated|using=is_staff()|check=is_staff()
+05.politica,sessions.horarios: el admin escribe,ALL|roles=authenticated|using=is_admin()|check=is_admin()
+05.politica,sessions.horarios: lectura pública,SELECT|roles=|using=true|check=
+05.politica,transactions.Members see own transactions,SELECT|roles=authenticated|using=((member_id = auth.uid()) OR is_staff())|check=
+05.politica,transactions.Staff can write transactions,ALL|roles=authenticated|using=is_staff()|check=is_staff()
+05.politica,transactions.security_finance_own_or_staff,SELECT|roles=authenticated|using=((member_id = ( SELECT auth.uid() AS uid)) OR ( SELECT crm_is_staff() AS crm_is_staff))|check=
+07.permiso,bank_accounts,"rls=true|acl={postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}"
+07.permiso,cash_sessions,"rls=true|acl={postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+07.permiso,coaches,"rls=true|acl={postgres=arwdDxtm/postgres,anon=arwdm/postgres,authenticated=arwdm/postgres,service_role=arwdDxtm/postgres}"
+07.permiso,expense_categories,"rls=true|acl={postgres=arwdDxtm/postgres,anon=arwdm/postgres,authenticated=arwdm/postgres,service_role=arwdDxtm/postgres}"
+07.permiso,finance_entries,"rls=true|acl={postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}"
+07.permiso,finance_settings_audit,"rls=true|acl={postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+07.permiso,member_balances,"rls=true|acl={postgres=arwdDxtm/postgres,anon=rm/postgres,authenticated=rm/postgres,service_role=arwdDxtm/postgres}"
+07.permiso,payment_methods,"rls=true|acl={postgres=arwdDxtm/postgres,anon=arwdm/postgres,authenticated=arwdm/postgres,service_role=arwdDxtm/postgres}"
+07.permiso,sessions,"rls=true|acl={postgres=arwdDxtm/postgres,anon=arwdm/postgres,authenticated=arwdm/postgres,service_role=arwdDxtm/postgres}"
+07.permiso,transactions,"rls=true|acl={postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}"
+08.enum,transaction_status,"pending,completed,cancelled"
+08.enum,transaction_type,"income,expense,transfer"
+09.vista,v_account_balances,"id,name,account_type,currency,balance,is_active"
+10.funcion,cashier_daily_close_enabled(),existe
+10.funcion,cashier_permissions(),existe
+10.funcion,crm_finance_layout(),existe
+10.funcion,"finance_account_save(p_id text, p_name text, p_account_type text, p_currency text, p_bank_name text, p_account_number text, p_display_order integer, p_is_active boolean)",existe
+10.funcion,finance_accounts_state(p_limit integer),existe
+10.funcion,"finance_cash_change(p_amount numeric, p_currency text, p_account text, p_cash_received numeric)",existe
+10.funcion,"finance_cash_close(p_request uuid, p_session uuid, p_counted_nio numeric, p_counted_usd numeric, p_notes text)",existe
+10.funcion,"finance_cash_movements(p_from timestamp with time zone, p_to timestamp with time zone)",existe
+10.funcion,"finance_cash_open(p_request uuid, p_open_nio numeric, p_open_usd numeric, p_notes text)",existe
+10.funcion,finance_cash_row_json(p_id uuid),existe
+10.funcion,finance_cash_session_closed(p_transaction uuid),existe
+10.funcion,"finance_cash_stamp(p_transaction uuid, p_cash_received numeric, p_change numeric)",existe
+10.funcion,finance_cash_state(),existe
+10.funcion,"finance_category_save(p_id text, p_name text, p_color text, p_budget_monthly numeric, p_display_order integer, p_is_active boolean)",existe
+10.funcion,finance_client_balance(p_client uuid),existe
+10.funcion,finance_debt_detail(p_client uuid),existe
+10.funcion,finance_debt_detail_before_cash(p_client uuid),existe
+10.funcion,finance_debt_ready(),existe
+10.funcion,"finance_debt_record(p_request uuid, p_kind text, p_client uuid, p_amount numeric, p_currency text, p_concept text, p_method text, p_account text, p_fx numeric, p_open jsonb)",existe
+10.funcion,"finance_debt_record_with_cash(p_request uuid, p_kind text, p_client uuid, p_amount numeric, p_currency text, p_concept text, p_method text, p_account text, p_fx numeric, p_open jsonb, p_cash_received numeric)",existe
+10.funcion,finance_debt_report(p_section text),existe
+10.funcion,"finance_method_save(p_id text, p_name text, p_currency text, p_fee_pct numeric, p_display_order integer, p_is_active boolean)",existe
+10.funcion,"finance_movements_page(p_search text, p_direction text, p_status text, p_currency text, p_method text, p_hide_expenses boolean, p_limit integer, p_offset integer)",existe
+10.funcion,finance_options(),existe
+10.funcion,finance_permission_enabled(p_key text),existe
+10.funcion,finance_protect_client_balance_link(),existe
+10.funcion,finance_protect_profile_balance_delete(),existe
+10.funcion,"finance_read(p_section text, p_limit integer)",existe
+10.funcion,"finance_read_before_debts(p_section text, p_limit integer)",existe
+10.funcion,finance_receipt(p_id uuid),existe
+10.funcion,"finance_recent_receipts(p_kind text, p_client uuid)",existe
+10.funcion,"finance_record_checkout(p_request uuid, p_client uuid, p_service_amount numeric, p_service_concept text, p_currency text, p_method text, p_account text, p_fx numeric, p_items jsonb, p_cash_received numeric)",existe
+10.funcion,"finance_record_checkout_before_cash(p_request uuid, p_client uuid, p_service_amount numeric, p_service_concept text, p_currency text, p_method text, p_account text, p_fx numeric, p_items jsonb)",existe
+10.funcion,"finance_record_checkout_plan(p_request uuid, p_client uuid, p_service_amount numeric, p_service_concept text, p_currency text, p_method text, p_account text, p_fx numeric, p_items jsonb, p_plan text, p_cash_received numeric)",existe
+10.funcion,"finance_record_movement(p_request uuid, p_kind text, p_client uuid, p_amount numeric, p_currency text, p_method text, p_account text, p_concept text, p_fx numeric, p_category text, p_cash_received numeric)",existe
+10.funcion,"finance_record_movement_before_debts(p_request uuid, p_kind text, p_client uuid, p_amount numeric, p_currency text, p_method text, p_account text, p_concept text, p_fx numeric, p_category text)",existe
+10.funcion,"finance_record_movement_plan(p_request uuid, p_client uuid, p_amount numeric, p_concept text, p_currency text, p_method text, p_account text, p_fx numeric, p_plan text, p_cash_received numeric)",existe
+10.funcion,"finance_transfer_create(p_request uuid, p_from text, p_to text, p_amount numeric, p_fx numeric, p_concept text)",existe
+10.funcion,"finance_transfer_void(p_request uuid, p_transfer uuid, p_reason text)",existe
+10.funcion,"finance_void_movement(p_request uuid, p_transaction uuid, p_reason text)",existe
+10.funcion,finance_void_plan(p_transaction uuid),existe
+10.funcion,finance_void_plan_impact(p_transaction uuid),existe
+10.funcion,"finance_void_stock_restore(p_original uuid, p_reversal uuid)",existe
+10.funcion,finance_voids_recent(p_limit integer),existe
+10.funcion,finance_writes_ready(),existe
+10.funcion,"record_payment(p_member_id uuid, p_amount numeric, p_currency text, p_method_id text, p_account_id text, p_plan_id text, p_concept text, p_reference text)",existe

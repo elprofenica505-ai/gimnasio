@@ -71,7 +71,7 @@ create table if not exists public.category_rules (
   )
 );
 
--- Valores por defecto acordados: mes vigente + compra = Strong Gym; cualquier
+-- Valores por defecto acordados: mes vigente + compra = categoría del gimnasio; cualquier
 -- vigencia = Familia; sin vigencia y 3 visitas en 30 días = Amigo; el resto Común.
 insert into public.category_rules(
   category, sort_order, is_active, is_fallback, requires_validity, forbids_validity,

@@ -95,7 +95,7 @@ begin
       v_bd := null;
     end if;
     insert into public.gym_clients(profile_id, full_name, phone, email, plan_id, birthdate)
-    values (new.id, coalesce(nullif(trim(new.full_name), ''), 'Cliente Strong'), new.phone, new.email, new.plan_id, v_bd)
+    values (new.id, coalesce(nullif(trim(new.full_name), ''), 'Cliente'), new.phone, new.email, new.plan_id, v_bd)
     on conflict (profile_id) do nothing;
   end if;
   return new;

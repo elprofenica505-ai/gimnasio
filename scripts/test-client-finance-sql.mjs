@@ -13,7 +13,7 @@ for (const layout of ["repository","bank_accounts_split"]) {
       create table auth.current_user(id uuid);
       create function auth.uid() returns uuid language sql stable as $$select id from auth.current_user limit 1$$;
       grant usage on schema auth to anon,authenticated; grant select on auth.current_user to anon,authenticated;`);
-    for (const name of ["supabase/migrations/00001_schema.sql","supabase/migrations/00002_seed.sql",
+    for (const name of ["supabase/migrations/00001_schema.sql","tests/fixtures/base-catalog.sql",
       layout === "repository" ? "supabase/migrations/00010_finance.sql" : "tests/fixtures/finance-bank-accounts.sql",
       "supabase/migrations/00012_profiles_self_read.sql","supabase/migrations/00020_clients_crm.sql",
       "supabase/migrations/00022_crm_finance_compat.sql"])

@@ -11,8 +11,8 @@ try {
     create table auth.users(id uuid primary key default gen_random_uuid(),email text,raw_user_meta_data jsonb default '{}'::jsonb,created_at timestamptz default now());
     create table auth.current_user(id uuid);create function auth.uid() returns uuid language sql stable as $$select id from auth.current_user limit 1$$;
     grant usage on schema auth to anon,authenticated;grant select on auth.current_user to anon,authenticated;`);
-  for(const f of ['00001_schema.sql','00002_seed.sql','fixture','00012_profiles_self_read.sql','00020_clients_crm.sql','00022_crm_finance_compat.sql','00023_finance_read_bank_accounts.sql','00024_finance_movements.sql','00027_client_finance_read.sql'])
-    await db.exec(sql(f==='fixture'?'tests/fixtures/finance-bank-accounts.sql':`supabase/migrations/${f}`));
+  for(const f of ['00001_schema.sql','catalog-fixture','fixture','00012_profiles_self_read.sql','00020_clients_crm.sql','00022_crm_finance_compat.sql','00023_finance_read_bank_accounts.sql','00024_finance_movements.sql','00027_client_finance_read.sql'])
+    await db.exec(sql(f==='fixture'?'tests/fixtures/finance-bank-accounts.sql':f==='catalog-fixture'?'tests/fixtures/base-catalog.sql':`supabase/migrations/${f}`));
   const user=async name=>(await row('insert into auth.users(email) values($1) returning id',[`${name}@test.invalid`])).id;
   const admin=await user('admin'),staff=await user('staff'),member=await user('member'),other=await user('other');
   await db.query("update profiles set role='admin' where id=$1",[admin]);await db.query("update profiles set role='staff' where id=$1",[staff]);

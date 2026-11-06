@@ -1,5 +1,5 @@
 -- ============================================================
---  Strong Fitness Gym — FASE 1: Contabilidad, caja y pagos
+--  FASE 1: Contabilidad, caja y finanzas
 -- ============================================================
 --  Este archivo crea todo el sistema de caja, ingresos, egresos,
 --  cuentas por cobrar y métodos de pago del gimnasio.

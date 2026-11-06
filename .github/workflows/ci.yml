@@ -78,8 +78,17 @@ jobs:
       - name: El SQL tiene que estar sincronizado con la web
         run: node scripts/build-sql.mjs --check
 
+      - name: El SQL de instalación tiene que estar sincronizado y sin datos ajenos
+        run: node scripts/build-install-sql.mjs --check
+
       - name: Probar el SQL con PGlite (una conexión)
         run: npm run test:sql
+
+      # La prueba más importante: aplica el INSTALAR-BASE.sql COMPLETO (el
+      # archivo que se pega en Supabase), sin la cadena curada del helper.
+      # Instala vacío y sin una sola cadena «Strong» en ninguna columna.
+      - name: Probar INSTALAR-BASE.sql completo, de una sola vez
+        run: npm run test:instalar
 
       # Estas suites existían pero no corrían en CI y se fueron quedando
       # atrás (una fecha fija venció sin que nadie lo notara). Deben correr

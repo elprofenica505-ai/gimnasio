@@ -213,18 +213,21 @@ await denied("Sin sesión iniciada no se puede crear una disciplina",
   /AUTH|permission denied/);
 
 // 6. Editar los datos base no rompe nada de lo que ya existía.
+// El color se lee de la base (no se hardcodea): la prueba es «guardar los
+// MISMOS datos no cambia nada», sea cual sea el color del catálogo base.
+const boxeoActual = await row("select * from public.classes where id='cls_boxeo'");
 const boxeo = await adminRpc("admin_save_class", [
   "cls_boxeo",
-  "boxeo",
-  "Boxeo",
-  "Boxing",
-  (await row("select description_es from public.classes where id='cls_boxeo'")).description_es,
-  (await row("select description_en from public.classes where id='cls_boxeo'")).description_en,
-  "high",
-  60,
-  20,
-  "#d81a22",
-  2,
+  boxeoActual.slug,
+  boxeoActual.name_es,
+  boxeoActual.name_en,
+  boxeoActual.description_es,
+  boxeoActual.description_en,
+  boxeoActual.intensity,
+  boxeoActual.duration_min,
+  boxeoActual.capacity,
+  boxeoActual.color,
+  boxeoActual.sort_order,
 ]);
 ok("Editar una disciplina existente conserva su estado y sus datos",
   boxeo.action === "sin_cambios" &&

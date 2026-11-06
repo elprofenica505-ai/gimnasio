@@ -14,7 +14,7 @@ for(const layout of ['repository','bank_accounts_split']) {
       create table auth.users(id uuid primary key default gen_random_uuid(),email text,raw_user_meta_data jsonb default '{}'::jsonb,created_at timestamptz default now());
       create table auth.current_user(id uuid);create function auth.uid() returns uuid language sql stable as $$select id from auth.current_user limit 1$$;
       grant usage on schema auth to anon,authenticated;grant select on auth.current_user to anon,authenticated;`);
-    for(const f of ['supabase/migrations/00001_schema.sql','supabase/migrations/00002_seed.sql',
+    for(const f of ['supabase/migrations/00001_schema.sql','tests/fixtures/base-catalog.sql',
       layout==='repository'?'supabase/migrations/00010_finance.sql':'tests/fixtures/finance-bank-accounts.sql',
       'supabase/migrations/00012_profiles_self_read.sql','supabase/migrations/00020_clients_crm.sql',
       'supabase/migrations/00022_crm_finance_compat.sql','supabase/migrations/00023_finance_read_bank_accounts.sql',
@@ -54,6 +54,9 @@ for(const layout of ['repository','bank_accounts_split']) {
       }
     }
     if(layout==='bank_accounts_split')await db.query("insert into transactions(type,amount,currency,amount_nio,amount_usd,fx_used,account_id,member_id,concept) values('expense',55,'NIO',55,0,40,'test',$1,'EJEMPLO gasto')",[other]);
+    // El fixture base no programa nada (datos del gimnasio anterior desarmados):
+    // la suite crea su propia sesión neutra para probar reservas.
+    await db.exec("insert into public.sessions(id,class_id,starts_at,ends_at,capacity) values('ses_hardening','cls_zumba',now()+interval '2 days',now()+interval '2 days'+interval '1 hour',30) on conflict (id) do nothing");
     const session=(await row('select id from sessions order by starts_at desc limit 1')).id;
     await db.query("insert into bookings(session_id,user_id,status) values($1,$2,'confirmed'),($1,$3,'confirmed')",[session,member,other]);
     await db.exec('revoke all on function crm_directory(text,text,integer) from authenticated;grant execute on function crm_directory(text,text,integer) to public');

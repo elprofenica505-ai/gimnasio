@@ -1,5 +1,5 @@
 -- ============================================================
--- Strong Gym: permitir la lectura del perfil propio con RLS.
+-- Permitir la lectura del perfil propio con RLS.
 -- ============================================================
 -- Ejecutar en el SQL Editor del proyecto que usa el sitio.
 -- Caso observado: profiles.role = admin como dueño, pero el usuario

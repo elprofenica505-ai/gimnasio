@@ -20,7 +20,7 @@ grant usage on schema auth to anon,authenticated; grant select on auth.current_u
 `);
 for (const f of [
   "supabase/migrations/00001_schema.sql",
-  "supabase/migrations/00002_seed.sql",
+  "tests/fixtures/base-catalog.sql",
   "tests/fixtures/finance-bank-accounts.sql",
   "supabase/migrations/00012_profiles_self_read.sql",
   "supabase/migrations/00020_clients_crm.sql",

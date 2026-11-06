@@ -23,7 +23,7 @@ await db.exec(`create schema auth; create role anon nologin; create role authent
 
 for (const f of [
   "supabase/migrations/00001_schema.sql",
-  "supabase/migrations/00002_seed.sql",
+  "tests/fixtures/base-catalog.sql",
   "tests/fixtures/finance-bank-accounts.sql",
   "supabase/migrations/00012_profiles_self_read.sql",
   "supabase/migrations/00020_clients_crm.sql",

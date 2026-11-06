@@ -12,7 +12,7 @@ await db.exec(`
 `);
 for (const file of [
   "00001_schema.sql",
-  "00002_seed.sql",
+  "tests/fixtures/base-catalog.sql",
   "00010_finance.sql",
   "00011_finance_seed.sql",
   "00012_profiles_self_read.sql",
@@ -20,10 +20,24 @@ for (const file of [
 ])
   await db.exec(
     readFileSync(
-      new URL(`../supabase/migrations/${file}`, import.meta.url),
+      new URL(
+        file.startsWith("tests/")
+          ? `../${file}`
+          : `../supabase/migrations/${file}`,
+        import.meta.url,
+      ),
       "utf8",
     ),
   );
+
+// Cuentas de caja neutras para la suite: 00011 ya no trae cuentas del
+// gimnasio anterior (semilla desarmada); cada instalación configura las suyas.
+await db.exec(
+  "insert into public.accounts (id, slug, name, kind, currency, holder_name) values" +
+    " ('acc_test_nio','caja-test-nio','Caja de prueba (C$)','cash','NIO','Gimnasio de prueba')," +
+    " ('acc_test_usd','caja-test-usd','Caja de prueba (US$)','cash','USD','Gimnasio de prueba')" +
+    " on conflict (id) do nothing;",
+);
 const nativeWriterQuery =
   "select pg_get_functiondef(oid) as definition from pg_proc where pronamespace='public'::regnamespace and proname='record_payment' order by oid";
 const nativeWriterBefore = JSON.stringify(
@@ -390,9 +404,9 @@ const seedBefore = (
 ).n;
 await db.exec(seed);
 check(
-  "seed opcional: seis fichas ficticias sin cuentas",
+  "seed opcional (vaciada): cero fichas ficticias, cero datos ajenos",
   (await row("select count(*)::int as n from public.gym_clients where is_demo"))
-    .n === 6,
+    .n === 0,
 );
 check(
   "seed idempotente, no duplica asistencias",
