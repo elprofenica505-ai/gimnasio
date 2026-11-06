@@ -11,9 +11,13 @@
 --       este archivo TAL CUAL → Run → copiar TODA la salida.
 --    2. Supabase del gimnasio nuevo (después de INSTALAR-BASE.sql)
 --       → lo mismo.
---    3. Comparar las dos salidas fila por fila (diff). El PR #4 no
---       se fusiona hasta que la diferencia sea cero, o hasta que
---       cada diferencia quede explicada y aceptada a propósito.
+--    3. Comparar las dos salidas con scripts/comparar-diagnosticos.mjs
+--       (npm run diagnostic:comparar -- <salida-strong> <salida-nueva>):
+--       clasifica SOLO-REAL / SOLO-LOCAL / VALOR DISTINTO por sección
+--       y filtra el ruido ambiental conocido (ACL de PGlite, NOT NULL
+--       que PG17 registra en pg_constraint). El PR #4 no se fusiona
+--       hasta que la diferencia sea cero, o hasta que cada diferencia
+--       quede explicada y aceptada a propósito.
 --
 --  NO MODIFICA NADA: sólo lee catálogos del sistema. La salida es
 --  una única tabla ordenada (seccion | objeto | detalle), pensada
@@ -25,9 +29,10 @@
 --    · Cuerpos de funciones: sólo se lista nombre+firma. Las
 --      funciones de la instalación nueva vienen de la cadena del
 --      repo, que es MÁS NUEVA que la base de Strong.
---    · record_payment: en Strong existe (la creó el sistema viejo);
---      en la instalación nueva NO debe existir (00023 sólo la
---      bloquea si ya existía y ningún módulo la llama).
+--    · record_payment: en Strong existe (writer viejo, hoy guard) y
+--      la instalación nueva TAMBIÉN la crea en forma guard (sección
+--      11 del artefacto split; 00023 la normaliza). Deben coincidir
+--      en firma.
 -- ============================================================
 
 with tablas(t) as (
@@ -37,8 +42,13 @@ with tablas(t) as (
     ('member_balances'), ('expense_categories'), ('cash_sessions'),
     -- tablas financieras que crea la cadena después
     ('finance_entries'), ('finance_settings_audit'),
-    -- tabla vecina que el artefacto completa (full_name, specialty)
+    -- tabla vecina que el artefacto reconstruye a la forma
+    -- productiva de 11 columnas (sección 10 del artefacto split)
     ('coaches'),
+    -- tabla del agendado: verifica la FK sessions_coach_id_fkey que
+    -- la reconstrucción de coaches restaura, y expone drift externo
+    -- de la base histórica si lo hubiera
+    ('sessions'),
     -- tablas del modelo histórico repository: en la instalación
     -- nueva NO deben existir; lo que haya en Strong, que se vea
     ('accounts'), ('invoices'), ('invoice_items'), ('cash_registers')
@@ -58,11 +68,16 @@ select seccion, objeto, detalle
           from tablas
 
         union all
-        -- 02. Columnas: posición | tipo | largo | nullable | default
+        -- 02. Columnas: posición | tipo | largo | precisión,escala |
+        --     nullable | default. La precisión/escala cierra el punto
+        --     ciego anterior: numeric(12,2) y numeric(12,4) antes se
+        --     veían ambas como «numeric» a secas.
         select '02.columna',
                c.table_name || '.' || c.column_name,
                c.ordinal_position::text || '|' || c.data_type || '|' ||
                coalesce(c.character_maximum_length::text, '') || '|' ||
+               coalesce(c.numeric_precision::text, '') || ',' ||
+               coalesce(c.numeric_scale::text, '') || '|' ||
                c.is_nullable || '|' || coalesce(c.column_default, '')
           from information_schema.columns c
           join tablas on c.table_name = tablas.t

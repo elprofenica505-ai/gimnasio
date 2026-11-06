@@ -746,9 +746,18 @@ grant execute on function public.is_staff() to authenticated;
 --      suites que usan tests/fixtures/finance-bank-accounts.sql).
 --
 --  DIFERENCIAS con el fixture de pruebas (deliberadas):
---    · Sin centinela record_payment: en una base nueva esa función
---      no existe; 00023 sólo la bloquea si ya existía y ningún
---      módulo de la cadena la llama.
+--    · record_payment nace en forma GUARD: la salida real del
+--      diagnóstico (2026-11-05) confirma que la función existe en la
+--      base de Strong con la firma de 8 argumentos; acá se crea la
+--      forma bloqueada (idéntica a la que instala 00023) para que el
+--      estado final coincida. 00023 la normaliza y fija permisos.
+--    · cash_sessions sin políticas: la base real no tiene ninguna
+--      (00087 elimina las que aparezcan; la caja va por funciones).
+--    · FKs de cash_sessions con ON DELETE (RESTRICT/SET NULL) y los
+--      cinco índices idx_cash_sessions_open + idx_transactions_*,
+--      que en la real nacieron por fuera del repo.
+--    · coaches se reconstruye a la forma productiva de 11 columnas
+--      si está en forma repo y vacía — ver sección 10.
 --    · DDL idempotente (if not exists / or replace / drop policy if
 --      exists): se puede volver a pegar sin romper.
 --    · Sin «grant all» amplios: los permisos los fija la cadena
@@ -778,7 +787,7 @@ exception when duplicate_object then null; end $$;
 create table if not exists public.expense_categories (
   id             text primary key,
   name           text not null,
-  color          text not null default '#999999',
+  color          text not null default '#888888',
   budget_monthly numeric(12,2),
   display_order  integer not null default 0
 );
@@ -790,9 +799,9 @@ create table if not exists public.expense_categories (
 --  La usan 00033/00037/00038/00087/00088 (apertura, cierre y arqueo).
 create table if not exists public.cash_sessions (
   id                    uuid primary key default gen_random_uuid(),
-  opened_by             uuid not null references public.profiles(id),
+  opened_by             uuid not null references public.profiles (id) on delete restrict,
   opened_at             timestamptz not null default now(),
-  closed_by             uuid references public.profiles(id),
+  closed_by             uuid references public.profiles (id) on delete set null,
   closed_at             timestamptz,
   opening_balance_nio   numeric(12,2) not null default 0,
   opening_balance_usd   numeric(12,2) not null default 0,
@@ -910,6 +919,25 @@ create table if not exists public.transactions (
   constraint transactions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id) ON DELETE SET NULL
 );
 
+--  Índices nacidos por fuera del repo [DIAGNÓSTICO 2026-11-05]
+--  La base real tiene estos cinco índices y ninguna migración
+--  numerada los crea (los únicos de cash_sessions que la cadena
+--  fabrica son los unique de 00087/00096). Son de rendimiento: no
+--  cambian resultados, pero sin ellos la instalación nueva difiere
+--  de la real en 04.indice y en planes de consulta.
+create index if not exists idx_cash_sessions_open
+  on public.cash_sessions (opened_at desc)
+  where closed_at is null;
+create index if not exists idx_transactions_account
+  on public.transactions (account_id);
+create index if not exists idx_transactions_member
+  on public.transactions (member_id)
+  where member_id is not null;
+create index if not exists idx_transactions_occurred_at
+  on public.transactions (occurred_at desc);
+create index if not exists idx_transactions_type
+  on public.transactions (type);
+
 
 -- ------------------------------------------------------------
 --  8. Vista de saldos [DIAGNÓSTICO]
@@ -942,9 +970,10 @@ drop policy if exists "Staff can write bank_accounts" on public.bank_accounts;
 create policy "Staff can write bank_accounts" on public.bank_accounts
   for all to authenticated using (public.is_staff()) with check (public.is_staff());
 
-drop policy if exists "Staff can write cash_sessions" on public.cash_sessions;
-create policy "Staff can write cash_sessions" on public.cash_sessions
-  for all to authenticated using (public.is_staff()) with check (public.is_staff());
+--  cash_sessions NO lleva políticas: la base real no tiene ninguna.
+--  (El fixture de pruebas trae «Staff can write cash_sessions», pero
+--  es ruido del fixture: 00087 elimina cualquier política de esta
+--  tabla y maneja la caja por funciones.)
 
 drop policy if exists "Authenticated can read expense_categories" on public.expense_categories;
 create policy "Authenticated can read expense_categories" on public.expense_categories
@@ -976,19 +1005,156 @@ create policy "Staff can write transactions" on public.transactions
 
 
 -- ------------------------------------------------------------
--- 10. Columnas de coaches nacidas por fuera del repo [CÓDIGO+PRUEBAS]
+-- 10. coaches a la forma productiva [DIAGNÓSTICO 2026-11-05]
 -- ------------------------------------------------------------
---  00050 y 00051 crean vistas sobre coaches.full_name y
---  coaches.specialty, pero ninguna migración numerada crea esas dos
---  columnas: en la base real nacieron por fuera del repo. El shim
---  `coachShim` de scripts/helpers/sql-test-db.mjs tapa el mismo hueco
---  en las suites. En una instalación nueva la tabla está vacía, así
---  que el update no toca nada; queda por si este bloque se reaplica.
-alter table public.coaches add column if not exists full_name text;
-alter table public.coaches add column if not exists specialty text;
-update public.coaches
-   set full_name = coalesce(full_name, name),
-       specialty = coalesce(specialty, role_es);
+--  La base real de Strong tiene coaches con OTRO cuerpo que el repo:
+--  11 columnas de RRHH (id, profile_id, full_name, specialty, phone,
+--  email, hire_date, is_active, monthly_salary, notes, specialties),
+--  UNIQUE en profile_id, sin slug/name/role_es/bio_es/bio_en/color/
+--  initials/sort_order/created_at y sin coaches_active_idx. Ese
+--  cuerpo nació por fuera del repo: ninguna migración numerada lo
+--  crea, pero la cadena completa lo tolera (00034/00050/00051/00066/
+--  00072/00073/00074/00075/00076/00078/00079 son de forma dual) y
+--  src/ nunca lee la tabla directa.
+--
+--  Reglas de reconstrucción (sin destruir datos nunca):
+--    · forma repo (tiene `slug`) Y vacía → drop cascade + CREATE con
+--      el cuerpo exacto de la real (11 columnas, en su orden). Se
+--      restauran sessions_coach_id_fkey (como la creó 00001), RLS y
+--      el grant de lectura (00001). Sin políticas: la real sólo tiene
+--      «profes: el admin escribe», que crea 00034 más adelante, y el
+--      cascade elimina «profes: lectura pública»/«el staff escribe»,
+--      que la real no tiene.
+--    · forma repo con filas, forma productiva o desconocida → NO se
+--      reconstruye; sólo se garantiza full_name/specialty (add if
+--      not exists + backfill desde name/role_es) para que 00050/00051
+--      encuentren sus columnas.
+do $$
+declare
+  v_slug    boolean;
+  v_profile boolean;
+  v_filas   bigint;
+begin
+  if to_regclass('public.coaches') is null
+     or to_regclass('public.sessions') is null
+     or to_regclass('public.profiles') is null
+     or to_regclass('public.transactions') is null then
+    raise exception 'COACHES_REBUILD_PREREQUISITE_MISSING';
+  end if;
+
+  select exists (
+           select 1 from information_schema.columns
+            where table_schema = 'public' and table_name = 'coaches'
+              and column_name = 'slug'
+         ),
+         exists (
+           select 1 from information_schema.columns
+            where table_schema = 'public' and table_name = 'coaches'
+              and column_name = 'profile_id'
+         )
+    into v_slug, v_profile;
+
+  if v_profile or not v_slug then
+    -- Forma productiva o desconocida: sólo asegurar las dos columnas
+    -- que 00050/00051 exigen. Backfill sólo si existe `name`.
+    alter table public.coaches add column if not exists full_name text;
+    alter table public.coaches add column if not exists specialty text;
+    if exists (
+      select 1 from information_schema.columns
+       where table_schema = 'public' and table_name = 'coaches'
+         and column_name = 'name'
+    ) then
+      update public.coaches
+         set full_name = coalesce(full_name, name),
+             specialty = coalesce(specialty, role_es);
+    end if;
+    return;
+  end if;
+
+  select count(*) into v_filas from public.coaches;
+  if v_filas > 0 then
+    -- Forma repo con datos (p. ej. semillas históricas): no se toca
+    -- la tabla; sólo el parche de columnas.
+    raise warning 'COACHES_REBUILD_OMITIDO: % fila(s) presentes; no se tocan datos', v_filas;
+    alter table public.coaches add column if not exists full_name text;
+    alter table public.coaches add column if not exists specialty text;
+    update public.coaches
+       set full_name = coalesce(full_name, name),
+           specialty = coalesce(specialty, role_es);
+    return;
+  end if;
+
+  -- Forma repo y vacía (instalación nueva): reconstrucción exacta.
+  drop table public.coaches cascade;
+  create table public.coaches (
+    id             text primary key,
+    profile_id     uuid references public.profiles (id) on delete set null unique,
+    full_name      text not null,
+    specialty      text,
+    phone          text,
+    email          text,
+    hire_date      date not null default current_date,
+    is_active      boolean not null default true,
+    monthly_salary numeric default 0,
+    notes          text,
+    specialties    text[] not null default '{}'::text[]
+  );
+  -- El cascade llevó sessions_coach_id_fkey: se restaura igual que la
+  -- creó 00001 (coach_id es text en las dos formas). También llevó la
+  -- FK de transactions.coach_id, que este mismo artefacto crea en la
+  -- sección 7 ANTES de reconstruir coaches.
+  alter table public.sessions
+    add constraint sessions_coach_id_fkey
+    foreign key (coach_id) references public.coaches (id) on delete set null;
+  alter table public.transactions
+    add constraint transactions_coach_id_fkey
+    foreign key (coach_id) references public.coaches (id) on delete set null;
+  -- 00001 habilita RLS y concede lectura sobre coaches; el cascade
+  -- eliminó ambas cosas.
+  alter table public.coaches enable row level security;
+  grant select on public.coaches to anon, authenticated;
+end
+$$;
+
+-- ------------------------------------------------------------
+-- 11. record_payment en forma guard [DIAGNÓSTICO 2026-11-05]
+-- ------------------------------------------------------------
+--  La base real TIENE esta función con la firma de 8 argumentos
+--  (uuid,numeric,text,text,text,text,text,text): fue el writer
+--  bancario de Strong y hoy está bloqueada. 00023 la reemplaza por
+--  este mismo guard cuando existe; acá nace directo en forma guard
+--  para que el estado final coincida con la real. Nada de la cadena
+--  la llama: los cobros van por finance_record_checkout y
+--  crm_record_payment(_plan). El body referencia crm_is_staff(),
+--  que no existe todavía acá: plpgsql la resuelve en ejecución y
+--  00023 reinstala la función idéntica después de crearla.
+create or replace function public.record_payment(
+  p_member_id  uuid,
+  p_amount     numeric,
+  p_currency   text,
+  p_method_id  text,
+  p_account_id text,
+  p_plan_id    text default null,
+  p_concept    text default 'Pago de membresía',
+  p_reference  text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $guard$
+begin
+  if not public.crm_is_staff() then
+    raise exception 'AUTH';
+  end if;
+  raise exception 'FINANCE_REVIEW_REQUIRED';
+end
+$guard$;
+
+revoke all on function public.record_payment(uuid, numeric, text, text, text, text, text, text)
+  from public, anon, authenticated;
+grant execute on function public.record_payment(uuid, numeric, text, text, text, text, text, text)
+  to authenticated;
 
 -- ═══════════════════════════════════════════════════════════
 --  00011_finance_seed.sql  →  REEMPLAZADA por supabase/instalacion/00011-semilla-generica-split.sql

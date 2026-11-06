@@ -67,11 +67,16 @@ Comandos: `npm run build:install` y `npm run build:install:check`.
 > INSTALAR-BASE completo en PGlite limpia, y el §2 de este
 > PERSONALIZAR-GIMNASIO.sql ahora crea las dos cajas en `bank_accounts`
 > (antes las insertaba en `accounts`, tabla del modelo histórico que en la
-> instalación nueva no existe). Falta la puerta final antes de fusionar:
-> comparar `supabase/DIAGNOSTICO-ESQUEMA-FINANCIERO.sql` (sólo lectura)
-> entre la base real de Strong y el proyecto nuevo — cero diferencias o
-> cada diferencia explicada. Detalle en
-> `docs/INVENTARIO-DATOS-STRONG.md` §8.7 y §8.7.1.
+> instalación nueva no existe). **La puerta de comparación ya corrió contra
+> la salida real de Strong (2026-11-05):** 36 diferencias detectadas y
+> corregidas en el artefacto (coaches a la forma productiva, FKs e índices
+> de caja/transactions, `record_payment` en forma guard, sin política
+> fantasma en `cash_sessions`, color de categorías); la segunda corrida dio
+> **cero diferencias no ambientales** (detalle y tabla en
+> `docs/INVENTARIO-DATOS-STRONG.md` §8.7.2). Resta UNA re-corrida del
+> diagnóstico en Strong con el formato nuevo (ahora saca precisión
+> numérica e incluye `sessions`) y la comparación final
+> Supabase↔Supabase: cero diferencias o cada diferencia explicada.
 
 - 0 cuentas bancarias (se neutralizaron BAC, LAFISE, Tigo y Claro).
 - 0 nombres de personas.

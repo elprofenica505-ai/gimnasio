@@ -369,15 +369,26 @@ real del kit, anterior a este desarme:
     `payment_methods`, `transactions`, `member_balances`,
     `expense_categories`, `cash_sessions`), la vista
     `v_account_balances`, RLS con políticas mínimas (la cadena las
-    endurece después: 00023/00024/00030/00095) y las columnas
-    `coaches.full_name`/`specialty` que nacieron por fuera del repo y
-    exigen las vistas de 00050/00051 (el `coachShim` del helper de
-    pruebas tapa el mismo hueco). Reemplaza a 00010 SÓLO para la
-    instalación nueva: SETUP.sql y ACTUALIZAR.sql describen la base
-    histórica y siguen usando las migraciones originales, intactas.
-    Sin el centinela `record_payment` del fixture: en base nueva la
-    función no existe, 00023 sólo bloquea la que ya existiera y ningún
-    módulo de la cadena la llama.
+    endurece después: 00023/00024/00030/00095), los cinco índices que
+    en la base real nacieron por fuera del repo
+    (`idx_cash_sessions_open` + cuatro de `transactions`) y la FKs de
+    `cash_sessions` con `ON DELETE` (RESTRICT/SET NULL), todo conforme
+    a la salida real del diagnóstico. Además RECONSTRUYE `coaches` a la
+    forma productiva de 11 columnas (RRHH: `id`, `profile_id`,
+    `full_name`, `specialty`, `phone`, `email`, `hire_date`,
+    `is_active`, `monthly_salary`, `notes`, `specialties`) cuando la
+    tabla está en forma repo y vacía — la única operación destructiva
+    del artefacto, con guardia: si tiene filas, omite la reconstrucción
+    con un warning y aplica sólo el parche `full_name`/`specialty` — y
+    restaura `sessions_coach_id_fkey` + `transactions_coach_id_fkey`
+    (afectadas por el `drop cascade`), RLS y el grant de lectura.
+    Reemplaza a 00010 SÓLO para la instalación nueva: SETUP.sql y
+    ACTUALIZAR.sql describen la base histórica y siguen usando las
+    migraciones originales, intactas. `record_payment` nace directo en
+    forma GUARD (la real la tiene con firma de 8 argumentos; 00023 la
+    normaliza — nunca fue un writer activo en este modelo). Sin
+    políticas en `cash_sessions`: la base real no tiene ninguna
+    (00087 elimina las que aparezcan).
   - `supabase/instalacion/00011-semilla-generica-split.sql` — el mismo
     catálogo genérico del 00011 sanitizado (10 métodos de pago, 11
     categorías de gasto) adaptado a las columnas *split* (`currency`
@@ -403,8 +414,44 @@ real del kit, anterior a este desarme:
   (sólo lectura) en la Supabase real de Strong Y en el proyecto nuevo, y
   comparar: cero diferencias, o cada diferencia explicada y aceptada.
   Pre-chequeo local: `npm run diagnostic:local` →
-  `diagnosticos/esquema-instalacion-nueva.txt` (299 filas: layout,
-  tablas, columnas, constraints, índices, políticas, permisos, enums,
-  vista y firmas de funciones).
+  `diagnosticos/esquema-instalacion-nueva.txt`. *(La puerta quedó
+  ejecutada: ver §8.7.2.)*
 - La lista de lo NO confirmado (lo que sólo la comparación contra la
   base real puede cerrar) está en el comentario del PR #4.
+
+#### 8.7.2 Puerta de comparación — ejecutada (2026-11-05)
+
+El dueño pasó la salida REAL del diagnóstico corrido en la Supabase de
+Strong (`diagnosticos/esquema-strong-real.csv`, 236 filas). La
+comparación sistemática se hizo con la herramienta nueva
+`scripts/comparar-diagnosticos.mjs` (`npm run diagnostic:comparar --`
+`<salida-strong> <salida-nueva>`): diff por sección clasificado en
+SOLO-REAL / SOLO-LOCAL / VALOR DISTINTO, con filtro de ruido ambiental
+(ACL de PGlite, NOT NULL que PG17 registra en pg_constraint).
+
+Primera corrida: **36 diferencias no ambientales**. Clasificación y
+correcciones aplicadas al artefacto (ninguna era A — nada rompía la
+instalación):
+
+| # | Diferencia | Clase | Corrección en el artefacto |
+|---|---|---|---|
+| 1 | `coaches` con cuerpo repo (15 columnas) vs forma productiva real (11, RRHH) | B | Sección 10 reescrita: reconstrucción exacta (drop cascade + CREATE con las 11 columnas en su orden, `profile_id` UNIQUE + FK SET NULL) sólo si está en forma repo y vacía; si tiene filas, warning y sólo parche `full_name`/`specialty`. Restaura `sessions_coach_id_fkey` + `transactions_coach_id_fkey` (cascade), RLS y grant de lectura. Elimina de paso `coaches_slug_key`/`coaches_active_idx` y las políticas «profes: lectura pública»/«el staff escribe», que la real no tiene |
+| 2 | FKs de `cash_sessions` sin `ON DELETE` (real: `opened_by` RESTRICT, `closed_by` SET NULL) | B | `references … on delete restrict / set null` (venían peladas del fixture) |
+| 3 | `record_payment` existe en la real (firma 8 args) y no nacía en la instalación | B | Crea la función directo en forma GUARD (idéntica a la de 00023, que la normaliza). **Corrige la creencia anterior de que no existía en real: sí existe** |
+| 4 | 5 índices reales ausentes: `idx_cash_sessions_open` + `idx_transactions_account/member/occurred_at/type` | B (rendimiento) | `create index if not exists` con las definiciones exactas de la real |
+| 5 | Política fantasma «Staff can write cash_sessions» (la real no tiene políticas ahí) | B (seguridad) | Eliminada del artefacto (era ruido del fixture; 00087 igual la borraba) |
+| 6 | `expense_categories.color` default `#999999` vs real `#888888` | C | Default corregido |
+
+Segunda corrida (local regenerada): **CERO diferencias no ambientales**
+en todas las secciones (00.layout … 10.funcion). `test:instalar` sigue
+en verde (la reconstrucción de coaches dejó el barrido en 217 columnas
+de texto: 11→6 de texto en esa tabla).
+
+**Punto ciego cerrado a posteriori:** el diagnóstico viejo sólo sacaba
+`data_type`, así que las precisiones `numeric(12,2)`/`numeric(12,4)`
+del fixture nunca fueron evidencia. El diagnóstico ahora saca
+`numeric_precision,numeric_scale` y agregó la tabla `sessions` al
+alcance (verifica la FK restaurada y expone drift externo). **Pendiente
+para el veredicto final: una re-corrida en Strong con este formato
+nuevo** (la local ya está regenerada: 335 filas) y la comparación final
+Supabase↔Supabase.
