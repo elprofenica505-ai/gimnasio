@@ -32,6 +32,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { authMinimo } from "./helpers/pglite-auth-min.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ARCHIVO = join(REPO, "supabase/INSTALAR-BASE.sql");
@@ -46,28 +47,10 @@ function check(label, condition, detail = "") {
 const db = new PGlite();
 
 /* ------------------------------------------------------------
-   0. El mínimo de Supabase que PGlite no trae
+   0. El mínimo de Supabase que PGlite no trae (helper compartido
+      con scripts/diagnostic-esquema-local.mjs)
    ------------------------------------------------------------ */
-await db.exec(`
-create schema if not exists auth;
-do $$ begin
-  if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon nologin; end if;
-  if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated nologin; end if;
-end $$;
-create table if not exists auth.users (
-  id uuid primary key default gen_random_uuid(),
-  email text unique,
-  raw_user_meta_data jsonb default '{}'::jsonb,
-  created_at timestamptz default now()
-);
-create table if not exists auth.current_user (id uuid, aal text);
-create or replace function auth.uid() returns uuid
-  language sql stable as $$ select id from auth.current_user limit 1 $$;
-create or replace function auth.jwt() returns jsonb
-  language sql stable as $$ select jsonb_build_object('aal', aal) from auth.current_user limit 1 $$;
-grant usage on schema auth to authenticated, anon;
-grant select on auth.current_user to authenticated, anon;
-`);
+await authMinimo(db);
 
 /* ------------------------------------------------------------
    1. El archivo completo, de una sola vez
@@ -92,11 +75,31 @@ for (const tabla of [
   "transactions",
   // Dos agregados en el mismo espíritu: las cuentas bancarias y la
   // siembra de la grilla de boxeo fueron fugas reales del kit original.
-  "accounts",
+  // En el esquema split de la instalación nueva las cuentas viven en
+  // bank_accounts; `accounts` es del modelo histórico repository.
+  "bank_accounts",
   "class_schedule_slots",
 ]) {
   const n = (await db.query(`select count(*)::int as n from public."${tabla}"`)).rows[0].n;
   check(`${tabla}: 0 filas`, n === 0, `${n} fila(s)`);
+}
+
+// El layout tiene que dar split: es lo que exigen los guards de
+// aplicación de 00024/00028/00029 y lo que usa finance_read (00023).
+const layout = (await db.query("select public.crm_finance_layout() as l")).rows[0].l;
+check(
+  "crm_finance_layout() = bank_accounts_split",
+  layout === "bank_accounts_split",
+  `layout=${layout}`,
+);
+
+// Las tablas del modelo repository NO deben existir en la instalación
+// nueva: si alguna migración las creara, el clasificador vería los dos
+// modelos a la vez y devolvería 'unsupported'.
+for (const tabla of ["accounts", "invoices", "invoice_items", "cash_registers"]) {
+  const existe = (await db.query(`select to_regclass('public.${tabla}') is not null as x`))
+    .rows[0].x;
+  check(`${tabla} (repository) no existe`, !existe, existe ? "existe" : "no existe");
 }
 
 /* ------------------------------------------------------------

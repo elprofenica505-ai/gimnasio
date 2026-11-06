@@ -13,6 +13,9 @@
 --    · los permisos del personal y los interruptores de caja
 --    · la configuración mínima genérica: métodos de pago y
 --      categorías de gasto
+--    · el esquema financiero «bank_accounts_split» que la cadena
+--      exige desde 00024 (reemplaza a las migraciones 00010/00011,
+--      que instalan el modelo histórico «repository»)
 --
 --  QUÉ NO INCLUYE
 --    · Ni un socio, ni una reserva, ni un cobro, ni una medición.
@@ -702,799 +705,378 @@ grant execute on function public.cancel_booking(uuid) to authenticated;
 grant execute on function public.is_staff() to authenticated;
 
 -- ═══════════════════════════════════════════════════════════
---  00010_finance.sql
+--  00010_finance.sql  →  REEMPLAZADA por supabase/instalacion/00010-esquema-financiero-split.sql
+--  (esquema financiero split para instalación nueva; hueco #5,
+--   docs/INVENTARIO-DATOS-STRONG.md §8.7)
 -- ═══════════════════════════════════════════════════════════
 
 -- ============================================================
---  FASE 1: Contabilidad, caja y finanzas
+--  ESQUEMA FINANCIERO «bank_accounts_split» PARA INSTALACIÓN NUEVA
 -- ============================================================
---  Este archivo crea todo el sistema de caja, ingresos, egresos,
---  cuentas por cobrar y métodos de pago del gimnasio.
+--  ARTEFACTO DE INSTALACIÓN (no es una migración numerada).
+--  `scripts/build-install-sql.mjs` lo intercala en INSTALAR-BASE.sql
+--  EN LUGAR de `00010_finance.sql` (que crea el modelo histórico
+--  «repository»). SETUP.sql y ACTUALIZAR.sql siguen usando 00010:
+--  esos archivos describen la base histórica, no la instalación nueva.
 --
---  Se puede correr varias veces sin romper nada (IF NOT EXISTS,
---  CREATE OR REPLACE, ON CONFLICT).
+--  POR QUÉ EXISTE (hueco #5, docs/INVENTARIO-DATOS-STRONG.md §8.7):
+--  Desde 00022 la cadena clasifica el esquema financiero y a partir
+--  de 00024 (y luego 00028, 00029, 00095, 00096…) EXIGE el modelo
+--  «bank_accounts_split». Ninguna migración numerada crea ese
+--  modelo: la base real de Strong se construyó por fuera del repo.
+--  Sin este archivo, INSTALAR-BASE.sql se corta a mitad con
+--  FINANCE_SCHEMA_UNSUPPORTED sobre una base vacía.
 --
---  Tablas que crea:
---    · payment_methods       — métodos de pago aceptados (efectivo,
---                              transferencia, tarjeta, SINPE Móvil,
---                              billetera móvil, etc.)
---    · expense_categories    — categorías de gastos (alquiler, luz,
---                              sueldos, mantenimiento…)
---    · accounts              — cuentas bancarias / billeteras del gym
---    · transactions          — cada movimiento de dinero (ingreso o
---                              egreso), con su método, moneda y
---                              conversión a la moneda base.
---    · invoices              — facturas a socios (mensualidades,
---                              pases diarios, suplementos…)
---    · invoice_items         — renglones de cada factura.
---    · cash_registers        — apertura y cierre de caja por día.
---    · member_balances       — saldo a favor / deuda de cada socio
---                              (se actualiza por trigger).
+--  PROCEDENCIA de cada bloque:
+--    · [DIAGNÓSTICO] transcripto de tests/fixtures/
+--      finance-bank-accounts.sql, derivado A MANO de los diagnósticos
+--      remotos de la Supabase real de Strong (2026-10-15 y
+--      2026-10-17). NO es fuente de verdad: la estructura exacta de
+--      la base real se confirma con supabase/
+--      DIAGNOSTICO-ESQUEMA-FINANCIERO.sql (se corre en las dos
+--      Supabase y se compara; el PR no se fusiona hasta que la
+--      diferencia sea cero).
+--    · [CÓDIGO] lo exigen las migraciones posteriores: el
+--      clasificador crm_finance_layout() de 00022 (columnas exactas
+--      de bank_accounts, payment_methods, member_balances y
+--      transactions), las lecturas de 00023, las escrituras de
+--      00024/00028/00029/00095/00096 y las vistas de 00050/00051.
+--    · [PRUEBAS] verificado aplicando la cadena completa sobre este
+--      esquema en PGlite (scripts/test-instalar-base-sql.mjs y las
+--      suites que usan tests/fixtures/finance-bank-accounts.sql).
 --
---  Campos que se agregan a profiles (sin romper lo existente):
---    · emergency_contact_name, emergency_contact_phone
---    · medical_notes, birthdate, address, joined_at
---    · status: 'active' | 'frozen' | 'cancelled'
---
---  Vistas para el panel:
---    · v_daily_cash           — resumen del día
---    · v_accounts_receivable  — quién debe y cuánto
---    · v_monthly_pnl          — pérdidas y ganancias del mes
---    · v_payment_methods_breakdown — qué método se usa más
+--  DIFERENCIAS con el fixture de pruebas (deliberadas):
+--    · Sin centinela record_payment: en una base nueva esa función
+--      no existe; 00023 sólo la bloquea si ya existía y ningún
+--      módulo de la cadena la llama.
+--    · DDL idempotente (if not exists / or replace / drop policy if
+--      exists): se puede volver a pegar sin romper.
+--    · Sin «grant all» amplios: los permisos los fija la cadena
+--      (00023, 00024, 00030, 00095…) que corre después.
 -- ============================================================
 
 
 -- ------------------------------------------------------------
---  1. TIPOS
+--  1. Tipos enum del modelo split [DIAGNÓSTICO + CÓDIGO]
 -- ------------------------------------------------------------
+--  Ninguna migración numerada los crea; transactions los usa.
+do $$ begin
+  create type public.transaction_status as enum ('pending', 'completed', 'cancelled');
+exception when duplicate_object then null; end $$;
 
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'currency_code') then
-    create type public.currency_code as enum ('NIO', 'USD');
-  end if;
-
-  if not exists (select 1 from pg_type where typname = 'txn_direction') then
-    create type public.txn_direction as enum ('income', 'expense');
-  end if;
-
-  if not exists (select 1 from pg_type where typname = 'txn_status') then
-    create type public.txn_status as enum ('pending', 'completed', 'reversed');
-  end if;
-
-  if not exists (select 1 from pg_type where typname = 'invoice_status') then
-    create type public.invoice_status as enum ('draft', 'open', 'paid', 'overdue', 'cancelled');
-  end if;
-
-  if not exists (select 1 from pg_type where typname = 'member_status') then
-    create type public.member_status as enum ('active', 'frozen', 'cancelled');
-  end if;
-end $$;
+do $$ begin
+  create type public.transaction_type as enum ('income', 'expense', 'transfer');
+exception when duplicate_object then null; end $$;
 
 
 -- ------------------------------------------------------------
---  2. EXTENDER PROFILES (sin romper datos existentes)
+--  2. Categorías de gasto [DIAGNÓSTICO]
 -- ------------------------------------------------------------
-
-alter table public.profiles
-  add column if not exists emergency_contact_name  text,
-  add column if not exists emergency_contact_phone text,
-  add column if not exists medical_notes          text,
-  add column if not exists birthdate              date,
-  add column if not exists address                text,
-  add column if not exists joined_at              date default current_date,
-  add column if not exists status                 public.member_status not null default 'active';
-
-
--- ------------------------------------------------------------
---  3. MÉTODOS DE PAGO
--- ------------------------------------------------------------
---  El admin configura los métodos aceptados. Cada método tiene
---  detalles del banco o billetera para que el socio sepa dónde
---  transferir (ej: "BAC · C$ 12345678").
-
-create table if not exists public.payment_methods (
-  id          text primary key,
-  slug        text not null unique,
-  kind        text not null check (kind in (
-                'cash',              -- efectivo
-                'bank_transfer',     -- transferencia bancaria
-                'credit_card',       -- tarjeta de crédito
-                'debit_card',        -- tarjeta de débito
-                'sinpe_movil',       -- SINPE Móvil (Costa Rica / Nicaragua)
-                'mobile_wallet',     -- billetera móvil (Tigo Money, Claro Pay, etc.)
-                'crypto',            -- cripto
-                'other'              -- otro
-              )),
-  name_es     text not null,
-  name_en     text not null,
-  details_es  text not null default '',
-  details_en  text not null default '',
-  accepts_nio boolean not null default true,
-  accepts_usd boolean not null default true,
-  icon        text not null default 'Wallet',
-  is_active   boolean not null default true,
-  sort_order  integer not null default 0,
-  created_at  timestamptz not null default now()
-);
-
-create index if not exists payment_methods_active_idx
-  on public.payment_methods (is_active, sort_order);
-
-
--- ------------------------------------------------------------
---  4. CATEGORÍAS DE GASTOS
--- ------------------------------------------------------------
-
+--  Columnas del modelo split (id, name, color, budget_monthly,
+--  display_order). Las filas genéricas las siembra
+--  00011-semilla-generica-split.sql.
 create table if not exists public.expense_categories (
-  id         text primary key,
-  slug       text not null unique,
-  name_es    text not null,
-  name_en    text not null,
-  icon       text not null default 'Receipt',
-  is_active  boolean not null default true,
-  sort_order integer not null default 0
+  id             text primary key,
+  name           text not null,
+  color          text not null default '#999999',
+  budget_monthly numeric(12,2),
+  display_order  integer not null default 0
 );
 
 
 -- ------------------------------------------------------------
---  5. CUENTAS DEL GIMNASIO
+--  3. Sesiones de caja [DIAGNÓSTICO]
 -- ------------------------------------------------------------
---  Dónde entra el dinero. Permite conciliar con extractos bancarios.
-
-create table if not exists public.accounts (
-  id              text primary key,
-  slug            text not null unique,
-  name            text not null,                -- ej: "Caja fuerte", "BAC NIO", "BAC USD"
-  kind            text not null check (kind in ('cash', 'bank', 'wallet')),
-  currency        public.currency_code not null default 'NIO',
-  bank_name       text,
-  account_number  text,
-  holder_name     text,
-  is_active       boolean not null default true,
-  created_at      timestamptz not null default now()
+--  La usan 00033/00037/00038/00087/00088 (apertura, cierre y arqueo).
+create table if not exists public.cash_sessions (
+  id                    uuid primary key default gen_random_uuid(),
+  opened_by             uuid not null references public.profiles(id),
+  opened_at             timestamptz not null default now(),
+  closed_by             uuid references public.profiles(id),
+  closed_at             timestamptz,
+  opening_balance_nio   numeric(12,2) not null default 0,
+  opening_balance_usd   numeric(12,2) not null default 0,
+  closing_balance_nio   numeric(12,2),
+  closing_balance_usd   numeric(12,2),
+  expected_balance_nio  numeric(12,2),
+  expected_balance_usd  numeric(12,2),
+  difference_nio        numeric(12,2),
+  difference_usd        numeric(12,2),
+  notes                 text
 );
 
 
 -- ------------------------------------------------------------
---  6. TRANSACCIONES (corazón del sistema)
+--  4. Cuentas del gimnasio [DIAGNÓSTICO + CÓDIGO]
 -- ------------------------------------------------------------
---  Cada movimiento de dinero. Con método, cuenta, categoría
---  (si es gasto), socio (si es pago de un socio), y la conversión
---  a la moneda base del gimnasio (NIO) para poder sumar.
-
-create table if not exists public.transactions (
-  id              uuid primary key default gen_random_uuid(),
-  occurred_at     timestamptz not null default now(),
-  direction       public.txn_direction not null,
-  status          public.txn_status not null default 'completed',
-
-  -- importe original (lo que pagó el socio o lo que salió)
-  amount          numeric(12, 2) not null check (amount >= 0),
-  currency        public.currency_code not null,
-
-  -- conversión a la moneda base (NIO) en el momento de la tx
-  fx_rate         numeric(12, 4) not null default 1.0,
-  base_amount     numeric(12, 2) not null,         -- amount * fx_rate
-
-  -- cómo se pagó
-  payment_method_id text references public.payment_methods (id) on delete set null,
-  account_id        text references public.accounts (id) on delete set null,
-
-  -- de dónde viene / a dónde va
-  member_id        uuid references public.profiles (id) on delete set null,
-  invoice_id       uuid,                            -- FK se agrega abajo (la tabla invoices se crea después)
-  expense_category_id text references public.expense_categories (id) on delete set null,
-
-  -- texto libre
-  concept         text not null,
-  notes           text,
-
-  -- auditoría
-  created_by      uuid references public.profiles (id),
-  created_at      timestamptz not null default now(),
-  reversed_at     timestamptz,
-  reversed_by     uuid references public.profiles (id),
-
-  -- integridad mínima
-  constraint tx_positive check (amount > 0)
+--  bank_accounts(id, name, currency, is_active, display_order) son
+--  las columnas exactas que exige el clasificador de 00022; el resto
+--  (account_type con sus tres valores, bank_name, account_number,
+--  balance) lo confirman 00023 (finance_read) y 00095 (alta y
+--  edición desde el panel, que valida account_type y currency).
+create table if not exists public.bank_accounts (
+  id             text not null,
+  name           text not null,
+  account_type   text not null,
+  currency       text not null,
+  bank_name      text,
+  account_number text,
+  balance        numeric(12,2) not null default 0,
+  is_active      boolean not null default true,
+  display_order  integer not null default 0,
+  constraint bank_accounts_account_type_check CHECK (account_type = ANY (ARRAY['caja_fuerte'::text, 'banco'::text, 'billetera'::text])),
+  constraint bank_accounts_currency_check CHECK (currency = ANY (ARRAY['NIO'::text, 'USD'::text])),
+  constraint bank_accounts_pkey PRIMARY KEY (id)
 );
 
-create index if not exists transactions_occurred_idx
-  on public.transactions (occurred_at desc);
-create index if not exists transactions_member_idx
-  on public.transactions (member_id, occurred_at desc);
-create index if not exists transactions_direction_idx
-  on public.transactions (direction, occurred_at desc);
-
 
 -- ------------------------------------------------------------
---  7. FACTURAS
+--  5. Saldos de socios [DIAGNÓSTICO + CÓDIGO]
 -- ------------------------------------------------------------
---  Una factura es un documento que agrupa varios items
---  (mensualidad + suplemento, por ejemplo).
-
-create table if not exists public.invoices (
-  id              uuid primary key default gen_random_uuid(),
-  number          text not null unique,         -- ej: "FAC-2026-0001"
-  member_id       uuid not null references public.profiles (id) on delete restrict,
-  status          public.invoice_status not null default 'open',
-  issued_at       date not null default current_date,
-  due_at          date not null,
-  paid_at         timestamptz,
-  currency        public.currency_code not null default 'NIO',
-  subtotal        numeric(12, 2) not null default 0,
-  discount        numeric(12, 2) not null default 0,
-  total           numeric(12, 2) not null default 0,
-  notes           text,
-  created_at      timestamptz not null default now()
-);
-
-create index if not exists invoices_member_idx
-  on public.invoices (member_id, issued_at desc);
-create index if not exists invoices_status_idx
-  on public.invoices (status, due_at);
-
--- Ahora sí, la FK pendiente
-alter table public.transactions
-  add constraint transactions_invoice_fkey
-  foreign key (invoice_id) references public.invoices (id) on delete set null
-  not valid;
-
-alter table public.transactions validate constraint transactions_invoice_fkey;
-
-
--- ------------------------------------------------------------
---  8. RENGLONES DE FACTURA
--- ------------------------------------------------------------
-
-create table if not exists public.invoice_items (
-  id          uuid primary key default gen_random_uuid(),
-  invoice_id  uuid not null references public.invoices (id) on delete cascade,
-  description text not null,
-  quantity    numeric(10, 2) not null default 1 check (quantity > 0),
-  unit_price  numeric(12, 2) not null check (unit_price >= 0),
-  total       numeric(12, 2) not null,           -- quantity * unit_price
-  sort_order  integer not null default 0
-);
-
-create index if not exists invoice_items_invoice_idx
-  on public.invoice_items (invoice_id, sort_order);
-
-
--- ------------------------------------------------------------
---  9. SALDOS POR SOCIO
--- ------------------------------------------------------------
---  Se actualiza por trigger cuando entra un pago o se emite
---  una factura. Es lo que muestra "saldo a favor" en la ficha.
-
+--  member_balances(member_id, credit_nio, credit_usd, debt_nio,
+--  debt_usd): las cinco columnas que exige el clasificador de 00022.
+--  00028 (deudas y abonos) y 00029 (vuelto) escriben acá.
 create table if not exists public.member_balances (
-  member_id      uuid primary key references public.profiles (id) on delete cascade,
-  balance_nio    numeric(12, 2) not null default 0,    -- + a favor del socio, - deuda
-  last_movement  timestamptz,
-  updated_at     timestamptz not null default now()
+  member_id         uuid not null,
+  credit_nio        numeric(12,2) not null default 0,
+  credit_usd        numeric(12,2) not null default 0,
+  debt_nio          numeric(12,2) not null default 0,
+  debt_usd          numeric(12,2) not null default 0,
+  last_payment_date timestamp with time zone,
+  updated_at        timestamp with time zone not null default now(),
+  constraint member_balances_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.profiles(id) ON DELETE CASCADE,
+  constraint member_balances_pkey PRIMARY KEY (member_id)
 );
 
 
 -- ------------------------------------------------------------
---  10. APERTURA / CIERRE DE CAJA
+--  6. Métodos de pago [DIAGNÓSTICO + CÓDIGO]
 -- ------------------------------------------------------------
-
-create table if not exists public.cash_registers (
-  id              uuid primary key default gen_random_uuid(),
-  opened_at       timestamptz not null default now(),
-  closed_at       timestamptz,
-  opened_by       uuid references public.profiles (id),
-  closed_by       uuid references public.profiles (id),
-  opening_amount  numeric(12, 2) not null default 0,    -- efectivo inicial
-  closing_amount  numeric(12, 2),                       -- efectivo contado al cierre
-  expected_amount numeric(12, 2),                       -- lo que debería haber (suma de tx)
-  difference      numeric(12, 2),                       -- expected - closing
-  notes           text
+--  payment_methods(id, name, currency, is_active, display_order):
+--  lo que exige el clasificador de 00022. currency admite BOTH
+--  (00023 lo traduce a accepts_nio/accepts_usd para la web).
+create table if not exists public.payment_methods (
+  id            text not null,
+  name          text not null,
+  currency      text not null,
+  fee_pct       numeric not null default 0,
+  is_active     boolean not null default true,
+  display_order integer not null default 0,
+  constraint payment_methods_currency_check CHECK (currency = ANY (ARRAY['NIO'::text, 'USD'::text, 'BOTH'::text])),
+  constraint payment_methods_pkey PRIMARY KEY (id)
 );
 
-create index if not exists cash_registers_opened_idx
-  on public.cash_registers (opened_at desc);
+
+-- ------------------------------------------------------------
+--  7. Movimientos [DIAGNÓSTICO + CÓDIGO]
+-- ------------------------------------------------------------
+--  transactions(type, method_id, amount_nio, amount_usd, fx_used):
+--  lo que exige el clasificador de 00022. El resto de las columnas
+--  y claves foráneas viene del diagnóstico; 00024 (finance_entries)
+--  y 00096 (transferencias entre cuentas) las usan.
+create table if not exists public.transactions (
+  id                     uuid not null default gen_random_uuid(),
+  type                   public.transaction_type not null,
+  status                 public.transaction_status not null default 'completed'::transaction_status,
+  occurred_at            timestamp with time zone not null default now(),
+  account_id             text not null,
+  destination_account_id text,
+  method_id              text,
+  category_id            text,
+  member_id              uuid,
+  coach_id               text,
+  plan_id                text,
+  amount                 numeric(12,2) not null,
+  currency               text not null,
+  amount_nio             numeric(12,2) not null,
+  amount_usd             numeric(12,4) not null,
+  fx_used                numeric(12,4) not null,
+  concept                text not null,
+  reference              text,
+  receipt_url            text,
+  notes                  text,
+  created_by             uuid,
+  created_at             timestamp with time zone not null default now(),
+  updated_at             timestamp with time zone not null default now(),
+  constraint transactions_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.bank_accounts(id) ON DELETE RESTRICT,
+  constraint transactions_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.expense_categories(id) ON DELETE SET NULL,
+  constraint transactions_coach_id_fkey FOREIGN KEY (coach_id) REFERENCES public.coaches(id) ON DELETE SET NULL,
+  constraint transactions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON DELETE SET NULL,
+  constraint transactions_currency_check CHECK (currency = ANY (ARRAY['NIO'::text, 'USD'::text])),
+  constraint transactions_destination_account_id_fkey FOREIGN KEY (destination_account_id) REFERENCES public.bank_accounts(id) ON DELETE RESTRICT,
+  constraint transactions_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.profiles(id) ON DELETE SET NULL,
+  constraint transactions_method_id_fkey FOREIGN KEY (method_id) REFERENCES public.payment_methods(id) ON DELETE SET NULL,
+  constraint transactions_pkey PRIMARY KEY (id),
+  constraint transactions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id) ON DELETE SET NULL
+);
 
 
--- ============================================================
---  11. TRIGGERS DE ACTUALIZACIÓN DE SALDO
--- ============================================================
---  Cada ingreso pago reduce la deuda (sube el balance).
---  Cada factura emitida la aumenta (baja el balance).
-
-create or replace function public.update_member_balance()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  if new.member_id is null then
-    return new;
-  end if;
-
-  insert into public.member_balances (member_id, balance_nio, last_movement)
-  values (new.member_id, 0, now())
-  on conflict (member_id) do nothing;
-
-  -- Un ingreso mejora el balance (sube); un egreso lo baja.
-  -- En la vida real, los gastos casi nunca son "del socio", pero
-  -- dejamos el cálculo igual para que el panel pueda mostrar
-  -- movimientos por socio si los hay (reembolsos, etc).
-  if new.direction = 'income' and new.status = 'completed' then
-    update public.member_balances
-       set balance_nio = balance_nio + new.base_amount,
-           last_movement = new.occurred_at,
-           updated_at = now()
-     where member_id = new.member_id;
-  elsif new.direction = 'expense' and new.status = 'completed' then
-    update public.member_balances
-       set balance_nio = balance_nio - new.base_amount,
-           last_movement = new.occurred_at,
-           updated_at = now()
-     where member_id = new.member_id;
-  end if;
-
-  -- Si la tx está atada a una factura, marcamos la factura como pagada.
-  if new.direction = 'income' and new.invoice_id is not null and new.status = 'completed' then
-    update public.invoices
-       set status = 'paid',
-           paid_at = coalesce(paid_at, new.occurred_at)
-     where id = new.invoice_id
-       and status in ('open', 'overdue');
-  end if;
-
-  return new;
-end;
-$$;
-
-drop trigger if exists transactions_update_balance on public.transactions;
-create trigger transactions_update_balance
-  after insert or update on public.transactions
-  for each row execute function public.update_member_balance();
+-- ------------------------------------------------------------
+--  8. Vista de saldos [DIAGNÓSTICO]
+-- ------------------------------------------------------------
+create or replace view public.v_account_balances as
+  SELECT id, name, account_type, currency, balance, is_active
+    FROM public.bank_accounts ba
+   ORDER BY display_order;
 
 
--- ============================================================
---  12. RECALCULAR TOTALES DE FACTURA
--- ============================================================
-
-create or replace function public.recalc_invoice_totals()
-returns trigger
-language plpgsql
-as $$
-declare
-  v_subtotal numeric(12, 2);
-  v_total    numeric(12, 2);
-begin
-  select coalesce(sum(total), 0) into v_subtotal
-  from public.invoice_items
-  where invoice_id = coalesce(new.invoice_id, old.invoice_id);
-
-  select subtotal, discount into v_subtotal, v_total
-  from public.invoices
-  where id = coalesce(new.invoice_id, old.invoice_id);
-
-  v_total := v_subtotal - coalesce(v_total, 0);
-
-  update public.invoices
-     set subtotal = v_subtotal,
-         total    = v_total
-   where id = coalesce(new.invoice_id, old.invoice_id);
-
-  return new;
-end;
-$$;
-
-drop trigger if exists invoice_items_recalc on public.invoice_items;
-create trigger invoice_items_recalc
-  after insert or update or delete on public.invoice_items
-  for each row execute function public.recalc_invoice_totals();
-
-
--- ============================================================
---  13. VISTAS PARA EL PANEL
--- ============================================================
-
--- 13.1 — Caja del día
-create or replace view public.v_daily_cash as
-  select
-    date_trunc('day', occurred_at) as day,
-    sum(case when direction = 'income'  and status = 'completed' then base_amount else 0 end) as income_nio,
-    sum(case when direction = 'expense' and status = 'completed' then base_amount else 0 end) as expense_nio,
-    sum(case when direction = 'income'  and status = 'completed' then base_amount
-             when direction = 'expense' and status = 'completed' then -base_amount
-             else 0 end) as net_nio,
-    count(*) filter (where status = 'completed') as tx_count
-  from public.transactions
-  group by 1
-  order by 1 desc;
-
--- 13.2 — Cuentas por cobrar (facturas abiertas, agrupadas por socio)
-create or replace view public.v_accounts_receivable as
-  select
-    i.member_id,
-    p.full_name,
-    p.email,
-    p.phone,
-    count(*)                                as invoices_open,
-    sum(i.total)                            as total_owed_nio,
-    min(i.due_at)                           as oldest_due,
-    max(
-      case
-        when current_date > i.due_at then (current_date - i.due_at)::int
-        else 0
-      end
-    )                                       as days_overdue
-  from public.invoices i
-  join public.profiles  p on p.id = i.member_id
-  where i.status in ('open', 'overdue')
-  group by i.member_id, p.full_name, p.email, p.phone
-  order by days_overdue desc nulls last, total_owed_nio desc;
-
--- 13.3 — P&L mensual
-create or replace view public.v_monthly_pnl as
-  select
-    date_trunc('month', occurred_at) as month,
-    sum(case when direction = 'income'  and status = 'completed' then base_amount else 0 end) as income_nio,
-    sum(case when direction = 'expense' and status = 'completed' then base_amount else 0 end) as expense_nio,
-    sum(case when direction = 'income'  and status = 'completed' then base_amount
-             when direction = 'expense' and status = 'completed' then -base_amount
-             else 0 end) as net_nio
-  from public.transactions
-  group by 1
-  order by 1 desc;
-
--- 13.4 — Desglose por método de pago
-create or replace view public.v_payment_methods_breakdown as
-  select
-    t.payment_method_id,
-    pm.name_es,
-    pm.icon,
-    count(*)                                 as tx_count,
-    sum(t.base_amount)                       as total_nio,
-    sum(case when t.direction = 'income' then t.base_amount else 0 end)  as income_nio,
-    sum(case when t.direction = 'expense' then t.base_amount else 0 end) as expense_nio
-  from public.transactions t
-  left join public.payment_methods pm on pm.id = t.payment_method_id
-  where t.status = 'completed'
-  group by t.payment_method_id, pm.name_es, pm.icon
-  order by total_nio desc;
-
--- 13.5 — Resumen del estado de cuenta de un socio
-create or replace view public.v_member_account as
-  select
-    p.id                                      as member_id,
-    p.full_name,
-    p.email,
-    p.status,
-    coalesce(mb.balance_nio, 0)               as balance_nio,
-    coalesce(open_inv.open_count, 0)          as open_invoices,
-    coalesce(open_inv.open_total, 0)          as open_total_nio,
-    coalesce(tx.last_payment, '1970-01-01'::timestamptz) as last_payment_at
-  from public.profiles p
-  left join public.member_balances mb on mb.member_id = p.id
-  left join (
-    select member_id, count(*) as open_count, sum(total) as open_total
-    from public.invoices
-    where status in ('open', 'overdue')
-    group by member_id
-  ) open_inv on open_inv.member_id = p.id
-  left join (
-    select member_id, max(occurred_at) as last_payment
-    from public.transactions
-    where direction = 'income' and status = 'completed'
-    group by member_id
-  ) tx on tx.member_id = p.id
-  where p.role in ('member', 'staff');
-
-
--- ============================================================
---  14. NÚMEROS DE FACTURA AUTOMÁTICOS
--- ============================================================
---  FAC-2026-0001, FAC-2026-0002, etc.
-
-create or replace function public.next_invoice_number()
-returns text
-language plpgsql
-as $$
-declare
-  v_year text := extract(year from current_date)::text;
-  v_next integer;
-begin
-  select coalesce(max(
-    nullif(regexp_replace(number, '[^0-9]', '', 'g'), '')::integer
-  ), 0) + 1
-  into v_next
-  from public.invoices
-  where number like 'FAC-' || v_year || '-%';
-
-  return 'FAC-' || v_year || '-' || lpad(v_next::text, 4, '0');
-end;
-$$;
-
-
--- ============================================================
---  15. RLS
--- ============================================================
---  Admin y staff ven todo. Socios solo ven lo propio.
-
-alter table public.payment_methods    enable row level security;
+-- ------------------------------------------------------------
+--  9. RLS de las seis tablas [DIAGNÓSTICO]
+-- ------------------------------------------------------------
+--  Políticas mínimas de lectura/escritura por staff; la cadena las
+--  endurece después (00023, 00024, 00030, 00095 revocan el acceso
+--  directo y canalizan la escritura por funciones). En la base real
+--  de Strong el conjunto exacto de políticas puede diferir: se
+--  confirma con el DIAGNOSTICO-ESQUEMA-FINANCIERO.sql.
+alter table public.bank_accounts      enable row level security;
+alter table public.cash_sessions      enable row level security;
 alter table public.expense_categories enable row level security;
-alter table public.accounts           enable row level security;
-alter table public.transactions       enable row level security;
-alter table public.invoices           enable row level security;
-alter table public.invoice_items      enable row level security;
 alter table public.member_balances    enable row level security;
-alter table public.cash_registers     enable row level security;
+alter table public.payment_methods    enable row level security;
+alter table public.transactions       enable row level security;
 
--- Helper: ¿es admin o staff?
-create or replace function public.is_staff()
-returns boolean
-language sql
-stable
-as $$
-  select exists(
-    select 1 from public.profiles
-    where id = auth.uid() and role in ('admin', 'staff')
-  );
-$$;
+drop policy if exists "Authenticated can read bank_accounts" on public.bank_accounts;
+create policy "Authenticated can read bank_accounts" on public.bank_accounts
+  for select to authenticated using (true);
+drop policy if exists "Staff can write bank_accounts" on public.bank_accounts;
+create policy "Staff can write bank_accounts" on public.bank_accounts
+  for all to authenticated using (public.is_staff()) with check (public.is_staff());
 
--- payment_methods: visible para todos (la landing puede listarlos),
--- modificable solo por staff.
-drop policy if exists pm_select_all on public.payment_methods;
-create policy pm_select_all on public.payment_methods
-  for select using (true);
+drop policy if exists "Staff can write cash_sessions" on public.cash_sessions;
+create policy "Staff can write cash_sessions" on public.cash_sessions
+  for all to authenticated using (public.is_staff()) with check (public.is_staff());
 
-drop policy if exists pm_modify_staff on public.payment_methods;
-create policy pm_modify_staff on public.payment_methods
-  for all using (public.is_staff()) with check (public.is_staff());
+drop policy if exists "Authenticated can read expense_categories" on public.expense_categories;
+create policy "Authenticated can read expense_categories" on public.expense_categories
+  for select to authenticated using (true);
+drop policy if exists "Staff can write expense_categories" on public.expense_categories;
+create policy "Staff can write expense_categories" on public.expense_categories
+  for all to authenticated using (public.is_staff()) with check (public.is_staff());
 
--- expense_categories: idem.
-drop policy if exists ec_select_all on public.expense_categories;
-create policy ec_select_all on public.expense_categories
-  for select using (true);
-drop policy if exists ec_modify_staff on public.expense_categories;
-create policy ec_modify_staff on public.expense_categories
-  for all using (public.is_staff()) with check (public.is_staff());
+drop policy if exists "Members see own balance" on public.member_balances;
+create policy "Members see own balance" on public.member_balances
+  for select to authenticated using (((member_id = auth.uid()) OR public.is_staff()));
+drop policy if exists "Staff can write member_balances" on public.member_balances;
+create policy "Staff can write member_balances" on public.member_balances
+  for all to authenticated using (public.is_staff()) with check (public.is_staff());
 
--- accounts: solo staff.
-drop policy if exists accounts_staff on public.accounts;
-create policy accounts_staff on public.accounts
-  for all using (public.is_staff()) with check (public.is_staff());
+drop policy if exists "Authenticated can read payment_methods" on public.payment_methods;
+create policy "Authenticated can read payment_methods" on public.payment_methods
+  for select to authenticated using (true);
+drop policy if exists "Staff can write payment_methods" on public.payment_methods;
+create policy "Staff can write payment_methods" on public.payment_methods
+  for all to authenticated using (public.is_staff()) with check (public.is_staff());
 
--- transactions: staff ve todo; socio ve solo las suyas.
-drop policy if exists tx_staff_all on public.transactions;
-create policy tx_staff_all on public.transactions
-  for all using (public.is_staff()) with check (public.is_staff());
-
-drop policy if exists tx_member_own on public.transactions;
-create policy tx_member_own on public.transactions
-  for select using (member_id = auth.uid());
-
--- invoices: staff ve todo; socio ve solo las suyas.
-drop policy if exists inv_staff_all on public.invoices;
-create policy inv_staff_all on public.invoices
-  for all using (public.is_staff()) with check (public.is_staff());
-
-drop policy if exists inv_member_own on public.invoices;
-create policy inv_member_own on public.invoices
-  for select using (member_id = auth.uid());
-
-drop policy if exists items_staff_all on public.invoice_items;
-create policy items_staff_all on public.invoice_items
-  for all using (public.is_staff()) with check (public.is_staff());
-
-drop policy if exists items_member_own on public.invoice_items;
-create policy items_member_own on public.invoice_items
-  for select using (
-    exists(select 1 from public.invoices i
-           where i.id = invoice_id and i.member_id = auth.uid())
-  );
-
--- member_balances: staff + el socio dueño.
-drop policy if exists bal_staff_all on public.member_balances;
-create policy bal_staff_all on public.member_balances
-  for all using (public.is_staff()) with check (public.is_staff());
-
-drop policy if exists bal_self on public.member_balances;
-create policy bal_self on public.member_balances
-  for select using (member_id = auth.uid());
-
--- cash_registers: solo staff.
-drop policy if exists cr_staff on public.cash_registers;
-create policy cr_staff on public.cash_registers
-  for all using (public.is_staff()) with check (public.is_staff());
-
--- Definiciones legacy: el propietario evalúa estas vistas por defecto.
--- 00030_access_hardening.sql activa invoker/RLS y retira permisos públicos.
--- El instalador completo aplica ese endurecimiento al finalizar.
-grant select on public.v_daily_cash,
-                public.v_accounts_receivable,
-                public.v_monthly_pnl,
-                public.v_payment_methods_breakdown,
-                public.v_member_account
-  to anon, authenticated;
+drop policy if exists "Members see own transactions" on public.transactions;
+create policy "Members see own transactions" on public.transactions
+  for select to authenticated using (((member_id = auth.uid()) OR public.is_staff()));
+drop policy if exists "Staff can write transactions" on public.transactions;
+create policy "Staff can write transactions" on public.transactions
+  for all to authenticated using (public.is_staff()) with check (public.is_staff());
 
 
--- ============================================================
---  16. FUNCIÓN PARA EL PANEL: REGISTRAR UN PAGO
--- ============================================================
---  Usa la API desde el panel: registra un pago, crea la tx,
---  y opcionalmente paga una factura.
-
-create or replace function public.record_payment(
-  p_member_id          uuid,
-  p_amount             numeric,
-  p_currency           public.currency_code,
-  p_payment_method_id  text,
-  p_concept            text,
-  p_invoice_id         uuid default null,
-  p_account_id         text default null,
-  p_fx_rate            numeric default 1.0,
-  p_notes              text default null
-)
-returns uuid
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_id  uuid;
-  v_uid uuid := auth.uid();
-  v_base numeric := round(p_amount * p_fx_rate, 2);
-begin
-  if not public.is_staff() then
-    raise exception 'AUTH: solo el staff puede registrar pagos';
-  end if;
-
-  insert into public.transactions
-    (direction, status, amount, currency, fx_rate, base_amount,
-     payment_method_id, account_id, member_id, invoice_id,
-     concept, notes, created_by)
-  values
-    ('income', 'completed', p_amount, p_currency, p_fx_rate, v_base,
-     p_payment_method_id, p_account_id, p_member_id, p_invoice_id,
-     p_concept, p_notes, v_uid)
-  returning id into v_id;
-
-  return v_id;
-end;
-$$;
-
-grant execute on function public.record_payment to authenticated;
+-- ------------------------------------------------------------
+-- 10. Columnas de coaches nacidas por fuera del repo [CÓDIGO+PRUEBAS]
+-- ------------------------------------------------------------
+--  00050 y 00051 crean vistas sobre coaches.full_name y
+--  coaches.specialty, pero ninguna migración numerada crea esas dos
+--  columnas: en la base real nacieron por fuera del repo. El shim
+--  `coachShim` de scripts/helpers/sql-test-db.mjs tapa el mismo hueco
+--  en las suites. En una instalación nueva la tabla está vacía, así
+--  que el update no toca nada; queda por si este bloque se reaplica.
+alter table public.coaches add column if not exists full_name text;
+alter table public.coaches add column if not exists specialty text;
+update public.coaches
+   set full_name = coalesce(full_name, name),
+       specialty = coalesce(specialty, role_es);
 
 -- ═══════════════════════════════════════════════════════════
---  00011_finance_seed.sql
+--  00011_finance_seed.sql  →  REEMPLAZADA por supabase/instalacion/00011-semilla-generica-split.sql
+--  (esquema financiero split para instalación nueva; hueco #5,
+--   docs/INVENTARIO-DATOS-STRONG.md §8.7)
 -- ═══════════════════════════════════════════════════════════
 
 -- ============================================================
---  FASE 1: Catálogo base (sin datos de ejemplo)
+--  SEMILLA FINANCIERA GENÉRICA PARA EL ESQUEMA SPLIT
 -- ============================================================
---  De la migración original se conservan SÓLO dos bloques genéricos:
---    · los métodos de pago (efectivo, transferencia, tarjeta, billetera)
---    · las categorías de gasto (alquiler, luz, agua, salarios…)
+--  ARTEFACTO DE INSTALACIÓN (no es una migración numerada).
+--  `scripts/build-install-sql.mjs` lo intercala en INSTALAR-BASE.sql
+--  EN LUGAR de `00011_finance_seed.sql`, cuya siembra está escrita
+--  para las columnas del modelo «repository» (slug/kind/name_es/
+--  accepts_nio/icon…) y no encaja en las tablas split que crea
+--  00010-esquema-financiero-split.sql.
 --
---  ANULADO (antes venía acá y eran datos del gimnasio anterior):
---    · las cuentas bancarias y billeteras con sus números reales
---    · los entrenadores con nombre y biografía
---    · las transacciones de ejemplo del mes
---    · la apertura de caja inicial
+--  Contenido: el MISMO catálogo genérico que conserva el 00011
+--  sanitizado (10 métodos de pago y 11 categorías de gasto), con
+--  tres adaptaciones al modelo split [CÓDIGO]:
+--    · payment_methods: (id, name, currency, fee_pct, is_active,
+--      display_order). `currency` sale de mapear accepts_nio/
+--      accepts_usd del seed repository (ambas → BOTH). No existen
+--      las columnas details/icon/slug: finance_read (00023) deriva
+--      slug e icono desde el id para la web. fee_pct arranca en 0 y
+--      se edita en el panel.
+--    · expense_categories: (id, name, color, budget_monthly,
+--      display_order). `name` es el name_es del seed repository;
+--      color y presupuesto quedan en sus defaults (se editan en el
+--      panel; 00095 trae el RPC del catálogo).
+--    · Sin §0 de tipo de cambio: el 00011 repository hacía
+--      set_config('app.fx_nio_per_usd') con alcance de SESIÓN y no
+--      existe ningún consumidor de ese GUC en la cadena ni en la
+--      web. En el modelo split el cambio viaja por movimiento
+--      (transactions.fx_used) y por parámetro (00029, 00096).
 --
---  Las cuentas reales se agregan en Administración → Dinero; las
---  dos cajas de efectivo las crea supabase/PERSONALIZAR-GIMNASIO.sql.
+--  Lo que NO hay acá (y en el 00011 repository está ANULADO):
+--  cuentas del gimnasio, entrenadores, transacciones de ejemplo y
+--  apertura de caja. Las cuentas se crean en PERSONALIZAR-GIMNASIO.sql
+--  (las dos cajas) y en el panel (bancos y billeteras, vía 00095).
 --
---  Es SEGURO correrlo varias veces: usa ON CONFLICT e ids estables.
---
---  TIPO DE CAMBIO (configurable): 1 USD = 36.5 NIO (Banco Central de
---  Nicaragua, precio de venta aprox. a 2026). Si cambia, actualizá el
---  valor abajo y se recalcula todo.
+--  Idempotente: se puede volver a correr sin duplicar.
 -- ============================================================
 
 
 -- ------------------------------------------------------------
---  0. TIPO DE CAMBIO
+--  1. Métodos de pago genéricos
 -- ------------------------------------------------------------
---  Si tu contador te pasa un valor distinto, cambialo acá y se
---  recalculan las conversiones en las transacciones existentes.
-do $$
-declare
-  v_fx numeric(12,4) := 36.50;  -- 1 USD = 36.50 NIO
-begin
-  perform set_config('app.fx_nio_per_usd', v_fx::text, false);
-end $$;
-
-
--- ------------------------------------------------------------
---  1. MÉTODOS DE PAGO
--- ------------------------------------------------------------
---  Catálogo genérico de lo que un gimnasio en Nicaragua puede
---  aceptar. Los números de cuenta NO vienen acá: cada gimnasio
---  configura los suyos en Administración → Dinero.
-
 insert into public.payment_methods
-  (id, slug, kind, name_es, name_en, details_es, details_en,
-   accepts_nio, accepts_usd, icon, sort_order)
+  (id, name, currency, fee_pct, is_active, display_order)
 values
-  ('pm_cash_nio',  'efectivo-cordobas', 'cash',          'Efectivo (C$)',       'Cash (NIO)',
-   'Pago en efectivo en la recepción, en córdobas.',
-   'Cash payment at the front desk, in córdobas.',
-   true,  false, 'Banknote', 1),
-
-  ('pm_cash_usd',  'efectivo-dolares', 'cash',          'Efectivo (US$)',      'Cash (USD)',
-   'Pago en efectivo en la recepción, en dólares.',
-   'Cash payment at the front desk, in US dollars.',
-   false, true,  'DollarSign', 2),
-
-  ('pm_bac_nio',   'transferencia-bac', 'bank_transfer', 'Transferencia BAC NIO','Bank transfer (BAC, NIO)',
-   'Transferencia bancaria en córdobas · configurá tu cuenta en Administración → Dinero',
-   'Bank transfer in córdobas · set your account in Admin → Money',
-   true,  false, 'Building2', 3),
-
-  ('pm_bac_usd',   'transferencia-bac-usd', 'bank_transfer', 'Transferencia BAC USD','Bank transfer (BAC, USD)',
-   'Transferencia bancaria en dólares · configurá tu cuenta en Administración → Dinero',
-   'Bank transfer in US dollars · set your account in Admin → Money',
-   false, true,  'Building2', 4),
-
-  ('pm_lafi_nio',  'transferencia-lafise', 'bank_transfer', 'Transferencia LAFISE', 'Bank transfer (LAFISE)',
-   'Transferencia bancaria · configurá el número de cuenta en Administración → Dinero',
-   'Bank transfer · set the account number in Admin → Money',
-   true,  false, 'Building2', 5),
-
-  ('pm_card_local','tarjeta-pos', 'debit_card',   'Tarjeta POS',          'Card (POS)',
-   'Débito y crédito Visa / MasterCard en la terminal del local.',
-   'Debit and credit Visa / MasterCard at the in-store terminal.',
-   true,  true,  'CreditCard', 6),
-
-  ('pm_sinpe',     'sinpe-movil',  'sinpe_movil',   'SINPE Móvil',          'SINPE Móvil',
-   'Transferencia inmediata · configurá el número en Administración → Dinero',
-   'Instant bank transfer · set the number in Admin → Money',
-   true,  false, 'Smartphone', 7),
-
-  ('pm_tigo_money','tigo-money',   'mobile_wallet', 'Tigo Money',           'Tigo Money',
-   'Billetera móvil · configurá el número en Administración → Dinero',
-   'Mobile wallet · set the number in Admin → Money',
-   true,  false, 'Wallet', 8),
-
-  ('pm_claro_pay', 'claro-pay',    'mobile_wallet', 'Claro Pay',            'Claro Pay',
-   'Billetera móvil · configurá el número en Administración → Dinero',
-   'Mobile wallet · set the number in Admin → Money',
-   true,  false, 'Wallet', 9),
-
-  ('pm_crypto',    'cripto-usdt',  'crypto',        'Cripto (USDT)',        'Crypto (USDT)',
-   'USDT en red TRC-20 · consultá la wallet en Administración → Dinero',
-   'USDT on TRC-20 network · ask for the wallet address in Admin → Money',
-   false, true,  'Bitcoin', 10)
+  ('pm_cash_nio',   'Efectivo (C$)',          'NIO',  0, true,  1),
+  ('pm_cash_usd',   'Efectivo (US$)',         'USD',  0, true,  2),
+  ('pm_bac_nio',    'Transferencia BAC NIO',  'NIO',  0, true,  3),
+  ('pm_bac_usd',    'Transferencia BAC USD',  'USD',  0, true,  4),
+  ('pm_lafi_nio',   'Transferencia LAFISE',   'NIO',  0, true,  5),
+  ('pm_card_local', 'Tarjeta POS',            'BOTH', 0, true,  6),
+  ('pm_sinpe',      'SINPE Móvil',            'NIO',  0, true,  7),
+  ('pm_tigo_money', 'Tigo Money',             'NIO',  0, true,  8),
+  ('pm_claro_pay',  'Claro Pay',              'NIO',  0, true,  9),
+  ('pm_crypto',     'Cripto (USDT)',          'USD',  0, true, 10)
 on conflict (id) do update set
-  name_es = excluded.name_es,
-  name_en = excluded.name_en,
-  details_es = excluded.details_es,
-  details_en = excluded.details_en,
-  icon = excluded.icon,
-  sort_order = excluded.sort_order;
+  name          = excluded.name,
+  currency      = excluded.currency,
+  display_order = excluded.display_order,
+  is_active     = true;
 
 
 -- ------------------------------------------------------------
---  2. CATEGORÍAS DE GASTOS
+--  2. Categorías de gasto genéricas
 -- ------------------------------------------------------------
-
-insert into public.expense_categories (id, slug, name_es, name_en, icon, sort_order) values
-  ('exp_rent',       'alquiler',     'Alquiler del local',  'Rent',              'Home',          1),
-  ('exp_electricity','luz',          'Servicio eléctrico',  'Electricity',       'Zap',           2),
-  ('exp_water',      'agua',         'Agua potable',        'Water',             'Droplet',       3),
-  ('exp_internet',   'internet',     'Internet y cable',    'Internet & cable',  'Wifi',          4),
-  ('exp_coaches',    'sueldos-coaches', 'Sueldos de coaches','Coaches payroll',  'Users',         5),
-  ('exp_cleaning',   'limpieza',     'Artículos de limpieza','Cleaning supplies','Sparkles',      6),
-  ('exp_equipment',  'mantenimiento','Mantenimiento equipos','Equipment maintenance','Wrench',    7),
-  ('exp_supplements','compra-suplementos','Compra de suplementos','Supplements restock','Package',8),
-  ('exp_marketing',  'marketing',    'Marketing y redes',   'Marketing & social','Megaphone',     9),
-  ('exp_tax',        'impuestos',    'Impuestos y tasas',   'Taxes & fees',      'FileText',     10),
-  ('exp_misc',       'varios',       'Otros gastos',        'Other expenses',    'Receipt',      99)
+insert into public.expense_categories
+  (id, name, display_order)
+values
+  ('exp_rent',        'Alquiler del local',       1),
+  ('exp_electricity', 'Servicio eléctrico',       2),
+  ('exp_water',       'Agua potable',             3),
+  ('exp_internet',    'Internet y cable',         4),
+  ('exp_coaches',     'Sueldos de coaches',       5),
+  ('exp_cleaning',    'Artículos de limpieza',    6),
+  ('exp_equipment',   'Mantenimiento equipos',    7),
+  ('exp_supplements', 'Compra de suplementos',    8),
+  ('exp_marketing',   'Marketing y redes',        9),
+  ('exp_tax',         'Impuestos y tasas',       10),
+  ('exp_misc',        'Otros gastos',            99)
 on conflict (id) do update set
-  name_es = excluded.name_es,
-  name_en = excluded.name_en,
-  icon = excluded.icon,
-  sort_order = excluded.sort_order;
+  name          = excluded.name,
+  display_order = excluded.display_order;
 
 -- ═══════════════════════════════════════════════════════════
 --  00012_profiles_self_read.sql

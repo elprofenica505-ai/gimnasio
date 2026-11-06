@@ -31,19 +31,22 @@ select id, full_name, email, role from public.profiles where role = 'admin';
 --  2 · CAJA: LAS DOS CUENTAS DE EFECTIVO
 -- ------------------------------------------------------------
 --  Sin esto la pantalla de Caja no tiene dónde abrir turno.
---  Los bancos se agregan después desde Administración → Dinero,
---  con los números reales del gimnasio.
+--  Van en bank_accounts (el esquema financiero de la instalación
+--  nueva es el «split»: no existe la tabla accounts).
+--  Los bancos y billeteras se agregan después desde
+--  Administración → Dinero, con los números reales del gimnasio.
 
-insert into public.accounts (id, slug, name, kind, currency, holder_name)
+insert into public.bank_accounts
+  (id, name, account_type, currency, balance, is_active, display_order)
 values
-  ('acc_cash_nio', 'caja-cordobas',  'Caja fuerte (C$)',  'cash', 'NIO', '<<NOMBRE DEL GIMNASIO>>'),
-  ('acc_cash_usd', 'caja-dolares',   'Caja fuerte (US$)', 'cash', 'USD', '<<NOMBRE DEL GIMNASIO>>')
+  ('cta_caja_nio', 'Caja fuerte (C$)',  'caja_fuerte', 'NIO', 0, true, 1),
+  ('cta_caja_usd', 'Caja fuerte (US$)', 'caja_fuerte', 'USD', 0, true, 2)
 on conflict (id) do update set
-  name        = excluded.name,
-  holder_name = excluded.holder_name,
-  is_active   = true;
+  name      = excluded.name,
+  is_active = true;
 
-select id, name, kind, currency, is_active from public.accounts order by id;
+select id, name, account_type, currency, is_active
+  from public.bank_accounts order by display_order;
 
 
 -- ------------------------------------------------------------

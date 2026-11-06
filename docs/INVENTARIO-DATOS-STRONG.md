@@ -355,7 +355,56 @@ real del kit, anterior a este desarme:
   repo (opción A: derivarlo del fixture sin los centinelas de prueba,
   excluir 00010 en el generador y adaptar la siembra de 00011 a las columnas
   *split*), o se pierden los módulos de cobros/deudas/vuelto (opción B:
-  viola «cero módulos menos»). **Decisión pendiente del dueño.**
-- La suite queda cableada en `npm run test:instalar` y en el job `sql` del
-  CI: ese paso va a estar EN ROJO hasta resolver el hueco #5. Es a
-  propósito: el rojo es el hallazgo, no se oculta.
+  viola «cero módulos menos»). **El dueño decidió la opción A**
+  (2026-11-05): cero módulos menos.
+
+#### 8.7.1 Opción A — ejecutada (2026-11-05)
+
+- **Artefactos reales y revisables** (el generador
+  `scripts/build-install-sql.mjs` los intercala en INSTALAR-BASE en el
+  mismo puesto del orden, con mapa `REEMPLAZOS` de clave obligatoria: si
+  el artefacto falta, la generación FALLA):
+  - `supabase/instalacion/00010-esquema-financiero-split.sql` — DDL del
+    esquema *split*: los dos enums, las seis tablas (`bank_accounts`,
+    `payment_methods`, `transactions`, `member_balances`,
+    `expense_categories`, `cash_sessions`), la vista
+    `v_account_balances`, RLS con políticas mínimas (la cadena las
+    endurece después: 00023/00024/00030/00095) y las columnas
+    `coaches.full_name`/`specialty` que nacieron por fuera del repo y
+    exigen las vistas de 00050/00051 (el `coachShim` del helper de
+    pruebas tapa el mismo hueco). Reemplaza a 00010 SÓLO para la
+    instalación nueva: SETUP.sql y ACTUALIZAR.sql describen la base
+    histórica y siguen usando las migraciones originales, intactas.
+    Sin el centinela `record_payment` del fixture: en base nueva la
+    función no existe, 00023 sólo bloquea la que ya existiera y ningún
+    módulo de la cadena la llama.
+  - `supabase/instalacion/00011-semilla-generica-split.sql` — el mismo
+    catálogo genérico del 00011 sanitizado (10 métodos de pago, 11
+    categorías de gasto) adaptado a las columnas *split* (`currency`
+    NIO/USD/BOTH mapeado de `accepts_nio`/`accepts_usd`; sin §0 de FX:
+    ese GUC de sesión no tiene consumidores; en *split* el cambio va
+    por `fx_used` y por parámetro). La categoría 12
+    (`exp_inventario`) la agrega 00042 legítimamente según layout.
+- **Arreglo de paso:** `supabase/PERSONALIZAR-GIMNASIO.sql` §2 insertaba
+  las dos cajas en `public.accounts` (¡tabla *repository*, que en la
+  instalación nueva no existe!) — ahora inserta en `bank_accounts`
+  (`cta_caja_nio`/`cta_caja_usd`, tipo `caja_fuerte`), coherente con el
+  alta del panel (00095, ids `cta_…`).
+- **Suite en verde:** `npm run test:instalar` aplica el INSTALAR-BASE
+  regenerado COMPLETO (82 bloques) sobre PGlite limpia y ahora afirma
+  además `crm_finance_layout() = 'bank_accounts_split'` y la ausencia de
+  las cuatro tablas *repository* (`accounts`, `invoices`,
+  `invoice_items`, `cash_registers`). El paso del CI deja de estar en
+  rojo.
+- **Falta la puerta final (condición del dueño):** el fixture del que
+  deriva el artefacto se transcribió A MANO de diagnósticos remotos: la
+  estructura queda PARECIDA, no probadamente IDÉNTICA. Antes de fusionar
+  el PR hay que correr `supabase/DIAGNOSTICO-ESQUEMA-FINANCIERO.sql`
+  (sólo lectura) en la Supabase real de Strong Y en el proyecto nuevo, y
+  comparar: cero diferencias, o cada diferencia explicada y aceptada.
+  Pre-chequeo local: `npm run diagnostic:local` →
+  `diagnosticos/esquema-instalacion-nueva.txt` (299 filas: layout,
+  tablas, columnas, constraints, índices, políticas, permisos, enums,
+  vista y firmas de funciones).
+- La lista de lo NO confirmado (lo que sólo la comparación contra la
+  base real puede cerrar) está en el comentario del PR #4.

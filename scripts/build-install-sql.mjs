@@ -49,7 +49,21 @@ const EXCLUIDAS = {
  * transacciones y la caja inicial (hoy ya están anuladas también en origen;
  * el corte sigue activo como doble seguro).
  */
-const RECORTE_00011 = "--  3. CUENTAS DEL GIMNASIO";
+/**
+ * Hueco #5 (docs/INVENTARIO-DATOS-STRONG.md §8.7): desde 00024 la cadena
+ * EXIGE el esquema financiero «bank_accounts_split», pero 00010/00011
+ * instalan el modelo histórico «repository» y ninguna migración numerada
+ * crea el split (la base real de Strong nació por fuera del repo). Para la
+ * instalación nueva, estas dos migraciones se REEMPLAZAN por artefactos
+ * revisables de supabase/instalacion/ (mismo puesto en el orden). Las
+ * migraciones de origen NO se tocan: SETUP.sql y ACTUALIZAR.sql describen
+ * la base histórica y siguen usándolas.
+ * Clave obligatoria: si el artefacto no existe, el generador FALLA.
+ */
+const REEMPLAZOS = {
+  "00010_finance.sql": "supabase/instalacion/00010-esquema-financiero-split.sql",
+  "00011_finance_seed.sql": "supabase/instalacion/00011-semilla-generica-split.sql",
+};
 
 /**
  * Bloques con datos del gimnasio anterior que viven dentro de migraciones
@@ -135,19 +149,19 @@ function aplicarRecortes(nombre, texto) {
 }
 
 function leerMigracion(nombre) {
-  let texto = readFileSync(join(migrationsDir, nombre), "utf8");
-
-  if (nombre === "00011_finance_seed.sql") {
-    const lineas = texto.split("\n");
-    const corte = lineas.findIndex((l) => l.startsWith(RECORTE_00011));
-    if (corte < 0) {
-      throw new Error("00011: no se encontró el corte de la sección 3. Revisá el archivo.");
+  const reemplazo = REEMPLAZOS[nombre];
+  if (reemplazo) {
+    const ruta = join(root, reemplazo);
+    if (!existsSync(ruta)) {
+      throw new Error(
+        `${nombre}: no existe el artefacto de reemplazo «${reemplazo}» (hueco #5).`,
+      );
     }
-    texto = lineas.slice(0, corte - 2).join("\n");
+    return readFileSync(ruta, "utf8").trim();
   }
 
-  texto = aplicarRecortes(nombre, texto);
-  return texto.trim();
+  const texto = readFileSync(join(migrationsDir, nombre), "utf8");
+  return aplicarRecortes(nombre, texto).trim();
 }
 
 function construir() {
@@ -158,7 +172,10 @@ function construir() {
   const incluidas = todas.filter((f) => !(f in EXCLUIDAS));
   const bloques = incluidas.map((nombre) => {
     const barra = "═".repeat(59);
-    return `-- ${barra}\n--  ${nombre}\n-- ${barra}\n\n${leerMigracion(nombre)}\n`;
+    const titulo = REEMPLAZOS[nombre]
+      ? `${nombre}  →  REEMPLAZADA por ${REEMPLAZOS[nombre]}\n--  (esquema financiero split para instalación nueva; hueco #5,\n--   docs/INVENTARIO-DATOS-STRONG.md §8.7)`
+      : nombre;
+    return `-- ${barra}\n--  ${titulo}\n-- ${barra}\n\n${leerMigracion(nombre)}\n`;
   });
 
   const cabecera = `-- ============================================================
@@ -176,6 +193,9 @@ function construir() {
 --    · los permisos del personal y los interruptores de caja
 --    · la configuración mínima genérica: métodos de pago y
 --      categorías de gasto
+--    · el esquema financiero «bank_accounts_split» que la cadena
+--      exige desde 00024 (reemplaza a las migraciones 00010/00011,
+--      que instalan el modelo histórico «repository»)
 --
 --  QUÉ NO INCLUYE
 --    · Ni un socio, ni una reserva, ni un cobro, ni una medición.

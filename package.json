@@ -9,6 +9,7 @@
     "build:install": "node scripts/build-install-sql.mjs",
     "build:install:check": "node scripts/build-install-sql.mjs --check",
     "test:instalar": "node scripts/test-instalar-base-sql.mjs",
+    "diagnostic:local": "node scripts/diagnostic-esquema-local.mjs",
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",

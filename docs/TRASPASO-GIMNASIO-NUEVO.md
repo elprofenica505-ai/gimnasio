@@ -60,11 +60,18 @@ Comandos: `npm run build:install` y `npm run build:install:check`.
 > **Y la corrección más grande (hueco #5):** el archivo nunca fue aplicable
 > sobre una base vacía. Desde 00024 las migraciones exigen el esquema
 > financiero *split* (`bank_accounts`), que no existe en ninguna migración del
-> repo: la base real de Strong se construyó por fuera. `npm run test:instalar`
-> (suite que aplica el INSTALAR-BASE completo en PGlite limpia) lo reproduce y
-> por eso ese paso del CI está en rojo hasta que se decida cómo crear el
-> esquema *split* como artefacto real. Detalle en
-> `docs/INVENTARIO-DATOS-STRONG.md` §8.7.
+> repo: la base real de Strong se construyó por fuera. Resuelto con la
+> opción A (decisión del dueño, 2026-11-05): el generador reemplaza
+> 00010/00011 por los artefactos de `supabase/instalacion/` (esquema *split*
+> + siembra genérica adaptada), `npm run test:instalar` pasa aplicando el
+> INSTALAR-BASE completo en PGlite limpia, y el §2 de este
+> PERSONALIZAR-GIMNASIO.sql ahora crea las dos cajas en `bank_accounts`
+> (antes las insertaba en `accounts`, tabla del modelo histórico que en la
+> instalación nueva no existe). Falta la puerta final antes de fusionar:
+> comparar `supabase/DIAGNOSTICO-ESQUEMA-FINANCIERO.sql` (sólo lectura)
+> entre la base real de Strong y el proyecto nuevo — cero diferencias o
+> cada diferencia explicada. Detalle en
+> `docs/INVENTARIO-DATOS-STRONG.md` §8.7 y §8.7.1.
 
 - 0 cuentas bancarias (se neutralizaron BAC, LAFISE, Tigo y Claro).
 - 0 nombres de personas.
