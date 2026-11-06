@@ -44,7 +44,7 @@
 02.columna|coaches.hire_date|7|date||,|NO|CURRENT_DATE
 02.columna|coaches.id|1|text||,|NO|
 02.columna|coaches.is_active|8|boolean||,|NO|true
-02.columna|coaches.monthly_salary|9|numeric||,|YES|0
+02.columna|coaches.monthly_salary|9|numeric||12,2|YES|0
 02.columna|coaches.notes|10|text||,|YES|
 02.columna|coaches.phone|5|text||,|YES|
 02.columna|coaches.profile_id|2|uuid||,|YES|
@@ -76,7 +76,7 @@
 02.columna|member_balances.updated_at|7|timestamp with time zone||,|NO|now()
 02.columna|payment_methods.currency|3|text||,|NO|
 02.columna|payment_methods.display_order|6|integer||32,0|NO|0
-02.columna|payment_methods.fee_pct|4|numeric||,|NO|0
+02.columna|payment_methods.fee_pct|4|numeric||5,2|NO|0
 02.columna|payment_methods.id|1|text||,|NO|
 02.columna|payment_methods.is_active|5|boolean||,|NO|true
 02.columna|payment_methods.name|2|text||,|NO|

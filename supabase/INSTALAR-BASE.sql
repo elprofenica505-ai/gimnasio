@@ -868,7 +868,7 @@ create table if not exists public.payment_methods (
   id            text not null,
   name          text not null,
   currency      text not null,
-  fee_pct       numeric not null default 0,
+  fee_pct       numeric(5,2) not null default 0,
   is_active     boolean not null default true,
   display_order integer not null default 0,
   constraint payment_methods_currency_check CHECK (currency = ANY (ARRAY['NIO'::text, 'USD'::text, 'BOTH'::text])),
@@ -1095,7 +1095,7 @@ begin
     email          text,
     hire_date      date not null default current_date,
     is_active      boolean not null default true,
-    monthly_salary numeric default 0,
+    monthly_salary numeric(12,2) default 0,
     notes          text,
     specialties    text[] not null default '{}'::text[]
   );

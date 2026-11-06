@@ -67,16 +67,20 @@ Comandos: `npm run build:install` y `npm run build:install:check`.
 > INSTALAR-BASE completo en PGlite limpia, y el §2 de este
 > PERSONALIZAR-GIMNASIO.sql ahora crea las dos cajas en `bank_accounts`
 > (antes las insertaba en `accounts`, tabla del modelo histórico que en la
-> instalación nueva no existe). **La puerta de comparación ya corrió contra
-> la salida real de Strong (2026-11-05):** 36 diferencias detectadas y
-> corregidas en el artefacto (coaches a la forma productiva, FKs e índices
-> de caja/transactions, `record_payment` en forma guard, sin política
-> fantasma en `cash_sessions`, color de categorías); la segunda corrida dio
-> **cero diferencias no ambientales** (detalle y tabla en
-> `docs/INVENTARIO-DATOS-STRONG.md` §8.7.2). Resta UNA re-corrida del
-> diagnóstico en Strong con el formato nuevo (ahora saca precisión
-> numérica e incluye `sessions`) y la comparación final
-> Supabase↔Supabase: cero diferencias o cada diferencia explicada.
+> instalación nueva no existe). **La puerta de comparación quedó cerrada
+> (2026-11-05):** la segunda corrida real en Strong, ya con el diagnóstico
+> nuevo (precisión/escala numérica + tabla `sessions`), destapó dos
+> precisiones faltantes (`coaches.monthly_salary` `numeric(12,2)`,
+> `payment_methods.fee_pct` `numeric(5,2)` — corregidas) y una diferencia
+> ACEPTADA: Strong real perdió `sessions_coach_id_fkey` (drift histórico) y
+> la instalación nueva la conserva fiel al repo. Veredicto: **cero
+> diferencias no ambientales y no aceptadas** en el alcance del
+> diagnóstico — las 14 tablas que lista (6 del modelo split, 2 financieras
+> de la cadena, `coaches`, `sessions` y 4 centinelas repository), sus
+> índices/constraints/políticas, 2 enums, la vista y las firmas de
+> funciones. NO «el esquema es idéntico»: las migraciones crean 52 tablas
+> y el diagnóstico no cubre las otras 38. Comando y detalle en
+> `docs/INVENTARIO-DATOS-STRONG.md` §8.7.2/§8.7.3.
 
 - 0 cuentas bancarias (se neutralizaron BAC, LAFISE, Tigo y Claro).
 - 0 nombres de personas.

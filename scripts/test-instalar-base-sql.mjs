@@ -102,6 +102,26 @@ for (const tabla of ["accounts", "invoices", "invoice_items", "cash_registers"])
   check(`${tabla} (repository) no existe`, !existe, existe ? "existe" : "no existe");
 }
 
+// Las DOS claves foráneas hacia coaches deben sobrevivir a la
+// reconstrucción de la sección 10 del artefacto split: el
+// `drop table … cascade` ya se llevó una vez
+// transactions_coach_id_fkey por sorpresa (sessions_coach_id_fkey
+// es diferencia ACEPTADA contra Strong real, que la perdió — ver
+// docs/INVENTARIO-DATOS-STRONG.md §8.7.2).
+{
+  const fks = (
+    await db.query(`
+      select conname from pg_constraint
+       where conname in ('sessions_coach_id_fkey', 'transactions_coach_id_fkey')
+       order by conname`)
+  ).rows.map((r) => r.conname);
+  check(
+    "FK sessions_coach_id_fkey y transactions_coach_id_fkey presentes",
+    JSON.stringify(fks) === JSON.stringify(["sessions_coach_id_fkey", "transactions_coach_id_fkey"]),
+    fks.join(", ") || "ninguna",
+  );
+}
+
 /* ------------------------------------------------------------
    3. Barrido: «Strong» en ninguna columna de texto
    ------------------------------------------------------------ */

@@ -23,22 +23,45 @@
  *
  *  Uso:
  *    node scripts/comparar-diagnosticos.mjs <referencia> <comparada> [--estricto]
+ *                                          [--aceptar <clave> ...]
  *    npm run diagnostic:comparar -- diagnosticos/esquema-strong-real.csv \
  *                                   diagnosticos/esquema-instalacion-nueva.txt
  *
+ *  --aceptar: repite la bandera con la clave completa
+ *  (`seccion|tabla.objeto`) de una diferencia DOCUMENTADA a propósito
+ *  (p. ej. la FK sessions_coach_id_fkey que Strong real perdió y la
+ *  instalación nueva conserva fiel al repo). Se listan aparte y no
+ *  afectan el código de salida; una clave aceptada que deja de
+ *  diferir se reporta como anomalía.
+ *
  *  Salida: por cada sección, claves SOLO EN REFERENCIA, SOLO EN
  *  COMPARADA y VALOR DISTINTO. Sale con código 1 si queda alguna
- *  diferencia no ambiental (la puerta es cero diferencias).
+ *  diferencia no ambiental y no aceptada (la puerta es cero
+ *  diferencias, salvo las aceptadas una por una).
  */
 
 import { readFileSync } from "node:fs";
 
-const [refPath, cmpPath, ...flags] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const [refPath, cmpPath] = args;
 if (!refPath || !cmpPath) {
-  console.error("Uso: comparar-diagnosticos.mjs <referencia> <comparada> [--estricto]");
+  console.error("Uso: comparar-diagnosticos.mjs <referencia> <comparada> [--estricto] [--aceptar <clave>]...");
   process.exit(2);
 }
-const estricto = flags.includes("--estricto");
+const restantes = args.slice(2);
+const estricto = restantes.includes("--estricto");
+const aceptadas = new Set();
+for (let i = 0; i < restantes.length; i++) {
+  if (restantes[i] === "--aceptar") {
+    const valor = restantes[i + 1];
+    if (!valor || valor.startsWith("--")) {
+      console.error('--aceptar requiere la clave completa, p. ej. --aceptar "03.constraint|sessions.sessions_coach_id_fkey"');
+      process.exit(2);
+    }
+    aceptadas.add(valor);
+    i++;
+  }
+}
 
 /** Parsea un CSV del SQL Editor (comillas RFC4180, CRLF). */
 function parseCsv(texto) {
@@ -116,11 +139,27 @@ function registrarAmbiental(motivo, clave) {
 }
 
 let diferencias = 0;
+const aceptadasUsadas = new Map(); // clave -> tipo de diferencia
+function clasificar(tipo, clave, seccion, valor) {
+  if (aceptadas.has(clave)) {
+    aceptadasUsadas.set(clave, tipo);
+    console.log(`    ACEPTADA (${tipo})  ${clave.slice(seccion.length + 1)}  →  ${valor ?? ""}`);
+    return;
+  }
+  diferencias++;
+  if (valor !== null) console.log(`    ${tipo}  ${clave.slice(seccion.length + 1)}  →  ${valor}`);
+  else console.log(`    ${tipo}  ${clave.slice(seccion.length + 1)}`);
+}
+
 const secciones = [...new Set([...ref.keys(), ...cmp.keys()].map((k) => k.split("|")[0]))].sort();
 
 console.log(`Referencia: ${refPath} (${ref.size} filas)`);
 console.log(`Comparada:  ${cmpPath} (${cmp.size} filas)`);
-console.log(`Modo: ${estricto ? "ESTRICTO (sin filtro ambiental)" : "normal (filtra ruido ambiental conocido)"}\n`);
+console.log(
+  `Modo: ${estricto ? "ESTRICTO (sin filtro ambiental)" : "normal (filtra ruido ambiental conocido)"}` +
+    (aceptadas.size ? ` · ${aceptadas.size} diferencia(s) aceptada(s) explícita(s)` : "") +
+    "\n",
+);
 
 for (const seccion of secciones) {
   const soloRef = [];
@@ -148,19 +187,18 @@ for (const seccion of secciones) {
     continue;
   }
   console.log(`✖ ${seccion}:`);
-  for (const [clave, valor] of soloRef) {
-    diferencias++;
-    console.log(`    SOLO EN REFERENCIA  ${clave.slice(seccion.length + 1)}  →  ${valor}`);
-  }
-  for (const [clave, valor] of soloCmp) {
-    diferencias++;
-    console.log(`    SOLO EN COMPARADA   ${clave.slice(seccion.length + 1)}  →  ${valor}`);
-  }
+  for (const [clave, valor] of soloRef) clasificar("SOLO EN REFERENCIA", clave, seccion, valor);
+  for (const [clave, valor] of soloCmp) clasificar("SOLO EN COMPARADA", clave, seccion, valor);
   for (const [clave, a, b] of distintas) {
-    diferencias++;
-    console.log(`    VALOR DISTINTO      ${clave.slice(seccion.length + 1)}`);
+    clasificar("VALOR DISTINTO", clave, seccion, null);
     console.log(`        referencia: ${a}`);
     console.log(`        comparada:  ${b}`);
+  }
+}
+
+for (const clave of aceptadas) {
+  if (!aceptadasUsadas.has(clave)) {
+    console.log(`⚠  La diferencia aceptada ya NO se presenta (revisar y quitar de la lista): ${clave}`);
   }
 }
 

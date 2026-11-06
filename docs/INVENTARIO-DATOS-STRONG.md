@@ -451,7 +451,42 @@ de texto: 11→6 de texto en esa tabla).
 `data_type`, así que las precisiones `numeric(12,2)`/`numeric(12,4)`
 del fixture nunca fueron evidencia. El diagnóstico ahora saca
 `numeric_precision,numeric_scale` y agregó la tabla `sessions` al
-alcance (verifica la FK restaurada y expone drift externo). **Pendiente
-para el veredicto final: una re-corrida en Strong con este formato
-nuevo** (la local ya está regenerada: 335 filas) y la comparación final
-Supabase↔Supabase.
+alcance (verifica la FK restaurada y expone drift externo).
+
+#### 8.7.3 Veredicto con el diagnóstico nuevo (2026-11-05)
+
+Re-corrida real en Strong con el formato nuevo (269 filas, hoy
+`diagnosticos/esquema-strong-real.csv`). El formato nuevo destapó de
+una vez tres diferencias invisibles antes:
+
+| Diferencia | Clase | Resolución |
+|---|---|---|
+| `coaches.monthly_salary`: real `numeric(12,2)` vs artefacto `numeric` pelado | B (tipo) | Artefacto corregido a `numeric(12,2) default 0` |
+| `payment_methods.fee_pct`: real `numeric(5,2)` vs artefacto `numeric` pelado | B (tipo) | Artefacto corregido a `numeric(5,2) not null default 0` |
+| `sessions_coach_id_fkey` existe SOLO en la instalación: Strong real la perdió (drift histórico; el resto de `sessions` coincide exactamente con 00001) | Aceptada a propósito | La instalación conserva la FK del repo (`on delete set null`). El comparador la registra con `--aceptar`; `test:instalar` afirma ambas FKs (`sessions_coach_id_fkey` + `transactions_coach_id_fkey`) y `node scripts/probar-fks-coaches.mjs` las prueba directo sobre la instalación |
+
+**Veredicto: CERO diferencias no ambientales y no aceptadas.** El
+comando que dejó el PASS, y el que hay que correr en el proyecto nuevo
+contra su salida real:
+
+```
+npm run diagnostic:comparar -- diagnosticos/esquema-strong-real.csv \
+    diagnosticos/esquema-instalacion-nueva.txt \
+    --aceptar "03.constraint|sessions.sessions_coach_id_fkey"
+```
+
+**ALCANCE exacto del veredicto** (no decir «el esquema es idéntico»):
+cero diferencias en las 14 tablas que lista el diagnóstico — las 6 del
+modelo *split* (`bank_accounts`, `payment_methods`, `transactions`,
+`member_balances`, `expense_categories`, `cash_sessions`), las 2
+financieras de la cadena (`finance_entries`, `finance_settings_audit`),
+`coaches`, `sessions` y 4 centinelas *repository* que deben NO existir
+(`accounts`, `invoices`, `invoice_items`, `cash_registers`) — más sus
+columnas/constraints/índices/políticas, los 2 enums, la vista
+`v_account_balances` y las funciones por patrón de nombre
+(`finance_*`, `cashier_*`, `record_payment`, `crm_finance_*`). Las
+migraciones del repo crean 52 tablas en total: las otras 38 (profiles,
+classes, plans, bookings, CRM, productos, etc.) NO están cubiertas por
+este diagnóstico. Los CUERPOS de funciones tampoco se comparan (sólo
+nombre+firma): los de la instalación vienen de la cadena, más nueva
+que la base de Strong.
