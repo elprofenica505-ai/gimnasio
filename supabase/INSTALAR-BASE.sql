@@ -28,6 +28,11 @@
 --    3. Run. Tarda unos segundos.
 --    4. Después correr PERSONALIZAR-GIMNASIO.sql
 --
+--    · Desde el celular, en vez de este archivo entero usar las
+--      3 partes de supabase/instalar/ (mismo contenido, cortado
+--      en pedazos que el editor del teléfono aguanta):
+--      docs/INSTALAR-DESDE-EL-CELULAR.md
+--
 --  QUÉ SIGUE DESPUÉS DE ESTO (no está en ningún SQL)
 --    · La biblioteca de ejercicios se descarga con el botón de
 --      administración (necesita 2FA): no vive en la base ni en el

@@ -24,6 +24,10 @@
  *    5. Existen las funciones clave: generate_week_sessions,
  *       admin_import_exercises, rate_limit_hit, crm_is_staff.
  *    6. generate_week_sessions() no inserta nada (sin grilla).
+ *    7. Las 3 partes de supabase/instalar/ (para instalar desde el
+ *       celular) reconstruyen INSTALAR-BASE.sql byte a byte.
+ *    8. Las 3 partes, corridas EN ORDEN sobre otra base limpia,
+ *       instalan sin errores y terminan en el mismo estado.
  *
  *  Uso:  npm run test:instalar
  */
@@ -33,6 +37,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { authMinimo } from "./helpers/pglite-auth-min.mjs";
+import { cabeceraParte, pieParte, PARTES } from "./build-install-sql.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ARCHIVO = join(REPO, "supabase/INSTALAR-BASE.sql");
@@ -193,6 +198,59 @@ const generadas = (
 check("devuelve 0 clases nuevas", Number(generadas) === 0, `${generadas}`);
 const sesiones = (await db.query(`select count(*)::int as n from public.sessions`)).rows[0].n;
 check("sessions sigue con 0 filas", sesiones === 0, `${sesiones} fila(s)`);
+
+/* ------------------------------------------------------------
+   7. Las 3 partes reconstruyen el archivo byte a byte
+   ------------------------------------------------------------ */
+console.log(`\n▶ Las ${PARTES} partes de supabase/instalar/ (instalación desde el celular)`);
+const rutaParte = (n) => join(REPO, "supabase", "instalar", `parte-${n}-de-${PARTES}.sql`);
+const nucleos = [];
+for (let n = 1; n <= PARTES; n++) {
+  const contenido = readFileSync(rutaParte(n), "utf8");
+  const cab = cabeceraParte(n);
+  const pie = pieParte(n);
+  const formaOk = contenido.startsWith(cab) && contenido.endsWith(pie);
+  check(
+    `parte ${n}: empieza con su cabecera y termina con «FIN DE LA PARTE ${n}»`,
+    formaOk,
+    formaOk ? "" : "cabecera/pie no coinciden con el generador",
+  );
+  nucleos.push(contenido.slice(cab.length, contenido.length - pie.length));
+}
+const identidadOk = nucleos.join("\n") === sql;
+check(
+  `los núcleos de las ${PARTES} partes concatenados son idénticos a INSTALAR-BASE.sql`,
+  identidadOk,
+  identidadOk ? "" : "difieren — regenerar con npm run build:install",
+);
+
+/* ------------------------------------------------------------
+   8. Las 3 partes, en orden, instalan solas
+   ------------------------------------------------------------ */
+console.log(`\n▶ Instalar con las ${PARTES} partes EN ORDEN sobre otra base limpia (como desde el celular)`);
+{
+  const dbPartes = new PGlite();
+  await authMinimo(dbPartes);
+  for (let n = 1; n <= PARTES; n++) {
+    const contenido = readFileSync(rutaParte(n), "utf8");
+    try {
+      await dbPartes.exec(contenido);
+      check(`parte ${n} corre completa y sin errores`, true, `${Math.round(contenido.length / 1024)} KB`);
+    } catch (e) {
+      check(`parte ${n} corre completa y sin errores`, false, String(e).slice(0, 200));
+    }
+  }
+  const layoutPartes = (
+    await dbPartes.query(`select public.crm_finance_layout() as l`)
+  ).rows[0].l;
+  check(
+    `las ${PARTES} partes dejan el mismo estado (layout split)`,
+    layoutPartes === "bank_accounts_split",
+    layoutPartes,
+  );
+  const planes = (await dbPartes.query(`select count(*)::int as n from public.plans`)).rows[0].n;
+  check("y también nace vacía (0 planes)", planes === 0, `${planes} fila(s)`);
+}
 
 console.log(
   `\n${

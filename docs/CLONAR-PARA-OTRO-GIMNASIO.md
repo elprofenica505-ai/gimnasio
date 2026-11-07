@@ -115,6 +115,8 @@ nombres y medidas, y no hay que tocar código.
 
 1. Supabase → **New project** → región `us-east-1` → guardar la contraseña.
 2. **SQL Editor** → pegar `supabase/INSTALAR-BASE.sql` → Run.
+   *(Desde el celular, instalar con las 3 partes de `supabase/instalar/`:
+   guía en `docs/INSTALAR-DESDE-EL-CELULAR.md`.)*
 3. **Authentication → Users → Add user**: correo y contraseña del dueño. Copiar su UID.
 4. **SQL Editor** → pegar `supabase/PERSONALIZAR-GIMNASIO.sql` con el UID y los precios → Run.
 5. **Authentication → URL Configuration**: URL del sitio y `/auth/callback`.

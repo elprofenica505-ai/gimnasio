@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 /**
  * ============================================================
- *  Genera `supabase/INSTALAR-BASE.sql`
+ *  Genera `supabase/INSTALAR-BASE.sql` y sus 3 partes
  * ============================================================
  *  Un solo archivo con TODA la estructura de la base, para
  *  levantar un proyecto nuevo de Supabase desde cero, sin
  *  arrastrar ni un dato de nadie.
+ *
+ *  Además lo parte en 3 archivos en supabase/instalar/ para
+ *  poder instalarlo desde el celular (el SQL Editor de Supabase
+ *  se traba con 800 KB de una vez). Los cortes van SIEMPRE
+ *  entre un `commit;` y el `begin;` siguiente: nunca en medio
+ *  de una transacción ni dentro de un bloque $$. Guía de uso:
+ *  docs/INSTALAR-DESDE-EL-CELULAR.md
  *
  *  Qué entra: las 82 migraciones de estructura (tablas, RLS,
  *  funciones, disparadores, permisos, límites de abuso) y el
@@ -17,18 +24,30 @@
  *  de caja.
  *
  *  Uso:  node scripts/build-install-sql.mjs
- *        node scripts/build-install-sql.mjs --check   (falla si el
- *        archivo del repo está desactualizado)
+ *        node scripts/build-install-sql.mjs --check   (falla si
+ *        INSTALAR-BASE.sql o las partes están desactualizados)
+ *
+ *  Las partes también se pueden importar desde las pruebas:
+ *  exportamos cabeceraParte/pieParte/partirEnPartes para que
+ *  test:instalar verifique que las 3 concatenadas reconstruyen
+ *  el archivo entero byte a byte.
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
+import { join, dirname, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { validarSinDatosAjenos } from "./helpers/prohibidas.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const migrationsDir = join(root, "supabase", "migrations");
 const outFile = join(root, "supabase", "INSTALAR-BASE.sql");
+
+/** En cuántas partes se entrega el SQL para pegar desde el celular. */
+export const PARTES = 3;
+/** Límite duro por parte (~300 KB): el editor del teléfono aguanta eso. */
+export const TAM_MAX_PARTE = 300 * 1024;
+const dirPartes = join(root, "supabase", "instalar");
+const rutaParte = (n) => join(dirPartes, `parte-${n}-de-${PARTES}.sql`);
 
 /**
  * Migraciones que NO van al clon, con el motivo escrito, porque dentro de
@@ -208,6 +227,11 @@ function construir() {
 --    3. Run. Tarda unos segundos.
 --    4. Después correr PERSONALIZAR-GIMNASIO.sql
 --
+--    · Desde el celular, en vez de este archivo entero usar las
+--      3 partes de supabase/instalar/ (mismo contenido, cortado
+--      en pedazos que el editor del teléfono aguanta):
+--      docs/INSTALAR-DESDE-EL-CELULAR.md
+--
 --  QUÉ SIGUE DESPUÉS DE ESTO (no está en ningún SQL)
 --    · La biblioteca de ejercicios se descarga con el botón de
 --      administración (necesita 2FA): no vive en la base ni en el
@@ -231,21 +255,153 @@ function construir() {
 `;
 }
 
-const sql = construir();
-validar(sql);
-const check = process.argv.includes("--check");
+/* ============================================================
+   PARTICIÓN EN PARTES
+   ============================================================ */
 
-if (check) {
-  const actual = existsSync(outFile) ? readFileSync(outFile, "utf8") : "";
-  if (actual !== sql) {
-    console.error("✗ supabase/INSTALAR-BASE.sql está desactualizado.");
-    console.error("  Corré: node scripts/build-install-sql.mjs");
-    process.exit(1);
+/** Cabecera visible de cada parte. Exportada para que las pruebas
+ *  la quiten y verifiquen que el núcleo reconstruye el archivo. */
+export function cabeceraParte(n) {
+  return `-- ============================================================
+--  PARTE ${n} DE ${PARTES} — NO CORRER FUERA DE ORDEN
+-- ============================================================
+--  Es el mismo contenido de supabase/INSTALAR-BASE.sql, cortado
+--  en ${PARTES} para que el SQL Editor del celular no se trabe.
+--  Correr la 1, esperar el «Success», después la 2 y después la 3.
+--  Guía paso a paso: docs/INSTALAR-DESDE-EL-CELULAR.md
+--  Generado por scripts/build-install-sql.mjs — no editar a mano.
+-- ============================================================
+
+`;
+}
+
+/** Pie visible de cada parte. */
+export function pieParte(n) {
+  return `
+-- ============================================================
+--  FIN DE LA PARTE ${n}
+-- ============================================================
+`;
+}
+
+/**
+ * Líneas donde se PUEDE cortar el SQL: hacia atrás, saltando
+ * comentarios y líneas en blanco, lo último que aparece es un
+ * `commit;` (transacción cerrada, ningún $$ abierto); hacia
+ * adelante, lo primero que va a aparecer es un `begin;`. Un corte
+ * así nunca deja una transacción o un bloque $$ partida en dos.
+ */
+export function cortesValidos(sql) {
+  const lineas = sql.split("\n");
+  const esComentarioOBlanco = (l) => l.trim() === "" || l.trimStart().startsWith("--");
+  const candidatos = [];
+  for (let i = 1; i < lineas.length; i++) {
+    let a = i - 1;
+    while (a >= 0 && esComentarioOBlanco(lineas[a])) a--;
+    if (a < 0 || lineas[a].trim() !== "commit;") continue;
+    let b = i;
+    while (b < lineas.length && esComentarioOBlanco(lineas[b])) b++;
+    if (b >= lineas.length || lineas[b].trim() !== "begin;") continue;
+    candidatos.push(i);
   }
-  console.log("✓ supabase/INSTALAR-BASE.sql está al día.");
-} else {
-  writeFileSync(outFile, sql, "utf8");
-  const lineas = sql.split("\n").length;
-  const kb = Math.round(Buffer.byteLength(sql) / 1024);
-  console.log(`✓ supabase/INSTALAR-BASE.sql — ${lineas} líneas, ${kb} KB`);
+  return { lineas, candidatos };
+}
+
+/**
+ * Parte el SQL en PARTES archivos balanceados por peso, cortando
+ * sólo en fronteras válidas. Devuelve [{parte, contenido}] donde
+ * contenido = cabeceraParte(parte) + núcleo + pieParte(parte).
+ * Garantía: los núcleos, concatenados con "\n", reproducen el SQL
+ * original byte a byte.
+ */
+export function partirEnPartes(sql) {
+  const { lineas, candidatos } = cortesValidos(sql);
+  if (candidatos.length < PARTES - 1) {
+    throw new Error(`Sólo encontré ${candidatos.length} frontera(s) segura(s) para partir el SQL en ${PARTES}.`);
+  }
+  const acumulado = [];
+  let t = 0;
+  for (const l of lineas) {
+    acumulado.push(t);
+    t += Buffer.byteLength(l, "utf8") + 1;
+  }
+  const total = t;
+
+  const cortes = [];
+  let anterior = 0;
+  for (let parte = 1; parte < PARTES; parte++) {
+    const objetivo = (total * parte) / PARTES;
+    let mejor = -1;
+    for (const c of candidatos) {
+      if (c <= anterior) continue;
+      if (mejor < 0 || Math.abs(acumulado[c] - objetivo) < Math.abs(acumulado[mejor] - objetivo)) {
+        mejor = c;
+      }
+    }
+    if (mejor < 0) {
+      throw new Error(`No encontré una frontera segura para la parte ${parte} después de la línea ${anterior}.`);
+    }
+    cortes.push(mejor);
+    anterior = mejor;
+  }
+
+  const partes = [];
+  let desde = 0;
+  for (let parte = 1; parte <= PARTES; parte++) {
+    const hasta = parte < PARTES ? cortes[parte - 1] : lineas.length;
+    const nucleo = lineas.slice(desde, hasta).join("\n");
+    const contenido = cabeceraParte(parte) + nucleo + pieParte(parte);
+    const peso = Buffer.byteLength(contenido, "utf8");
+    if (peso > TAM_MAX_PARTE) {
+      throw new Error(
+        `La parte ${parte} pesa ${(peso / 1024).toFixed(0)} KB y pasa del límite de ${(TAM_MAX_PARTE / 1024).toFixed(0)} KB.`,
+      );
+    }
+    partes.push({ parte, contenido, peso });
+    desde = hasta;
+  }
+  return partes;
+}
+
+/* ============================================================
+   CLI
+   ============================================================ */
+
+const esCli =
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+
+if (esCli) {
+  const sql = construir();
+  validar(sql);
+  const partes = partirEnPartes(sql);
+  const check = process.argv.includes("--check");
+
+  if (check) {
+    const actual = existsSync(outFile) ? readFileSync(outFile, "utf8") : "";
+    if (actual !== sql) {
+      console.error("✗ supabase/INSTALAR-BASE.sql está desactualizado.");
+      console.error("  Corré: node scripts/build-install-sql.mjs");
+      process.exit(1);
+    }
+    for (const { parte, contenido } of partes) {
+      const enDisco = existsSync(rutaParte(parte)) ? readFileSync(rutaParte(parte), "utf8") : "";
+      if (enDisco !== contenido) {
+        console.error(`✗ supabase/instalar/parte-${parte}-de-${PARTES}.sql está desactualizada.`);
+        console.error("  Corré: node scripts/build-install-sql.mjs");
+        process.exit(1);
+      }
+    }
+    console.log(`✓ supabase/INSTALAR-BASE.sql y las ${PARTES} partes de supabase/instalar/ están al día.`);
+  } else {
+    writeFileSync(outFile, sql, "utf8");
+    mkdirSync(dirPartes, { recursive: true });
+    for (const { parte, contenido, peso } of partes) {
+      writeFileSync(rutaParte(parte), contenido, "utf8");
+      console.log(`✓ supabase/instalar/parte-${parte}-de-${PARTES}.sql — ${(peso / 1024).toFixed(0)} KB`);
+    }
+    const lineas = sql.split("\n").length;
+    const kb = Math.round(Buffer.byteLength(sql) / 1024);
+    console.log(`✓ supabase/INSTALAR-BASE.sql — ${lineas} líneas, ${kb} KB`);
+  }
 }
