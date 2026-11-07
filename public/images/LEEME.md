@@ -39,5 +39,5 @@ sola en la página, sin tocar nada de código.
 ## Consejos
 
 - Que pesen menos de 1 MB cada una, así la página carga rápido en datos móviles.
-- Horizontales (apaisadas) para `fachada.jpg`, `grupo.jpg` y `pareja1.jpg`.
+- Todas horizontales (apaisadas), salvo `dip.jpg`, `pantorrilla.jpg` y `triceps.jpg` que son verticales.
 - Que se vean bien iluminadas: son la primera impresión del gimnasio.

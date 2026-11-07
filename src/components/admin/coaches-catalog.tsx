@@ -334,7 +334,7 @@ export function CoachesCatalog({ initial }: { initial: CoachesCatalog }) {
                   >
                     <input
                       type="checkbox"
-                      className="size-4 accent-[var(--color-brand,#d81a22)]"
+                      className="size-4 accent-[var(--color-brand,#c8f73b)]"
                       checked={checked}
                       disabled={busy}
                       onChange={() => toggleSpecialty(item.slug)}

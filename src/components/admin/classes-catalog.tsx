@@ -102,7 +102,7 @@ const emptyDraft = (classes: AdminClass[]): Draft => ({
   intensity: "medium",
   durationMin: "60",
   capacity: "20",
-  color: "#d81a22",
+  color: "#c8f73b",
   sortOrder: String(
     classes.reduce((max, item) => Math.max(max, item.sort_order), 0) + 10,
   ),

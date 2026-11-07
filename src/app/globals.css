@@ -1,12 +1,11 @@
 @import "tailwindcss";
 
 /* ============================================================
-   STRONG FITNESS GYM — sistema de diseño
+   POWER BOX GYM — sistema de diseño
    ------------------------------------------------------------
-   Identidad real del gimnasio: ROJO + NEGRO + BLANCO, como el
-   cartel iluminado del local: fondo negro de punta a punta y el
-   rojo de la banderola (#d81a22) como acento en fondos de
-   bloque, títulos, números, líneas y bordes.
+   Identidad: NEGRO + VOLT (verde eléctrico #c8f73b) + BLANCO.
+   Look de gimnasio de última generación: base negra pura y un
+   único acento eléctrico en títulos, números, líneas y bordes.
 
    IMPORTANTE: las páginas NO se pintan una por una. Todo el
    sitio se apoya en estos tokens, así que para cambiar el tema
@@ -28,19 +27,16 @@
   --color-mist: #c9c9d1;
   --color-fog: #8e8e99;
 
-  /* --- Rojo de marca (banderola y zócalo del local) --- */
-  --color-brand: #d81a22;
-  --color-brand-600: #b8141b;
-  --color-brand-700: #8f0f15;
-  /* Rojo claro: texto e íconos chicos apoyados sobre rojo oscuro.
-     (#d81a22 sobre #0c0c0e sólo llega a 3.6:1, así que el rojo
-     puro se reserva para números grandes, botones, fondos y
-     bordes; el texto menudo usa este.) */
-  --color-brand-300: #ff6b72;
-  /* Rojo oscuro: fondo de bloques y chips. Nunca rosa claro. */
-  --color-brand-soft: #3d0e13;
-  /* Texto que va encima del rojo. */
-  --color-onbrand: #ffffff;
+  /* --- Volt de marca (acento eléctrico) --- */
+  --color-brand: #c8f73b;
+  --color-brand-600: #a8d92e;
+  --color-brand-700: #5f7a1d;
+  /* Volt claro: texto e íconos chicos apoyados sobre fondos oscuros. */
+  --color-brand-300: #e4ff8f;
+  /* Fondo de bloques y chips en tono oliva profundo. */
+  --color-brand-soft: #1c2608;
+  /* Texto que va encima del volt: negro, contraste máximo. */
+  --color-onbrand: #0c0c0e;
 
   /* --- Estados (no son identidad: sirven para avisos) --- */
   --color-alert: #fb923c;
@@ -96,13 +92,13 @@
 
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 rgb(216 26 34 / 0.45);
+    box-shadow: 0 0 0 0 rgb(200 247 59 / 0.4);
   }
   70% {
-    box-shadow: 0 0 0 16px rgb(216 26 34 / 0);
+    box-shadow: 0 0 0 16px rgb(200 247 59 / 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgb(216 26 34 / 0);
+    box-shadow: 0 0 0 0 rgb(200 247 59 / 0);
   }
 }
 
@@ -412,7 +408,7 @@
   }
 }
 
-/* Hilo de brasas bajo el texto: la única línea recta del efecto. */
+/* Hilo eléctrico bajo el texto: la única línea recta del efecto. */
 .fire-line {
   display: block;
   width: 9rem;
@@ -421,9 +417,9 @@
   background-image: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(216 26 34 / 0.9) 25%,
-    rgb(251 191 36 / 1) 50%,
-    rgb(216 26 34 / 0.9) 75%,
+    rgb(200 247 59 / 0.9) 25%,
+    rgb(255 255 255 / 1) 50%,
+    rgb(200 247 59 / 0.9) 75%,
     transparent 100%
   );
   background-size: 200% 100%;
@@ -633,9 +629,9 @@
   color: var(--color-brand-300);
 }
 
-/* Texto con degradado rojo, para resaltar una palabra del título */
+/* Texto con degradado volt, para resaltar una palabra del título */
 @utility text-gradient-brand {
-  background-image: linear-gradient(100deg, #ff4d55 0%, #d81a22 48%, #8f0f15 100%);
+  background-image: linear-gradient(100deg, #e9ff9e 0%, #c8f73b 45%, #5f7a1d 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -650,8 +646,8 @@
 
 /* Textura de fondo: grilla tenue sobre superficie oscura */
 @utility bg-grid {
-  background-image: linear-gradient(rgb(216 26 34 / 0.14) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(216 26 34 / 0.14) 1px, transparent 1px);
+  background-image: linear-gradient(rgb(200 247 59 / 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(200 247 59 / 0.09) 1px, transparent 1px);
   background-size: 62px 62px;
 }
 
@@ -663,11 +659,11 @@
   background-size: 62px 62px;
 }
 
-/* Resalte rojo para tarjetas destacadas (ej: el plan más elegido) */
+/* Resalte volt para tarjetas destacadas (ej: el plan más elegido) */
 @utility glow-brand {
   box-shadow:
-    0 0 0 1px rgb(216 26 34 / 0.5),
-    0 18px 60px -22px rgb(216 26 34 / 0.45);
+    0 0 0 1px rgb(200 247 59 / 0.5),
+    0 18px 60px -22px rgb(200 247 59 / 0.35);
 }
 
 @utility no-scrollbar {

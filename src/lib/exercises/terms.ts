@@ -317,7 +317,7 @@ export function equipmentGroupOf(slug: string | null): string {
  * tarjeta, no compite con la foto.
  */
 export const EQUIPMENT_TONES: Record<string, string> = {
-  peso_libre: "#d81a22",
+  peso_libre: "#c8f73b",
   maquinas: "#6f8fb8",
   poleas: "#d9a441",
   cuerpo: "#6fbf9f",

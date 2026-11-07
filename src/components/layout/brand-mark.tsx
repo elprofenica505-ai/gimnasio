@@ -16,9 +16,9 @@ export function BrandMark({ className }: { className?: string }) {
       focusable="false"
     >
       {/* Guante: puño redondeado + pulgar + muñequera, separados del fondo. */}
-      <rect x="26" y="16" width="48" height="50" rx="24" fill="#d81a22" />
-      <ellipse cx="22" cy="50" rx="10" ry="13" fill="#d81a22" />
-      <rect x="40" y="70" width="26" height="14" rx="6" fill="#d81a22" />
+      <rect x="26" y="16" width="48" height="50" rx="24" fill="#c8f73b" />
+      <ellipse cx="22" cy="50" rx="10" ry="13" fill="#c8f73b" />
+      <rect x="40" y="70" width="26" height="14" rx="6" fill="#c8f73b" />
       {/* Costura del pulgar y línea del puño, en el color del fondo oscuro. */}
       <path
         d="M36 38 C29 46 29 56 36 64"

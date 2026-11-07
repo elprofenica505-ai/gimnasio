@@ -31,7 +31,7 @@ export default function Image() {
           justifyContent: "space-between",
           background: "#0c0c0e",
           backgroundImage:
-            "radial-gradient(900px 500px at 88% 8%, #8f0f15 0%, rgba(143,15,21,0) 60%)",
+            "radial-gradient(900px 500px at 88% 8%, #2c400b 0%, rgba(44,64,11,0) 60%)",
           padding: "72px 80px",
           fontFamily: "Anton",
         }}
@@ -39,9 +39,9 @@ export default function Image() {
         {/* Emblema + nombre */}
         <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
           <svg width="104" height="104" viewBox="0 0 100 100">
-            <rect x="26" y="16" width="48" height="50" rx="24" fill="#d81a22" />
-            <ellipse cx="22" cy="50" rx="10" ry="13" fill="#d81a22" />
-            <rect x="40" y="70" width="26" height="14" rx="6" fill="#d81a22" />
+            <rect x="26" y="16" width="48" height="50" rx="24" fill="#c8f73b" />
+            <ellipse cx="22" cy="50" rx="10" ry="13" fill="#c8f73b" />
+            <rect x="40" y="70" width="26" height="14" rx="6" fill="#c8f73b" />
             <path
               d="M36 38 C29 46 29 56 36 64"
               stroke="#0c0c0e"
@@ -99,7 +99,7 @@ export default function Image() {
             style={{
               fontFamily: "Anton",
               fontSize: 104,
-              color: "#d81a22",
+              color: "#c8f73b",
               lineHeight: 0.92,
               letterSpacing: "-0.01em",
             }}

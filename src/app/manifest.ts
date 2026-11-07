@@ -30,7 +30,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display_override: ["standalone", "browser"],
     orientation: "portrait",
     background_color: "#0c0c0e",
-    theme_color: "#d81a22",
+    theme_color: "#0c0c0e",
     lang: "es",
     dir: "ltr",
     categories: ["health", "fitness", "sports"],

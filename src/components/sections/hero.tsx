@@ -41,7 +41,7 @@ export function Hero({
     <section className="relative isolate overflow-hidden bg-night">
       {/* Fondo */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(1100px_600px_at_15%_100%,#7a0f14_0%,transparent_62%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(1100px_600px_at_15%_100%,#22330a_0%,transparent_62%)]" />
 
         {fachada ? (
           <Image
@@ -64,7 +64,7 @@ export function Hero({
           <div className="max-w-3xl">
             {/* Dónde estamos */}
             <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full border border-brand/45 bg-brand/15 py-1.5 pr-4 pl-1.5 text-[0.75rem] font-semibold text-white backdrop-blur-sm sm:text-[0.8125rem]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-brand/45 bg-brand/15 py-1.5 pr-4 pl-1.5 text-[0.75rem] font-semibold text-white sm:text-[0.8125rem]">
                 <span className="grid size-6 place-items-center rounded-full bg-brand text-onbrand">
                   <MapPin className="size-3.5" aria-hidden="true" />
                 </span>
