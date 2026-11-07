@@ -26,7 +26,7 @@ export function SwRegister() {
         .catch((err) => {
           // Silencioso: el service worker es una mejora progresiva, no
           // un requisito para que la app funcione.
-          console.warn("[Strong Gym] SW no se pudo registrar:", err.message);
+          console.warn("[Power Box Gym] SW no se pudo registrar:", err.message);
         });
     };
 

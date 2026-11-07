@@ -169,7 +169,7 @@ values
   ('coa_xx', 'nombre', 'Nombre Apellido',
    'Head Coach', 'Head Coach',
    'Bio en español', 'Bio in English',
-   array['boxeo','pesas'], 'NA', '#d81a22', 1, true);`}
+   array['boxeo','pesas'], 'NA', '#c8f73b', 1, true);`}
         </pre>
         <p className="mt-2 text-fog">
           O pedime ayuda acá mismo y lo armamos juntos.

@@ -58,7 +58,7 @@ const bodySchema = z.discriminatedUnion("action", [
 
 const messages: Record<string, [string, number]> = {
   AUTH: ["Solo un administrador con verificación en dos pasos puede cambiar las categorías.", 403],
-  INVALID_CATEGORY: ["Elegí una categoría válida: Strong Gym, Familia, Amigo o Común.", 422],
+  INVALID_CATEGORY: ["Elegí una categoría válida: Power Box, Familia, Amigo o Común.", 422],
   INVALID_REASON: ["Escribí el motivo, entre 4 y 200 caracteres.", 422],
   INVALID_RULES: ["Las cuatro categorías tienen que venir completas y con una sola de reserva.", 422],
   INVALID_ORDER: ["El orden debe estar entre 1 y 999.", 422],

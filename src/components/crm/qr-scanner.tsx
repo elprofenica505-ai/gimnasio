@@ -134,7 +134,7 @@ export function QrScanner({
         </summary>
         <p className="my-2 text-xs text-fog">
           Este campo no busca nombres. Sólo usalo si tenés el contenido completo
-          de un QR Strong.
+          de un QR Power Box.
         </p>
         <form
           onSubmit={(e) => {

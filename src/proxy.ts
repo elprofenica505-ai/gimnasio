@@ -38,7 +38,7 @@ export default async function proxy(request: NextRequest) {
     // Sólo constantes traducidas; nunca interpolar entradas ni configuración.
     return new NextResponse(`<!doctype html><html lang="${english ? "en" : "es"}">
       <head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-      <title>Strong Gym — ${title}</title></head>
+      <title>Power Box Gym — ${title}</title></head>
       <body style="background:#090909;color:#eee;font-family:sans-serif;padding:3rem">
       <h1>${title}</h1><p>${detail}</p></body></html>`, {
       status: 503, headers: { ...headers, "Content-Type": "text/html; charset=utf-8" },

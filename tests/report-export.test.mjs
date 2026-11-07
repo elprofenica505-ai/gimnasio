@@ -107,9 +107,9 @@ test("la descripción de filtros usa nombres legibles y «Todos» cuando no hay 
 });
 
 test("el nombre del archivo incluye el rango", () => {
-  assert.equal(exportFilename(NO_FILTERS, "csv"), "Strong-Gym-Reporte_inicio_a_hoy.csv");
+  assert.equal(exportFilename(NO_FILTERS, "csv"), "Power-Box-Gym-Reporte_inicio_a_hoy.csv");
   const f = parseExportFilters(params({ from: "2026-10-01", to: "2026-10-21" })).filters;
-  assert.equal(exportFilename(f, "xlsx"), "Strong-Gym-Reporte_2026-10-01_a_2026-10-21.xlsx");
+  assert.equal(exportFilename(f, "xlsx"), "Power-Box-Gym-Reporte_2026-10-01_a_2026-10-21.xlsx");
 });
 
 test("CSV: acentos con BOM, comillas escapadas y sin fórmulas ejecutables", () => {

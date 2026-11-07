@@ -1,8 +1,9 @@
 # Fotos del gimnasio
 
-Acá van las fotos reales de **Strong Fitness Gym**. Mientras una foto no esté
-subida, la web muestra en su lugar un recuadro gris con el nombre del archivo
-que falta, así se ve enseguida qué queda pendiente.
+Acá van las fotos reales de **Power Box Gym**. Las actuales son imágenes
+neutras de relleno para la demo (sin personas reconocibles ni marcas ajenas).
+Apenas subas la foto real con el mismo nombre, reemplaza a la neutra sin tocar
+nada de código.
 
 **Importante:** el nombre del archivo tiene que ser exactamente el de la lista
 (en minúsculas y terminado en `.jpg`). Apenas la subís con ese nombre, aparece
@@ -29,7 +30,7 @@ sola en la página, sin tocar nada de código.
 
 ## Cómo subirlas desde el celular
 
-1. Entrá a <https://github.com/elprofenica505-ai/Strong-Gym>
+1. Entrá a <https://github.com/elprofenica505-ai/gimnasio>
 2. Abrí la carpeta `public` y después `images`
 3. Tocá **Add file** → **Upload files**
 4. Elegí las fotos (se pueden subir todas juntas)
@@ -38,5 +39,5 @@ sola en la página, sin tocar nada de código.
 ## Consejos
 
 - Que pesen menos de 1 MB cada una, así la página carga rápido en datos móviles.
-- Horizontales (apaisadas) para `fachada.jpg`, `grupo.jpg` y `pareja1.jpg`.
+- Todas horizontales (apaisadas), salvo `dip.jpg`, `pantorrilla.jpg` y `triceps.jpg` que son verticales.
 - Que se vean bien iluminadas: son la primera impresión del gimnasio.

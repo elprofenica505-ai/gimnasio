@@ -58,7 +58,7 @@ const messages: Record<string, [string, number]> = {
   INVALID_INTENSITY: ["Elegí la intensidad: baja, media o alta.", 422],
   INVALID_DURATION: ["La duración de la clase debe estar entre 10 y 180 minutos.", 422],
   INVALID_CAPACITY: ["El cupo debe estar entre 1 y 200 personas.", 422],
-  INVALID_COLOR: ["El color tiene que ser un código como #d81a22.", 422],
+  INVALID_COLOR: ["El color tiene que ser un código como #c8f73b.", 422],
   INVALID_ORDER: ["El orden debe estar entre 0 y 9999.", 422],
   CLASS_EXISTS: ["Ya existe una disciplina con ese identificador. Elegí otro.", 409],
   NOT_FOUND: ["No encontramos esa disciplina. Recargá antes de reintentar.", 404],

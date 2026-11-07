@@ -27,7 +27,7 @@ test("las tres etiquetas no son roles ni reglas de precios", () => {
   assert.deepEqual(Object.values(categories), [
     "Clientes",
     "Clientes amigos",
-    "Clientes familia Strong",
+    "Clientes familia Power Box",
   ]);
   assert.equal(
     crmActionSchema.safeParse({ action: "create", name: "Cliente nuevo" })

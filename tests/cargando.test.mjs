@@ -222,10 +222,10 @@ test("el emblema, el nombre y la barra son los del cartel del gimnasio", () => {
   const storm = source("src/components/layout/storm-transition.tsx");
   const css = source("src/app/globals.css");
 
-  // El emblema es la imagen del cartel (triángulo rojo con el atleta).
-  assert.match(storm, /src="\/brand\/emblema-strong\.webp"/);
+  // El emblema es la imagen del guante rojo de la marca.
+  assert.match(storm, /src="\/brand\/emblema\.webp"/);
   assert.match(storm, /className="storm-emblem"/);
-  assert.ok(existsSync(path.join("public", "brand", "emblema-strong.webp")), "falta la imagen del emblema");
+  assert.ok(existsSync(path.join("public", "brand", "emblema.webp")), "falta la imagen del emblema");
 
   // Nombre en serif plateado y «Cargando…» en dorado, con las letras separadas.
   assert.match(css, /\.storm-title \{[^}]*font-family: ui-serif/);
@@ -241,7 +241,7 @@ test("el emblema, el nombre y la barra son los del cartel del gimnasio", () => {
   const sw = source("public/sw.js");
   assert.match(sw, /"\/brand\/emblema-strong\.webp"/);
   assert.match(sw, /"\/sounds\/trueno\.mp3"/);
-  assert.match(sw, /CACHE_VERSION = "strong-gym-v8"/);
+  assert.match(sw, /CACHE_VERSION = "power-box-v9"/);
 });
 
 test("el trueno suena con el rayo, y sólo el trueno", () => {
@@ -276,5 +276,5 @@ test("el trueno suena con el rayo, y sólo el trueno", () => {
   const sw = source("public/sw.js");
   assert.match(sw, /"\/sounds\/trueno\.mp3"/);
   assert.doesNotMatch(sw, /toque2?\.mp3/);
-  assert.match(sw, /CACHE_VERSION = "strong-gym-v8"/);
+  assert.match(sw, /CACHE_VERSION = "power-box-v9"/);
 });

@@ -1,7 +1,7 @@
 export const categories = {
   client: "Clientes",
   friend: "Clientes amigos",
-  family: "Clientes familia Strong",
+  family: "Clientes familia Power Box",
 } as const;
 export type ClientCategory = keyof typeof categories;
 /**
@@ -9,7 +9,7 @@ export type ClientCategory = keyof typeof categories;
  * editables, no de la etiqueta histórica de arriba.
  */
 export const calculatedCategories = {
-  strong_gym: "Strong Gym",
+  strong_gym: "Power Box",
   familia: "Familia",
   amigo: "Amigo",
   comun: "Común",

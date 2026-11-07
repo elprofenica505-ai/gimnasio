@@ -100,7 +100,7 @@ test("cents evita arrastre de punto flotante", () => {
 test("Excel maestro: nombre fijo, hojas y cifras con los mismos datos", async () => {
   const data = { generatedAt: "2026-10-19T03:30:00Z", rows, debtEntries: [], maps };
   const buf = await buildMasterWorkbook(data, new Date("2026-10-19T03:30:00Z"));
-  assert.equal(MASTER_FILENAME, "Strong-Gym-Maestro.xlsx");
+  assert.equal(MASTER_FILENAME, "Power-Box-Gym-Maestro.xlsx");
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(buf);
   assert.deepEqual(wb.worksheets.map((w) => w.name), [

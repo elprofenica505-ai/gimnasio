@@ -3,7 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isTotpCode, mfaStateFromLevels, type MfaState } from "./current-user";
 
-export const MFA_FACTOR_NAME = "Strong Gym";
+export const MFA_FACTOR_NAME = "Power Box Gym";
 
 export type MfaActionError = "code" | "unavailable";
 export type MfaActionResult = { ok: true } | { ok: false; error: MfaActionError };

@@ -32,7 +32,7 @@ export function ClientPass() {
   if (!user || isDemo) return null;
   return (
     <section className="container-x my-8 rounded-2xl border border-line bg-card p-5">
-      <h2 className="mb-4 text-xl font-bold">Mi carnet Strong</h2>
+      <h2 className="mb-4 text-xl font-bold">Mi carnet Power Box</h2>
       {pass ? (
         <ClientCard {...pass} />
       ) : (

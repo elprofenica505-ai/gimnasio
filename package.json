@@ -2,7 +2,7 @@
   "name": "strong-gym",
   "version": "1.0.0",
   "private": true,
-  "description": "Sitio web del gimnasio Strong Gym: landing bilingüe (ES/EN) con reserva de clases, Next.js + Supabase.",
+  "description": "Sitio web del gimnasio Power Box Gym: landing bilingüe (ES/EN) con reserva de clases, Next.js + Supabase.",
   "scripts": {
     "build": "next build",
     "build:sql": "node scripts/build-sql.mjs",

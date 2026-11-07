@@ -1294,7 +1294,7 @@ test("el listado distingue la categoría por vigencia y el filtro la envía al s
     { ...client(other, "Sin recalcular", 3) },
   ]);
   // La categoría real se ve tal cual; la decisión manual se anuncia.
-  assert.ok(await screen.findByText(/Strong Gym · EJEMPLO/));
+  assert.ok(await screen.findByText(/Power Box · EJEMPLO/));
   assert.ok(screen.getByText(/Común \(a mano\) · EJEMPLO/));
   // Sin categoría calculada, el listado sigue mostrando la etiqueta histórica.
   assert.ok(screen.getByText(/Clientes · EJEMPLO/));

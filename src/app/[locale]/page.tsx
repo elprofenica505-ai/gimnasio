@@ -74,8 +74,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         showBoxing={visibility.showBoxing}
         showZumba={visibility.showZumba}
       />
-      <ClassesGrid locale={safeLocale} />
       {visibility.showBoxing ? <Boxing locale={safeLocale} /> : null}
+      <ClassesGrid locale={safeLocale} />
       <Plans locale={safeLocale} activeClassSlugs={activeClassSlugs} />
       <Supplements locale={safeLocale} />
       <Gallery locale={safeLocale} />

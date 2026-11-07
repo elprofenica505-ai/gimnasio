@@ -31,7 +31,7 @@ export default function Image() {
           justifyContent: "space-between",
           background: "#0c0c0e",
           backgroundImage:
-            "radial-gradient(900px 500px at 88% 8%, #8f0f15 0%, rgba(143,15,21,0) 60%)",
+            "radial-gradient(900px 500px at 88% 8%, #2c400b 0%, rgba(44,64,11,0) 60%)",
           padding: "72px 80px",
           fontFamily: "Anton",
         }}
@@ -39,24 +39,21 @@ export default function Image() {
         {/* Emblema + nombre */}
         <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
           <svg width="104" height="104" viewBox="0 0 100 100">
-            <polygon points="50,12 93,85 7,85" fill="#d81a22" />
-            <circle cx="50" cy="46.5" r="5.6" fill="#0c0c0e" />
-            <polygon points="42,54.5 58,54.5 55.5,77 44.5,77" fill="#0c0c0e" />
+            <rect x="26" y="16" width="48" height="50" rx="24" fill="#c8f73b" />
+            <ellipse cx="22" cy="50" rx="10" ry="13" fill="#c8f73b" />
+            <rect x="40" y="70" width="26" height="14" rx="6" fill="#c8f73b" />
             <path
-              d="M43 56 L33.5 60.5 L37 49.5"
+              d="M36 38 C29 46 29 56 36 64"
               stroke="#0c0c0e"
-              strokeWidth="6.6"
+              strokeWidth="4"
               strokeLinecap="round"
-              strokeLinejoin="round"
               fill="none"
             />
             <path
-              d="M57 56 L66.5 60.5 L63 49.5"
+              d="M44 72 h18"
               stroke="#0c0c0e"
-              strokeWidth="6.6"
+              strokeWidth="3"
               strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
             />
           </svg>
 
@@ -70,7 +67,7 @@ export default function Image() {
                 lineHeight: 1,
               }}
             >
-              STRONG
+              POWER BOX
             </span>
             <span
               style={{
@@ -80,7 +77,7 @@ export default function Image() {
                 marginTop: 8,
               }}
             >
-              FITNESS GYM
+              GYM
             </span>
           </div>
         </div>
@@ -102,7 +99,7 @@ export default function Image() {
             style={{
               fontFamily: "Anton",
               fontSize: 104,
-              color: "#d81a22",
+              color: "#c8f73b",
               lineHeight: 0.92,
               letterSpacing: "-0.01em",
             }}

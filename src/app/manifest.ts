@@ -20,7 +20,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: siteConfig.name,
     short_name: siteConfig.shortName,
     description:
-      "Gimnasio en Los Cedros, Villa El Carmen: pesas y máquinas, boxeo, bailoterapia y suplementos.",
+      "Gimnasio en Managua: pesas y máquinas, boxeo, bailoterapia y suplementos.",
     start_url: "/es",
     // Alcance sólo de la parte pública en español. Así los enlaces de correo
     // (p. ej. /api/auth/callback de recuperación) se abren en el navegador y
@@ -30,7 +30,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display_override: ["standalone", "browser"],
     orientation: "portrait",
     background_color: "#0c0c0e",
-    theme_color: "#d81a22",
+    theme_color: "#0c0c0e",
     lang: "es",
     dir: "ltr",
     categories: ["health", "fitness", "sports"],

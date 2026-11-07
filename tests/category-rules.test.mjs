@@ -104,8 +104,8 @@ function setup() {
 
 test("las reglas muestran el estado actual y los conteos por categoría", async () => {
   setup();
-  assert.ok(screen.getByRole("heading", { name: "Strong Gym" }));
-  assert.ok(screen.getByText(/Strong Gym:/));
+  assert.ok(screen.getByRole("heading", { name: "Power Box" }));
+  assert.ok(screen.getByText(/Power Box:/));
   assert.ok(screen.getByText(/Sin calcular todavía/));
   assert.equal(
     screen.getByRole("button", { name: "Guardar reglas" }).disabled,

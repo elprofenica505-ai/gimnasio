@@ -96,7 +96,7 @@ export async function generateMetadata({
 }
 
 export const viewport: Viewport = {
-  themeColor: "#d81a22",
+  themeColor: "#0c0c0e",
   width: "device-width",
   initialScale: 1,
   colorScheme: "dark",

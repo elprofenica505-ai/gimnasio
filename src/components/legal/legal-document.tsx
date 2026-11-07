@@ -10,7 +10,7 @@ export function LegalDocumentView({ doc, locale }: { doc: LegalDocument; locale:
     <>
       <section className="relative overflow-hidden border-b border-brand/25 bg-cloud pt-10 pb-8 sm:pt-12 sm:pb-10">
         <div className="container-x relative">
-          <SectionHeading eyebrow="Strong Fitness Gym" title={doc.title} subtitle={doc.intro} />
+          <SectionHeading eyebrow="Power Box Gym" title={doc.title} subtitle={doc.intro} />
         </div>
       </section>
       <section className="py-8 sm:py-10">
