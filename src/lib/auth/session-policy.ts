@@ -6,9 +6,9 @@
  */
 export const ADMIN_CASHIER_INACTIVITY_MS = 15 * 60 * 1000;
 
-/** Sólo administración y caja tienen cierre automático por inactividad. */
-export function inactivityLimitMs(role: "member" | "cashier" | "trainer" | "admin" | null | undefined): number | null {
-  return role === "admin" || role === "cashier" ? ADMIN_CASHIER_INACTIVITY_MS : null;
+/** Sólo administración y caja tienen cierre automático por inactividad (el súper administrador también: es administración). */
+export function inactivityLimitMs(role: "member" | "cashier" | "trainer" | "admin" | "superadmin" | null | undefined): number | null {
+  return role === "admin" || role === "cashier" || role === "superadmin" ? ADMIN_CASHIER_INACTIVITY_MS : null;
 }
 
 export function isInactive(lastActivityMs: number, nowMs: number, limitMs: number | null): boolean {

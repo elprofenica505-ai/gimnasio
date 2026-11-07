@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ProfileStatus = "ready" | "missing" | "error";
-export type UserRole = "member" | "cashier" | "trainer" | "admin";
+export type UserRole = "member" | "cashier" | "trainer" | "admin" | "superadmin";
 
 export type MfaState =
   | "not_required" // member: MFA no aplica al acceso del panel
@@ -17,17 +17,24 @@ export interface AalLevels {
 
 /** Personal del gimnasio: administrador, caja o entrenador. Todos requieren MFA (aal2). */
 export function isStaffRole(role: unknown): boolean {
-  return role === "admin" || role === "cashier" || role === "trainer";
+  return role === "admin" || role === "cashier" || role === "trainer" || role === "superadmin";
 }
 
 /** Caja y administración: cobros, abonos, gastos, cuentas y datos de contacto. */
 export function isFinanceRole(role: unknown): boolean {
-  return role === "admin" || role === "cashier";
+  return role === "admin" || role === "cashier" || role === "superadmin";
 }
 
-/** Sólo administrador: reportes, importación, planes, horarios y asignación de roles. */
+/** Sólo administrador: reportes, importación, planes, horarios y asignación de roles.
+ * El súper administrador (dueño del aplicativo) tiene todo eso y su cuenta es
+ * intocable desde el panel: la protege la base (00100). */
 export function isAdminRole(role: unknown): boolean {
-  return role === "admin";
+  return role === "admin" || role === "superadmin";
+}
+
+/** Sólo el dueño del aplicativo. La base impide otorgar o quitar este rol desde la app. */
+export function isSuperAdminRole(role: unknown): boolean {
+  return role === "superadmin";
 }
 
 export function mfaStateFromLevels(

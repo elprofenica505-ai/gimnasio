@@ -4,7 +4,7 @@
  * visibilidad; la seguridad real vive en la base (RLS y funciones) y en cada página.
  */
 
-export type PanelRole = "admin" | "cashier" | "trainer" | "member" | "staff" | null | undefined;
+export type PanelRole = "admin" | "cashier" | "trainer" | "member" | "staff" | "superadmin" | null | undefined;
 
 /** "trainer": sólo el módulo del entrenador. "none": sin módulos. */
 export type PanelAccessLevel = "all" | "finance" | "trainer" | "none";
@@ -106,10 +106,11 @@ export const PANEL_MODULES: PanelModule[] = [
   },
 ];
 
-/** Caja y administración ven el panel; el entrenador sólo ve su módulo "Mis clientes". */
+/** Caja y administración ven el panel; el entrenador sólo ve su módulo "Mis clientes".
+ * El súper administrador (dueño del aplicativo) ve lo mismo que el administrador. */
 export function panelAccess(role: PanelRole, demo = false): PanelAccessLevel {
   if (demo) return "all";
-  if (role === "admin") return "all";
+  if (role === "admin" || role === "superadmin") return "all";
   if (role === "cashier") return "finance";
   if (role === "trainer") return "trainer";
   return "none";

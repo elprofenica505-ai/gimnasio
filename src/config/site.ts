@@ -35,11 +35,11 @@ export const siteConfig = {
   contactEmail: null as string | null,
 
   /** Número visible, tal como lo da el gimnasio. */
-  phone: "0000 0000",
+  phone: "8827 6908",
   /** El mismo número en formato internacional. */
-  phoneIntl: "+505 0000 0000",
+  phoneIntl: "+505 8827 6908",
   /** Sólo dígitos, con código de país. Se usa para el link de WhatsApp. */
-  whatsapp: "50500000000",
+  whatsapp: "50588276908",
 
   address: {
     street: "Calle principal (dirección por confirmar)",

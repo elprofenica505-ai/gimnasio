@@ -15,7 +15,7 @@ import { CLIENT_CATEGORY_LABEL } from "@/lib/clients/category";
 import type { AttendanceData } from "@/lib/attendance/summary";
 import { isLocale, type Locale } from "@/i18n/config";
 import { DEMO_MODE } from "@/lib/supabase/env";
-import { isStaffRole } from "@/lib/auth/current-user";
+import { isStaffRole, isAdminRole } from "@/lib/auth/current-user";
 import { BackLink } from "@/components/ui/back-link";
 import { groupRoutineByDay, formatRest, formatSeries } from "@/lib/progress/routine-view";
 import {
@@ -62,7 +62,7 @@ export default async function ProgresoClientePage({
     redirect(`/${locale}/panel`);
   }
   const canRecord = DEMO_MODE ? false : isStaffRole(user?.role);
-  const canManage = DEMO_MODE ? false : user?.role === "admin" || user?.role === "trainer";
+  const canManage = DEMO_MODE ? false : isAdminRole(user?.role) || user?.role === "trainer";
 
   const result = DEMO_MODE || !/^[0-9a-f-]{36}$/i.test(id) ? null : await readData(() => getClientProgress(id));
   const data: ClientProgress | null = result && result.ok ? result.data : null;
@@ -134,8 +134,8 @@ export default async function ProgresoClientePage({
             ) : (
               <>
                 {category && <p className="rounded-xl border border-line bg-card px-4 py-3 text-[0.9rem] text-ink">Categoría: <strong>{category}</strong></p>}
-                <ProgressView data={data} today={today} canRecord={canRecord} canManage={canManage} isAdmin={user?.role === "admin"} attendance={attendance} attendanceFailed={!!(attResult && !attResult.ok)} />
-                {canRecord && (<section className="grid gap-3"><h2 className="text-xl font-bold text-ink">Calculadora, plan nutricional y rutina</h2><NutritionCalculator mode="staff" clientId={data.clientId} isAdmin={user?.role === "admin"} /></section>)}
+                <ProgressView data={data} today={today} canRecord={canRecord} canManage={canManage} isAdmin={isAdminRole(user?.role)} attendance={attendance} attendanceFailed={!!(attResult && !attResult.ok)} />
+                {canRecord && (<section className="grid gap-3"><h2 className="text-xl font-bold text-ink">Calculadora, plan nutricional y rutina</h2><NutritionCalculator mode="staff" clientId={data.clientId} isAdmin={isAdminRole(user?.role)} /></section>)}
               </>
             )
           )}

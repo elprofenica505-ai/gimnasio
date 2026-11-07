@@ -5,7 +5,7 @@ import { readFinance } from "@/lib/finance/read-result";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isFinanceRole } from "@/lib/auth/current-user";
+import { isFinanceRole, isAdminRole } from "@/lib/auth/current-user";
 import { visibleModules } from "@/lib/admin/modules";
 import { getDictionary } from "@/i18n/dictionaries";
 import { isLocale, type Locale } from "@/i18n/config";
@@ -57,7 +57,7 @@ export default async function FinanzasPage({
       permissions &&
       (child.id !== "cuentas" || permissions.receivables) &&
       (child.id !== "gastos" || permissions.expenses) &&
-      (child.id !== "reportes" || permissions.dailyClose || user?.role === "admin"),
+      (child.id !== "reportes" || permissions.dailyClose || isAdminRole(user?.role)),
   );
 
   const result = demo

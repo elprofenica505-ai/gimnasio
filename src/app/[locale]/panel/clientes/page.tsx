@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { canAccessPanel } from "@/lib/auth/current-user";
+import { canAccessPanel, isAdminRole } from "@/lib/auth/current-user";
 import { getCurrentUser, getStaffProfiles } from "@/lib/data/queries";
 import { readData } from "@/lib/data/read-result";
 import { StaffDirectory } from "@/components/crm/staff-directory";
@@ -28,7 +28,7 @@ export default async function ClientsPage({
   const staffRows = staff.ok ? staff.data : [];
   return (
     <ClientsPanel
-      isAdmin={user?.role === "admin"}
+      isAdmin={isAdminRole(user?.role)}
       isDemo={DEMO_MODE}
       staffIds={staffRows.map((p) => p.id)}
       staffDirectory={

@@ -7,7 +7,7 @@ import { InteractiveBarChart } from "@/components/admin/interactive-chart";
 import { FinanceKpis } from "@/components/admin/finance-kpis";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { canAccessPanel } from "@/lib/auth/current-user";
+import { canAccessPanel, isAdminRole } from "@/lib/auth/current-user";
 import { LinkPending } from "@/components/ui/link-pending";
 import { panelAccess, visibleModules, type PanelModule } from "@/lib/admin/modules";
 import { Bell, CalendarCheck, CalendarDays, MessageSquare, ShieldAlert, UserPlus, Users, Wallet, Receipt, Zap } from "lucide-react";
@@ -165,7 +165,7 @@ export default async function PanelHomePage({
 
   /* ---------- Administración: pendientes de entrenadores ---------- */
   let pendingTrainerRequests: number | null = null;
-  if (!demo && role === "admin") {
+  if (!demo && isAdminRole(role)) {
     const access = await readData(() => getTrainerAccessAdmin());
     if (access.ok) pendingTrainerRequests = access.data.requests.filter((r) => r.status === "pending").length;
   }
@@ -257,7 +257,7 @@ export default async function PanelHomePage({
           ) : null}
 
           {/* Hoy y pendientes: sólo administración */}
-          {role === "admin" && !demo ? (
+          {isAdminRole(role) && !demo ? (
             <AdminToday
               locale={locale}
               cash={finance && finance.ok ? finance.data[0] : null}
