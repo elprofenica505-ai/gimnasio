@@ -14,6 +14,7 @@ import { Plans } from "@/components/sections/plans";
 import { Rules } from "@/components/sections/rules";
 import { Supplements } from "@/components/sections/supplements";
 import { Testimonials } from "@/components/sections/testimonials";
+import { LeadCapture } from "@/components/sections/lead-capture";
 import { MemberSummary } from "@/components/account/member-summary";
 import { getDictionary } from "@/i18n/dictionaries";
 import { isLocale } from "@/i18n/config";
@@ -77,6 +78,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       {visibility.showBoxing ? <Boxing locale={safeLocale} /> : null}
       <ClassesGrid locale={safeLocale} />
       <Plans locale={safeLocale} activeClassSlugs={activeClassSlugs} />
+      <LeadCapture locale={safeLocale} />
       <Supplements locale={safeLocale} />
       <Gallery locale={safeLocale} />
       <Community locale={safeLocale} />

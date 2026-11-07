@@ -144,20 +144,47 @@ export async function Plans({
                   ))}
                 </ul>
 
-                <ButtonLink
-                  href={whatsappLink(
-                    locale === "es"
-                      ? `Hola, me interesa el plan ${name}.`
-                      : `Hi, I am interested in the ${name} plan.`,
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant={plan.is_popular ? "primary" : "outline"}
-                  size="md"
-                  className="mt-7 w-full"
-                >
-                  {price ? dict.plans.choose : dict.plans.ask}
-                </ButtonLink>
+                {plan.price_nio !== null && plan.price_nio !== undefined ? (
+                  <div className="mt-7 flex flex-col gap-2">
+                    <ButtonLink
+                      href={`/${locale}/checkout?plan=${plan.id}`}
+                      variant="primary"
+                      size="md"
+                      className="w-full"
+                    >
+                      {locale === "es" ? "Comprar ahora" : "Buy now"}
+                    </ButtonLink>
+                    <ButtonLink
+                      href={whatsappLink(
+                        locale === "es"
+                          ? `Hola, me interesa el plan ${name}.`
+                          : `Hi, I am interested in the ${name} plan.`,
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="outline"
+                      size="md"
+                      className="w-full"
+                    >
+                      {locale === "es" ? "Preguntar por WhatsApp" : "Ask on WhatsApp"}
+                    </ButtonLink>
+                  </div>
+                ) : (
+                  <ButtonLink
+                    href={whatsappLink(
+                      locale === "es"
+                        ? `Hola, me interesa el plan ${name}.`
+                        : `Hi, I am interested in the ${name} plan.`,
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant={plan.is_popular ? "primary" : "outline"}
+                    size="md"
+                    className="mt-7 w-full"
+                  >
+                    {price ? dict.plans.choose : dict.plans.ask}
+                  </ButtonLink>
+                )}
               </article>
             </Reveal>
           );

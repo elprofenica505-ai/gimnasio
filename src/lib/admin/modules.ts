@@ -59,6 +59,7 @@ export const PANEL_MODULES: PanelModule[] = [
     href: "/panel/finanzas",
     children: [
       { id: "caja", label: "Caja", href: "/panel/caja" },
+      { id: "ventas", label: "Ventas online", href: "/panel/ventas" },
       { id: "cuentas", label: "Cuentas por cobrar", href: "/panel/cuentas" },
       { id: "gastos", label: "Gastos", href: "/panel/gastos" },
       { id: "productos", label: "Productos y stock", href: "/panel/productos" },

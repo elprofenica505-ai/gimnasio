@@ -260,7 +260,8 @@ begin
   return jsonb_build_object(
     'public_id', v_out.public_id, 'total', v_out.total,
     'currency', v_out.currency, 'plan_name', v_out.plan_name,
-    'items', v_out.items);
+    'items', v_out.items,
+    'instrucciones', (select value from public.embudo_config where key = 'instrucciones'));
 end $$;
 
 create or replace function public.embudo_informar_pago(

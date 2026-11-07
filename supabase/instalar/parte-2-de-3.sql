@@ -6873,6 +6873,8 @@ commit;
 -- `admin_coaches_catalog`, `admin_slot_coach_plan`, `admin_apply_slot_coach` y
 -- `coach_audit`, y volver a las versiones de `_schedule_plan` (00075) y
 -- `admin_apply_schedule` (00074). Los entrenadores creados siguen existiendo y
+-- ninguna clase ni reserva se toca.
+
 -- ============================================================
 --  FIN DE LA PARTE 2
 -- ============================================================
