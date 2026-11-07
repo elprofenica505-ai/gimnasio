@@ -24,7 +24,7 @@ import type { FinanceReportData } from "./load";
 import { presentSheet } from "./present.ts";
 
 /** Nombre fijo: el Excel maestro siempre se llama igual y se regenera con datos actuales. */
-export const MASTER_FILENAME = "Strong-Gym-Maestro.xlsx";
+export const MASTER_FILENAME = "Power-Box-Gym-Maestro.xlsx";
 
 const stampFmt = new Intl.DateTimeFormat("es-NI", {
   timeZone: "America/Managua",
@@ -81,7 +81,7 @@ export async function buildFilteredWorkbook(data: FinanceReportData, filters: Ex
 
 async function buildLedgerWorkbook(data: FinanceReportData, now: Date, filters: ExportFilters | null): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Strong Gym";
+  wb.creator = "Power Box Gym";
   wb.created = now;
   const today = managuaDay(now);
   const rows = filters ? filterLedger(data.rows, filters) : data.rows;

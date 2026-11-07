@@ -1,4 +1,4 @@
-/* Service Worker de Strong Gym.
+/* Service Worker de Power Box Gym.
  *
  * Estrategia:
  *   - Assets estáticos (imágenes, JS, CSS, fuentes): cache-first. Si el
@@ -167,7 +167,7 @@ async function networkFirstPage(req) {
     const offline = await cache.match(offlineUrl);
     if (offline) return offline;
     return new Response(
-      "<h1>Sin conexión</h1><p>Volvé a conectarte a internet para usar Strong Gym.</p>",
+      "<h1>Sin conexión</h1><p>Volvé a conectarte a internet para usar Power Box Gym.</p>",
       { status: 503, headers: { "content-type": "text/html; charset=utf-8" } },
     );
   }

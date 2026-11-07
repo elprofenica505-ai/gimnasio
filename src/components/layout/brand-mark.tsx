@@ -1,10 +1,11 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Emblema de STRONG FITNESS GYM: triángulo rojo con la silueta negra
- * del atleta. Es el mismo dibujo del cartel del local y del favicon
- * (src/app/icon.svg), hecho en vectores para que se vea nítido en
- * cualquier tamaño y sobre cualquier fondo.
+ * Emblema de POWER BOX GYM: guante de boxeo rojo, dibujado en vectores
+ * para que se vea nítido en cualquier tamaño y sobre cualquier fondo.
+ * La costura oscura asume fondo oscuro (el caso de todo el sitio),
+ * igual que la marca anterior. El favicon (src/app/icon.svg) y la
+ * imagen para compartir (opengraph-image.tsx) dibujan el mismo guante.
  */
 export function BrandMark({ className }: { className?: string }) {
   return (
@@ -14,19 +15,19 @@ export function BrandMark({ className }: { className?: string }) {
       aria-hidden="true"
       focusable="false"
     >
-      <polygon points="50,12 93,85 7,85" fill="#d81a22" />
-      <g
-        fill="#0c0c0e"
+      {/* Guante: puño redondeado + pulgar + muñequera, separados del fondo. */}
+      <rect x="26" y="16" width="48" height="50" rx="24" fill="#d81a22" />
+      <ellipse cx="22" cy="50" rx="10" ry="13" fill="#d81a22" />
+      <rect x="40" y="70" width="26" height="14" rx="6" fill="#d81a22" />
+      {/* Costura del pulgar y línea del puño, en el color del fondo oscuro. */}
+      <path
+        d="M36 38 C29 46 29 56 36 64"
         stroke="#0c0c0e"
-        strokeWidth="6.6"
+        strokeWidth="4"
         strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="50" cy="46.5" r="5.6" stroke="none" />
-        <polygon points="42,54.5 58,54.5 55.5,77 44.5,77" stroke="none" />
-        <path d="M43 56 L33.5 60.5 L37 49.5" fill="none" />
-        <path d="M57 56 L66.5 60.5 L63 49.5" fill="none" />
-      </g>
+        fill="none"
+      />
+      <path d="M44 72 h18" stroke="#0c0c0e" strokeWidth="3" strokeLinecap="round" />
     </svg>
   );
 }
