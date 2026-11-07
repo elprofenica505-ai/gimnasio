@@ -187,7 +187,9 @@ al compartir), `boxeo.jpg`, `sacos.jpg`, `cambio.jpg`, `grupo.jpg`,
 ## 6 · Cómo crear la base del gimnasio nuevo
 
 1. Supabase → **New project** → región `us-east-1` → guardar la contraseña.
-2. **SQL Editor** → pegar `supabase/INSTALAR-BASE.sql` → Run.
+2. **SQL Editor** → pegar `supabase/INSTALAR-BASE.sql` → Run. *(Desde el
+   celular: las 3 partes de `supabase/instalar/`, guía en
+   `docs/INSTALAR-DESDE-EL-CELULAR.md`.)*
 3. **Authentication → Users → Add user**: correo y contraseña del dueño. Copiar
    el UID.
 4. **SQL Editor** → pegar `supabase/PERSONALIZAR-GIMNASIO.sql` con el UID y los
