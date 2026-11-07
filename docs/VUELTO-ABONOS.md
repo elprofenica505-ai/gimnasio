@@ -46,7 +46,7 @@ No hay migración automática ni modificación de cobros/abonos existentes.
 
 ## Evidencia remota aportada por el usuario antes de este cambio
 
-FICHA FICTICIA Carlicheta Sequeira, no cliente real del dueño:
+FICHA FICTICIA Cliente EJEMPLO, no cliente real del dueño:
 - Apertura0/0/0/0, referencia SD-196dc579-4bcb-469b-b54f-b651c03fc212.
 - Cargo100 NIO, referencia SD-57b3f4ec-f42b-4627-a923-e239b2c90b3c.
 - Abono40 NIO, SG-344483e5-9b86-42f3-9548-87a7bd7edaee,

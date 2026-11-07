@@ -2,7 +2,7 @@
 
 ## Evidencia y estado
 
-Usuario, sesión de prueba Carlicheta, intentó reservar Boxeo del 20 de octubre
+Usuario, sesión de prueba Cliente EJEMPLO, intentó reservar Boxeo del 20 de octubre
 2026 a las 06:00–07:00 Managua. Capturas 18:44–18:45 muestran 1/20 y 19 lugares
 libres, pero el botón sigue «Reservar» y Mi cuenta muestra cero reservas y ninguna
 próxima. **Recorrido no aceptado entonces; la persistencia se confirmó después mediante CSV (véase abajo).**
@@ -125,7 +125,7 @@ Migración00026 y `supabase/LECTURA-RESERVAS.sql`:
 
 ### Comprobación remota pendiente tras instalar
 
-Recargar como Carlicheta. Mi cuenta debe recuperar la reserva **original** del20-oct
+Recargar como Cliente EJEMPLO. Mi cuenta debe recuperar la reserva **original** del20-oct
 06:00, con una próxima reserva; Horarios debe mostrar1/20,19libres y «Cancelar
 reserva» para esa clase. No reservar de nuevo ni cancelar aún. No se da la
 instalación por ejecutada hasta la respuesta del usuario.

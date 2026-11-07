@@ -2,7 +2,7 @@
 
 ## Evidencia remota del 17 de octubre de 2026
 
-El usuario asignó «Gimnasio mensual» a Carlicheta (ficha/cuenta de prueba) desde
+El usuario asignó «Gimnasio mensual» a Cliente EJEMPLO (ficha/cuenta de prueba) desde
 Clientes, guardó y recargó: plan y nota «Plan Común» permanecieron. En Mi cuenta,
 tras recargar con esa identidad, seguía apareciendo «Sin plan asignado».
 
@@ -36,7 +36,7 @@ sin nueva fila ni cambio de hora. Esto no demuestra asistencia a una clase reser
 2. Ejecutar **sólo** `supabase/PLAN-CUENTA.sql` en SQL Editor de Supabase.
    Es una función de lectura y sus permisos; no actualiza ni borra datos.
 3. Resultado esperado: `Success. No rows returned`.
-4. Usar el preview actualizado de PR10. Como Carlicheta, recargar Mi cuenta:
+4. Usar el preview actualizado de PR10. Como Cliente EJEMPLO, recargar Mi cuenta:
    debe verse «Gimnasio mensual». No reasignar ni guardar la ficha otra vez.
 5. Si aparece un error, informar el texto/código. No repetir SETUP, FASE2,
    COBROS-GASTOS ni crear otra ficha.

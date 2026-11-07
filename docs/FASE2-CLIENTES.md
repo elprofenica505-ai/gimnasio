@@ -468,7 +468,7 @@ Las capturas nuevas de 07:29 en el Preview `3e5minnn6` muestran barras negativas
 (-166.5K/-86.6K) y tabla expandida de ingresos en cero. Se valida ese caso visual,
 no sus importes contables. Las capturas de 07:15 adjuntas otra vez corresponden
 al Preview anterior (`f78mjvkhv`), no prueban regresión del texto de accesos.
-La captura de Hellen ya validada tampoco se interpreta como nueva prueba de Caja.
+La captura de Cliente EJEMPLO ya validada tampoco se interpreta como nueva prueba de Caja.
 
 Se detectó que la grilla móvil, sin columnas explícitas ni min-width:0 en sus
 hijos, heredaba el ancho mínimo del gráfico. Corrección acotada: columna

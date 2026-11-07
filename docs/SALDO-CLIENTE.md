@@ -52,7 +52,7 @@ El resto de la ficha sigue disponible. El despliegue web no instala SQL remoto.
 ## Validación remota pendiente
 
 1. Instalar el SQL incremental y esperar Success sin filas.
-2. En preview, administrador → Clientes → buscar Carlicheta → abrir su ficha.
+2. En preview, administrador → Clientes → buscar Cliente EJEMPLO → abrir su ficha.
 3. Revisar el bloque nuevo «Saldo y cobros del cliente». Si informa `missing`,
    significa que no hay fila de saldo para el perfil vinculado; no que esté al día.
    No cambiar perfil, crear saldo cero ni hacer otro cobro para ocultarlo.
@@ -61,7 +61,7 @@ El resto de la ficha sigue disponible. El despliegue web no instala SQL remoto.
    cuáles están asociados a esta ficha.
 5. Compartir captura de ese bloque. No repetir reservas, planes, entradas ni cobros.
 
-Carlicheta es la cuenta/ficha de prueba del usuario, no cliente real del dueño.
+Cliente EJEMPLO es la cuenta/ficha de prueba del usuario, no cliente real del dueño.
 PR10 sigue sin merge; no limpieza, cambios de administrador ni importación real.
 
 ## Evidencia local
