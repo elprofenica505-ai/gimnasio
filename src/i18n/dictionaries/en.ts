@@ -157,6 +157,20 @@ const en = {
     cta: "Check availability",
   },
 
+  cart: {
+    add: "Add to cart",
+    added: "Added!",
+    title: "Your cart",
+    empty: "Your cart is empty.",
+    emptyCta: "Browse the store",
+    plan: "Selected plan",
+    remove: "Remove",
+    qty: "Quantity",
+    total: "Estimated total",
+    checkout: "Checkout",
+    note: "No sign-up needed: details are requested when placing the order and the gym confirms the total.",
+  },
+
   community: {
     eyebrow: "Community",
     title: "Real people training",

@@ -2,16 +2,22 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useCart } from "@/components/cart/cart-provider";
 import {
   ArrowLeft,
   CheckCircle2,
   ChevronRight,
   ClipboardCheck,
   Loader2,
+  Minus,
+  Plus,
   ShieldCheck,
+  ShoppingCart,
+  Trash2,
 } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
+import { cartTotal, formatCórdobas } from "@/lib/cart";
 import { cn } from "@/lib/utils";
 
 interface PlanEnVenta {
@@ -46,10 +52,11 @@ const PERIODO_EN: Record<string, string> = {
 };
 
 /**
- * Checkout online de membresías: elegir plan → datos → pagar por
- * SINPE/transferencia → cargar el número de referencia. El total lo
- * confirma el servidor (nunca el navegador) y el personal activa la
- * membresía con un toque cuando verifica el pago.
+ * Checkout: plan y/o productos del carrito → datos → pagar por
+ * SINPE/transferencia → número de referencia. El visitante NUNCA se
+ * registra para comprar: los datos se piden al generar la orden, y el
+ * total lo confirma el servidor (nunca el navegador). El personal
+ * activa la membresía con un toque cuando verifica el pago.
  */
 export function CheckoutFlow({
   locale,
@@ -61,8 +68,11 @@ export function CheckoutFlow({
   const es = locale === "es";
   const params = useSearchParams();
   const planInicial = params.get("plan") ?? "";
+  const { items, total: totalCarrito, setQty, removeItem, clear, ready } = useCart();
 
-  const [paso, setPaso] = useState<Paso>(planInicial && planes.length ? "datos" : "carrito");
+  const [paso, setPaso] = useState<Paso>(
+    planInicial && planes.length ? "datos" : "carrito",
+  );
   const [planId, setPlanId] = useState(planInicial);
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -72,12 +82,10 @@ export function CheckoutFlow({
   const [error, setError] = useState<string | null>(null);
   const [orden, setOrden] = useState<OrdenCreada | null>(null);
   const [referencia, setReferencia] = useState("");
-  const [informada, setInformada] = useState(false);
 
   const plan = useMemo(() => planes.find((p) => p.id === planId), [planes, planId]);
   const periodoTexto = (p: PlanEnVenta) => (es ? PERIODO_ES[p.periodo] : PERIODO_EN[p.periodo]);
-  const dinero = (n: number) =>
-    es ? `C$${n.toLocaleString("es-NI")}` : `NIO ${n.toLocaleString("en-US")}`;
+  const estimado = (plan?.precio ?? 0) + totalCarrito;
 
   async function crearOrden() {
     setError(null);
@@ -94,11 +102,17 @@ export function CheckoutFlow({
           phone: telefono,
           email: correo || null,
           plan_id: planId || null,
+          items: items.map((i) => ({ product_id: i.productId, qty: i.qty })),
           website: web,
         }),
       });
       const j = await r.json();
       if (!r.ok || !j.orden) {
+        if (j.error === "ORDEN_VACIA") {
+          setError(es ? "Tu carrito quedó vacío: elegí un plan o un producto." : "Your cart is empty: pick a plan or a product.");
+          setPaso("carrito");
+          return;
+        }
         setError(
           j.error === "RATE_LIMIT"
             ? es
@@ -130,7 +144,7 @@ export function CheckoutFlow({
         body: JSON.stringify({ public_id: orden.public_id, reference: referencia, website: web }),
       });
       if (r.ok) {
-        setInformada(true);
+        clear();
         setPaso("listo");
       } else {
         setError(es ? "No se pudo registrar. Intentá de nuevo." : "Could not save it. Try again.");
@@ -146,13 +160,13 @@ export function CheckoutFlow({
       <div className="mx-auto w-full max-w-2xl">
         {/* Título + pasos */}
         <div className="mb-10">
-          <p className="eyebrow">{es ? "Membresías" : "Memberships"}</p>
+          <p className="eyebrow">{es ? "Membresías y tienda" : "Memberships and store"}</p>
           <h1 className="display-xl mt-3 text-4xl sm:text-5xl">
-            {paso === "listo" ? (es ? "¡Listo!" : "All set!") : es ? "Comprá tu plan" : "Buy your plan"}
+            {paso === "listo" ? (es ? "¡Listo!" : "All set!") : es ? "Completá tu compra" : "Complete your order"}
           </h1>
           <ol className="mt-4 flex items-center gap-2 text-xs text-fog">
             {[
-              ["carrito", es ? "Plan" : "Plan"],
+              ["carrito", es ? "Carrito" : "Cart"],
               ["datos", es ? "Tus datos" : "Details"],
               ["pago", es ? "Pago" : "Payment"],
             ].map(([id, label], i) => (
@@ -179,40 +193,55 @@ export function CheckoutFlow({
           </p>
         )}
 
-        {/* PASO 1: elegir plan */}
+        {/* PASO 1: carrito (plan + productos) */}
         {paso === "carrito" && (
-          <div className="space-y-3">
-            {planes.length === 0 && (
-              <p className="text-fog">
+          <div className="space-y-6">
+            {planes.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-mist">{es ? "1. ¿Sumás un plan?" : "1. Add a plan?"}</p>
+                {planes.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setPlanId(planId === p.id ? "" : p.id)}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-2xl border p-5 text-left transition-colors hover:border-brand/60",
+                      planId === p.id ? "border-brand bg-brand/10" : "border-line bg-card",
+                    )}
+                  >
+                    <span>
+                      <span className="block font-bold text-white">{p.nombre}</span>
+                      <span className="text-sm text-fog">{periodoTexto(p)}</span>
+                    </span>
+                    <span className="display-xl text-2xl text-brand">{formatCórdobas(p.precio)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {ready && items.length > 0 && (
+              <p className="text-sm text-mist">
                 {es
-                  ? "Ahora mismo no hay planes con venta online. Escribinos por WhatsApp y te ayudamos."
-                  : "No plans are available online right now. Reach us on WhatsApp."}
+                  ? `2. Tu carrito con ${items.length} producto(s) se incluye en la orden.`
+                  : `2. Your cart with ${items.length} product(s) is included in the order.`}
               </p>
             )}
-            {planes.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => {
-                  setPlanId(p.id);
-                  setPaso("datos");
-                }}
-                className={cn(
-                  "flex w-full items-center justify-between rounded-2xl border p-5 text-left transition-colors hover:border-brand/60",
-                  planId === p.id ? "border-brand bg-brand/10" : "border-line bg-card",
-                )}
-              >
-                <span>
-                  <span className="block font-bold text-white">{p.nombre}</span>
-                  <span className="text-sm text-fog">{periodoTexto(p)}</span>
-                </span>
-                <span className="display-xl text-2xl text-brand">{dinero(p.precio)}</span>
-              </button>
-            ))}
+            <Button
+              type="button"
+              disabled={!planId && items.length === 0}
+              onClick={() => setPaso("datos")}
+              className="w-full"
+            >
+              <ClipboardCheck className="size-4" aria-hidden="true" />
+              {es ? "Continuar" : "Continue"}
+            </Button>
+            <ButtonLink href={`/${locale}/#tienda`} variant="outline-dark" className="w-full">
+              <ShoppingCart className="size-4" aria-hidden="true" />
+              {es ? "Ver la tienda" : "Browse the store"}
+            </ButtonLink>
           </div>
         )}
 
-        {/* PASO 2: datos */}
+        {/* PASO 2: datos + resumen */}
         {paso === "datos" && (
           <form
             className="space-y-4"
@@ -221,12 +250,53 @@ export function CheckoutFlow({
               crearOrden();
             }}
           >
-            {plan && (
-              <div className="flex items-center justify-between rounded-2xl border border-brand/40 bg-brand/10 p-4">
-                <span className="font-bold text-white">{plan.nombre}</span>
-                <span className="display-xl text-xl text-brand">{dinero(plan.precio)}</span>
+            {/* Resumen editable */}
+            <div className="space-y-3 rounded-2xl border border-line bg-card p-5">
+              {plan && (
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-bold text-white">{plan.nombre}</span>
+                  <span className="display-xl text-lg text-brand">{formatCórdobas(plan.precio)}</span>
+                </div>
+              )}
+              {items.map((i) => (
+                <div key={i.productId} className="flex items-center gap-3 border-t border-line pt-3">
+                  <span className="min-w-0 flex-1 truncate text-sm text-mist">{i.name}</span>
+                  <button
+                    type="button"
+                    aria-label="−"
+                    onClick={() => setQty(i.productId, i.qty - 1)}
+                    className="grid size-7 place-items-center rounded-full border border-line text-mist"
+                  >
+                    <Minus className="size-3" aria-hidden="true" />
+                  </button>
+                  <span className="w-5 text-center text-sm font-bold text-ink">{i.qty}</span>
+                  <button
+                    type="button"
+                    aria-label="+"
+                    onClick={() => setQty(i.productId, i.qty + 1)}
+                    className="grid size-7 place-items-center rounded-full border border-line text-mist"
+                  >
+                    <Plus className="size-3" aria-hidden="true" />
+                  </button>
+                  <span className="w-20 text-right text-sm font-semibold text-brand">
+                    {formatCórdobas(i.price * i.qty)}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={es ? "Quitar" : "Remove"}
+                    onClick={() => removeItem(i.productId)}
+                    className="text-fog hover:text-alert"
+                  >
+                    <Trash2 className="size-3.5" aria-hidden="true" />
+                  </button>
+                </div>
+              ))}
+              <div className="flex items-center justify-between border-t border-line pt-3">
+                <span className="text-sm font-semibold text-mist">{es ? "Total estimado" : "Estimated total"}</span>
+                <span className="display-xl text-2xl text-brand">{formatCórdobas(estimado)}</span>
               </div>
-            )}
+            </div>
+
             <div>
               <label htmlFor="ck-nombre" className="mb-1.5 block text-sm font-semibold text-mist">
                 {es ? "Nombre completo" : "Full name"}
@@ -284,9 +354,9 @@ export function CheckoutFlow({
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline-dark" onClick={() => setPaso("carrito")}>
                 <ArrowLeft className="size-4" aria-hidden="true" />
-                {es ? "Cambiar plan" : "Change plan"}
+                {es ? "Atrás" : "Back"}
               </Button>
-              <Button type="submit" disabled={cargando} className="flex-1">
+              <Button type="submit" disabled={cargando || (!plan && items.length === 0)} className="flex-1">
                 {cargando ? (
                   <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                 ) : (
@@ -312,7 +382,7 @@ export function CheckoutFlow({
               <p className="display-xl text-3xl tracking-wide text-white">{orden.public_id}</p>
               {orden.plan_name && <p className="mt-1 text-mist">{orden.plan_name}</p>}
               <p className="display-xl mt-3 text-4xl text-brand">
-                {dinero(Number(orden.total))}
+                {formatCórdobas(Number(orden.total))}
                 <span className="ml-2 text-sm font-normal tracking-normal text-fog">{orden.currency}</span>
               </p>
             </div>
@@ -365,13 +435,13 @@ export function CheckoutFlow({
                 {es ? (
                   <>
                     Tu orden <strong className="text-white">{orden.public_id}</strong> quedó en la cola de
-                    verificación. En cuanto el gimnasio confirme tu pago, tu membresía queda activa y te
+                    verificación. En cuanto el gimnasio confirme tu pago, tu compra queda activa y te
                     avisamos al <strong className="text-white">{telefono}</strong>.
                   </>
                 ) : (
                   <>
                     Your order <strong className="text-white">{orden.public_id}</strong> is in the
-                    verification queue. Once the gym confirms your payment, your membership is activated and
+                    verification queue. Once the gym confirms your payment, your purchase is activated and
                     we contact you at <strong className="text-white">{telefono}</strong>.
                   </>
                 )}

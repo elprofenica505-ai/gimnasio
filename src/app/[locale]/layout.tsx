@@ -12,6 +12,7 @@ import { StormTransition } from "@/components/layout/storm-transition";
 import { SwRegister } from "@/components/sw-register";
 import { AppProvider } from "@/components/providers/app-provider";
 import { DictionaryProvider } from "@/components/providers/dictionary-provider";
+import { CartProvider } from "@/components/cart/cart-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { getSiteUrl, siteConfig } from "@/config/site";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -167,6 +168,7 @@ export default async function LocaleLayout({
       <body className="min-h-dvh bg-paper text-ink antialiased">
         <DictionaryProvider dict={dict} locale={locale as Locale}>
           <AppProvider initialUser={user} isDemo={DEMO_MODE}>
+            <CartProvider>
             <a
               href="#contenido"
               className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-full focus:bg-brand focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-onbrand"
@@ -198,6 +200,7 @@ export default async function LocaleLayout({
                 (`process.env.NODE_ENV === "production"`) y si el navegador
                 lo soporta, así que en dev local no interferimos. */}
             <SwRegister />
+            </CartProvider>
           </AppProvider>
         </DictionaryProvider>
       </body>

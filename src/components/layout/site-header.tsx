@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarCheck, Menu } from "lucide-react";
+import Link from "next/link";
+import { CalendarCheck, Menu, ShoppingCart } from "lucide-react";
 import { isOpenAt } from "@/config/site";
 import { useDictionary } from "@/components/providers/dictionary-provider";
 import { useApp } from "@/components/providers/app-provider";
+import { useCart } from "@/components/cart/cart-provider";
 import { ButtonLink } from "@/components/ui/button";
 import { isStaffRole } from "@/lib/auth/current-user";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,7 @@ export function SiteHeader({
 }) {
   const { dict, locale } = useDictionary();
   const { user } = useApp();
+  const { count, ready } = useCart();
   // El personal no reserva clases: no se muestra el botón de reserva en el encabezado.
   const staff = isStaffRole(user?.role);
   const [scrolled, setScrolled] = useState(false);
@@ -97,6 +100,20 @@ export function SiteHeader({
             ) : null}
 
             <LanguageSwitcher locale={locale} label={dict.nav.language} />
+
+            {/* Carrito de la tienda: visible siempre, sin cuenta. */}
+            <Link
+              href={`/${locale}/carrito`}
+              aria-label={dict.cart.title}
+              className="relative grid size-10 place-items-center rounded-full border border-line bg-card text-ink transition-colors hover:border-brand/40"
+            >
+              <ShoppingCart className="size-5" aria-hidden="true" />
+              {ready && count > 0 ? (
+                <span className="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full bg-brand text-[0.625rem] font-bold text-onbrand">
+                  {count > 9 ? "9+" : count}
+                </span>
+              ) : null}
+            </Link>
 
             {/* La visibilidad pertenece al contenedor: ButtonLink usa inline-flex
                 y no debe competir con hidden dentro del mismo elemento. */}

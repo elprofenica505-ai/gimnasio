@@ -51,7 +51,7 @@
 --      el panel del gimnasio, no por SQL.
 --
 --  Generado por scripts/build-install-sql.mjs — no editar a mano.
---  84 migraciones incluidas de 87.
+--  85 migraciones incluidas de 88.
 -- ============================================================
 
 
@@ -5129,6 +5129,11 @@ commit;
 -- no incluye monthly_salary, phone, email, notes, hire_date ni profile_id.
 --
 -- Reversión (copiar y pegar si hiciera falta): regresar a la vista de 00050:
+--   drop view if exists public.coaches_public;
+--   create view public.coaches_public as
+--     select id, full_name, full_name as name, specialty, is_active from public.coaches;
+--   grant select on public.coaches_public to anon, authenticated;
+
 -- ============================================================
 --  FIN DE LA PARTE 1
 -- ============================================================
