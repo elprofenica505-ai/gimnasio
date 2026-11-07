@@ -172,6 +172,7 @@ for (const variant of ["ejemplo", "vacio", "importes-largos"]) {
     "@/lib/data/queries": `export const getCurrentUser=async()=>({role:'admin',mfa:'ok'});export const getCashierPermissions=async()=>({dailyClose:true,monthlyResult:true,charts:true,accountBalances:true,expenses:true,receivables:true,void:true});export const getMonthlyPnl=async()=>${JSON.stringify(variantMonthly)};export const getPaymentMethodsBreakdown=async()=>${JSON.stringify(variantMethods)};export const getCashSummary=async()=>(${JSON.stringify(variantSummary)});export const getAccounts=async()=>${JSON.stringify(variantAccounts)};export const getRecentTransactions=async()=>${JSON.stringify(variantRecent)};export const getAccountsReceivable=async()=>${JSON.stringify(debts)};export const getExpenseCategories=async()=>${JSON.stringify(categories)};export const getDailyCash=async()=>[];export const getPaymentMethods=async()=>[];export const getRecentVoids=async()=>[];export const getVoidPlanImpact=async()=>[];`,
     "@/components/providers/dictionary-provider": `export const useDictionary=()=>({locale:'es',dict:${JSON.stringify(dict)}});`,
     "@/components/providers/app-provider": `export const useApp=()=>({user:{role:'admin',fullName:'Admin EJEMPLO'},isDemo:false,hydrated:true,bookings:[],signOut(){},toast(){}});`,
+    "@/components/cart/cart-provider": `export const useCart=()=>({items:[],count:0,total:0,ready:true,addItem(){},removeItem(){},setQty(){},clear(){}});`,
     "next/navigation": `export function notFound(){throw Error("NOT_FOUND")};export const usePathname=()=>'/es/panel/reportes';export const useRouter=()=>({});export function redirect(){throw Error('redirect')}`,
   });
   const { RecoveryForm } = await load("components/auth/recovery-form.tsx");
@@ -276,6 +277,7 @@ for (const [name, role] of [
     "server-only": "export {};",
     "@/components/providers/dictionary-provider": `export const useDictionary=()=>({locale:'es',dict:${JSON.stringify(dict)}});`,
     "@/components/providers/app-provider": `export const useApp=()=>({user:{role:'${role}',fullName:'EJEMPLO'},isDemo:false,hydrated:true,bookings:[],signOut(){},toast(){}});`,
+    "@/components/cart/cart-provider": `export const useCart=()=>({items:[],count:0,total:0,ready:true,addItem(){},removeItem(){},setQty(){},clear(){}});`,
     "next/navigation": `export function notFound(){throw Error("NOT_FOUND")};export const usePathname=()=>'/es/horarios';export const useRouter=()=>({});export function redirect(){throw Error('redirect')}`,
   });
   const { SiteShell: PublicShell } = await publicLoad(
