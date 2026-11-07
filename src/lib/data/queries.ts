@@ -126,6 +126,26 @@ export async function getPlans(): Promise<Plan[]> {
   );
 }
 
+/** Catálogo público de la tienda: sólo productos activos, sin costos. */
+export async function getProductsPublic(): Promise<
+  { id: string; name: string; category: string; price: string | number; image_data: string | null }[]
+> {
+  return checkedRead("PRODUCTS_PUBLIC", async () => {
+    const db = await operationalClient();
+    if (!db) return [];
+    const result = await db
+      .rpc("tienda_productos")
+      .abortSignal(AbortSignal.timeout(15000));
+    return requireRows("PRODUCTS_PUBLIC", result) as {
+      id: string;
+      name: string;
+      category: string;
+      price: string | number;
+      image_data: string | null;
+    }[];
+  });
+}
+
 export interface PlanTariffAdmin {
   id: string;
   slug: string;

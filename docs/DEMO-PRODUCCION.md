@@ -81,7 +81,7 @@ Rama: `arena/e27cbf67-strong-gym`. Sin SQL ni cambios en Supabase/Vercel remoto.
 
 No hay migración nueva ni instrucciones para ejecutar SQL. No repetir00030/00028/
 00029. Los datos ficticios PERSISTIDOS en Supabase siguen siendo datos del entorno
-conectado: no se confunden con esta demo local. Carlicheta/saldos no se tocaron.
+conectado: no se confunden con esta demo local. Cliente EJEMPLO/saldos no se tocaron.
 
 Para desplegar, ambas variables públicas reales deben estar configuradas en el
 entorno correspondiente de Vercel y reconstruir el despliegue. No pedir al usuario

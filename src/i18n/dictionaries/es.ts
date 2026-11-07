@@ -159,6 +159,20 @@ const es = {
     cta: "Consultar disponibilidad",
   },
 
+  cart: {
+    add: "Agregar al carrito",
+    added: "¡Agregado!",
+    title: "Tu carrito",
+    empty: "Tu carrito está vacío.",
+    emptyCta: "Ver la tienda",
+    plan: "Plan elegido",
+    remove: "Quitar",
+    qty: "Cantidad",
+    total: "Total estimado",
+    checkout: "Finalizar compra",
+    note: "Sin registro: los datos se piden al generar la orden y el total lo confirma el gimnasio.",
+  },
+
   community: {
     eyebrow: "Comunidad",
     title: "Gente real entrenando",

@@ -8,11 +8,6 @@
 --  Generado por scripts/build-install-sql.mjs — no editar a mano.
 -- ============================================================
 
---   drop view if exists public.coaches_public;
---   create view public.coaches_public as
---     select id, full_name, full_name as name, specialty, is_active from public.coaches;
---   grant select on public.coaches_public to anon, authenticated;
-
 begin;
 
 drop view if exists public.coaches_public;

@@ -108,7 +108,7 @@ No se promete una auditoría completa de Auth.
 - Test HTTP producción sin configuración incluye nuevas rutas y callback503.
 - Diseño SSR/CSS amplía a264 casos (11 pantallas ×3 fixtures ×8 anchos320–1280).
   No equivale a probar hidratación/entregabilidad en dispositivos reales.
-- SQL y regresiones financieras se mantienen aisladas. No repetir Carlicheta,
+- SQL y regresiones financieras se mantienen aisladas. No repetir Cliente EJEMPLO,
   movimientos ni00030. Ningún merge nuevo queda autorizado por esta documentación.
 
 Después de publicar con autorización y verificar redirects/SMTP, guiar una prueba

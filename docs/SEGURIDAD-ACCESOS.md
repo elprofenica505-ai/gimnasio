@@ -145,7 +145,7 @@ migraciones CLI; el incremental queda versionado en el repositorio.
 
 **No volver a pegar este SQL por rutina.** Su aplicación no depende de hacer merge.
 Falta prueba de humo de lectura desde celular: panel/clientes/Caja/reportes/cupos,
-sin crear pagos ni repetir liquidación de Carlicheta. Si algo falla, detener y
+sin crear pagos ni repetir liquidación de Cliente EJEMPLO. Si algo falla, detener y
 revisar; no reinstalar SETUP ni relajar RLS para hacerlo pasar.
 
 ## Lo siguiente, sin mezclar alcances

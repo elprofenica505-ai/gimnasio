@@ -3,7 +3,7 @@
 ## Alcance y evidencia remota
 
 Pruebas realizadas por el usuario en el preview de la rama, contra Supabase real.
-El agente no ejecutó operaciones financieras remotas. Carlicheta es una cuenta/ficha
+El agente no ejecutó operaciones financieras remotas. Cliente EJEMPLO es una cuenta/ficha
 de prueba del usuario; no es una cliente real del dueño. La tasa 40 es ficticia.
 
 - Cobro NIO10, cuenta EJEMPLO - Caja NIO, saldo 0 → 10.
@@ -13,9 +13,9 @@ de prueba del usuario; no es una cliente real del dueño. La tasa 40 es ficticia
 - Cobro USD1, cuenta EJEMPLO - Caja USD, saldo USD0 → 1.
   Comprobante SG-13b26579-109e-4482-a997-df12bb5e8fb6.
   La cuenta NIO permanece en 6; el equivalente NIO40 no es un abono a esa cuenta.
-- El usuario confirmó que Caja y Gastos, por enlace directo como Carlicheta,
+- El usuario confirmó que Caja y Gastos, por enlace directo como Cliente EJEMPLO,
   redirigen a Mi cuenta sin mostrar panel ni datos administrativos.
-- Capturas de consultas como Carlicheta a `/api/admin/finance` y a
+- Capturas de consultas como Cliente EJEMPLO a `/api/admin/finance` y a
   `?receipt=9ca113fb-fa2e-4e8f-babe-0de25395a1d9` muestran
   `{"error":"No tenés acceso a movimientos financieros."}`.
   Las capturas prueban el cuerpo de rechazo, no documentan el código HTTP.
