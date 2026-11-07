@@ -23,7 +23,7 @@ export function ClientCard({
           level="M"
           marginSize={4}
           className="mx-auto my-3 h-auto max-w-full"
-          title="Identificación de cliente Strong"
+          title="Identificación de cliente Power Box"
         />
         <p className="text-xs">
           Mostrá este carnet en recepción. No es un comprobante de pago.

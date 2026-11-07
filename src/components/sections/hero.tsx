@@ -94,8 +94,8 @@ export function Hero({
                 <ButtonLink
                   href={whatsappLink(
                     locale === "es"
-                      ? "Hola, quiero información de Strong Fitness Gym."
-                      : "Hi, I would like information about Strong Fitness Gym.",
+                    ? "Hola, quiero información de Power Box Gym."
+                    : "Hi, I would like information about Power Box Gym.",
                   )}
                   target="_blank"
                   rel="noopener noreferrer"

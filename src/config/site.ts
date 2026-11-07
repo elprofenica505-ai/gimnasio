@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  STRONG FITNESS GYM — datos reales del gimnasio
+ *  POWER BOX GYM — datos del gimnasio
  * ============================================================
  *  Todos los datos "de negocio" están acá: nombre, dirección,
  *  teléfono, redes, horarios y moneda. Cambiá lo que necesites
@@ -22,28 +22,28 @@ export const siteConfig = {
    * Para cambiarla sin tocar el código, define NEXT_PUBLIC_DEVELOPER_BRAND en Vercel y vuelve a publicar.
    */
   developerBrand: process.env.NEXT_PUBLIC_DEVELOPER_BRAND || "El Profe Nica 505",
-  name: "Strong Fitness Gym",
-  shortName: "Strong",
+  name: "Power Box Gym",
+  shortName: "Power Box",
   /** Razón social. Si no hay una distinta, se usa el nombre comercial. */
-  legalName: "Strong Fitness Gym",
+  legalName: "Power Box Gym",
   /** Dominio propio. Mientras no haya uno, se usa la URL del hosting. */
   domain: null as string | null,
   /** URL pública confirmada del hosting, también para builds sin variables de Vercel. */
-  productionUrl: "https://strong-gym-gamma.vercel.app",
+  productionUrl: "https://gimnasio-wheat.vercel.app",
 
   /** Email de contacto. Null = el sitio muestra WhatsApp en su lugar. */
   contactEmail: null as string | null,
 
   /** Número visible, tal como lo da el gimnasio. */
-  phone: "8449 1486",
+  phone: "0000 0000",
   /** El mismo número en formato internacional. */
-  phoneIntl: "+505 8449 1486",
+  phoneIntl: "+505 0000 0000",
   /** Sólo dígitos, con código de país. Se usa para el link de WhatsApp. */
-  whatsapp: "50584491486",
+  whatsapp: "50500000000",
 
   address: {
-    street: "Los Cedros, km 28½ Carretera Vieja a León",
-    city: "Villa El Carmen",
+    street: "Calle principal (dirección por confirmar)",
+    city: "Managua",
     region: "Managua",
     country: "Nicaragua",
     /** Sin código postal confirmado. */
@@ -51,7 +51,7 @@ export const siteConfig = {
   },
 
   /** Ubicación exacta en Google Maps (link que compartió el gimnasio). */
-  mapsUrl: "https://maps.app.goo.gl/PHVLYBuEkq4k1vEx7?g_st=ac",
+  mapsUrl: null as string | null,
   /** Coordenadas. Null = no las publicamos en los datos estructurados. */
   geo: null as { lat: number; lng: number } | null,
 
@@ -67,7 +67,8 @@ export const siteConfig = {
   currency: { code: "USD", symbol: "$", decimals: 0 },
 
   social: {
-    facebook: "https://www.facebook.com/share/1DgTyQLpHc/",
+    /** Pendiente: el gimnasio todavía no pasó la página de Facebook. */
+    facebook: null as string | null,
     /** Pendiente: el gimnasio todavía no pasó el usuario de Instagram. */
     instagram: null as string | null,
     tiktok: null as string | null,
@@ -79,15 +80,12 @@ export const siteConfig = {
    * Un día sin tramos está CERRADO. El domingo no se abre.
    */
   openingHours: [
-    [{ opens: "06:00", closes: "21:00" }], // Lunes
-    [{ opens: "06:00", closes: "21:00" }], // Martes
-    [{ opens: "06:00", closes: "21:00" }], // Miércoles
-    [{ opens: "06:00", closes: "21:00" }], // Jueves
-    [{ opens: "06:00", closes: "21:00" }], // Viernes
-    [
-      { opens: "08:00", closes: "12:00" },
-      { opens: "13:00", closes: "18:00" },
-    ], // Sábado
+    [{ opens: "06:00", closes: "20:00" }], // Lunes
+    [{ opens: "06:00", closes: "20:00" }], // Martes
+    [{ opens: "06:00", closes: "20:00" }], // Miércoles
+    [{ opens: "06:00", closes: "20:00" }], // Jueves
+    [{ opens: "06:00", closes: "20:00" }], // Viernes
+    [{ opens: "08:00", closes: "13:00" }], // Sábado
     [], // Domingo: CERRADO
   ] as readonly (readonly OpeningSlot[])[],
 

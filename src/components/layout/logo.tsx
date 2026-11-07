@@ -40,7 +40,7 @@ export function Logo({
               tone === "dark" ? "text-white" : "text-night",
             )}
           >
-            Strong
+            Power Box
           </span>
           <span
             className={cn(
@@ -48,7 +48,7 @@ export function Logo({
               tone === "dark" ? "text-white/55" : "text-night/60",
             )}
           >
-            Fitness Gym
+            Gym
           </span>
         </span>
       ) : null}

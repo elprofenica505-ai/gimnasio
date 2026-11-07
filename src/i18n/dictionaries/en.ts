@@ -1,16 +1,16 @@
 const en = {
   meta: {
-    title: "Strong Fitness Gym | Los Cedros, Villa El Carmen",
+    title: "Power Box Gym | Managua, Nicaragua",
     description:
-      "Gym in Los Cedros, km 28½ Old Road to León. Modern machines, free weights, boxing for all ages, dance cardio and sports supplements. Monday to Saturday.",
+      "Gym in Managua. Modern machines, free weights, boxing for all ages, dance cardio and sports supplements. Monday to Saturday.",
     descriptionBoxingOnly:
-      "Gym in Los Cedros, km 28½ Old Road to León. Modern machines, free weights, boxing for all ages and sports supplements. Monday to Saturday.",
+      "Gym in Managua. Modern machines, free weights, boxing for all ages and sports supplements. Monday to Saturday.",
     descriptionDanceOnly:
-      "Gym in Los Cedros, km 28½ Old Road to León. Modern machines, free weights, dance cardio and sports supplements. Monday to Saturday.",
+      "Gym in Managua. Modern machines, free weights, dance cardio and sports supplements. Monday to Saturday.",
     descriptionWeightsOnly:
-      "Gym in Los Cedros, km 28½ Old Road to León. Modern machines, free weights and sports supplements. Monday to Saturday.",
+      "Gym in Managua. Modern machines, free weights and sports supplements. Monday to Saturday.",
     keywords:
-      "gym Villa El Carmen, gym Los Cedros, boxing Managua, zumba, supplements, weights, Old Road to Leon",
+      "gym Managua, boxing gym Nicaragua, supplements, weights",
   },
 
   nav: {
@@ -162,9 +162,9 @@ const en = {
     title: "Real people training",
     subtitle: "People of all ages train here, each at their own pace and with their own goal.",
     groupCaption: "Group classes and gym activities.",
-    membersCaption: "Strong Fitness Gym members.",
-    changeTitle: "From 2022 to 2026",
-    changeCaption: "A real member's result, shared with her permission.",
+    membersCaption: "Power Box Gym members.",
+    changeTitle: "Consistency first",
+    changeCaption: "Every workout adds up. Results are built day by day.",
   },
 
   rules: {

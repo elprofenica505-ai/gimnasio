@@ -1,16 +1,16 @@
 const es = {
   meta: {
-    title: "Strong Fitness Gym | Los Cedros, Villa El Carmen",
+    title: "Power Box Gym | Managua, Nicaragua",
     description:
-      "Gimnasio en Los Cedros, km 28½ Carretera Vieja a León. Máquinas modernas, pesas libres, boxeo para todas las edades, zumba y venta de suplementos. Lunes a sábado.",
+      "Gimnasio en Managua. Máquinas modernas, pesas libres, boxeo para todas las edades, zumba y venta de suplementos. Lunes a sábado.",
     descriptionBoxingOnly:
-      "Gimnasio en Los Cedros, km 28½ Carretera Vieja a León. Máquinas modernas, pesas libres, boxeo para todas las edades y venta de suplementos. Lunes a sábado.",
+      "Gimnasio en Managua. Máquinas modernas, pesas libres, boxeo para todas las edades y venta de suplementos. Lunes a sábado.",
     descriptionDanceOnly:
-      "Gimnasio en Los Cedros, km 28½ Carretera Vieja a León. Máquinas modernas, pesas libres, zumba y venta de suplementos. Lunes a sábado.",
+      "Gimnasio en Managua. Máquinas modernas, pesas libres, zumba y venta de suplementos. Lunes a sábado.",
     descriptionWeightsOnly:
-      "Gimnasio en Los Cedros, km 28½ Carretera Vieja a León. Máquinas modernas, pesas libres y venta de suplementos. Lunes a sábado.",
+      "Gimnasio en Managua. Máquinas modernas, pesas libres y venta de suplementos. Lunes a sábado.",
     keywords:
-      "gimnasio Villa El Carmen, gimnasio Los Cedros, boxeo Managua, zumba, suplementos, pesas, Carretera Vieja a León",
+      "gimnasio Managua, gym Nicaragua, boxeo, zumba, suplementos, pesas",
   },
 
   nav: {
@@ -165,10 +165,10 @@ const es = {
     subtitle:
       "Acá entrena gente de todas las edades, cada quien a su ritmo y con su objetivo.",
     groupCaption: "Clases grupales y actividades del gimnasio.",
-    membersCaption: "Clientes de Strong Fitness Gym.",
-    changeTitle: "De 2022 a 2026",
+    membersCaption: "Clientes de Power Box Gym.",
+    changeTitle: "Constancia ante todo",
     changeCaption:
-      "Resultado real de una socia del gimnasio, publicado con su permiso.",
+      "Cada entrenamiento suma. Los resultados se construyen día a día.",
   },
 
   rules: {

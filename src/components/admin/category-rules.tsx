@@ -26,7 +26,7 @@ type Catalog = {
 };
 
 const LABELS: Record<CategoryRule["category"], string> = {
-  strong_gym: "Strong Gym",
+  strong_gym: "Power Box",
   familia: "Familia",
   amigo: "Amigo",
   comun: "Común",

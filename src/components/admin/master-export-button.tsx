@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Download } from "lucide-react";
 
 const ENDPOINT = "/api/admin/reportes/maestro";
-const FILENAME = "Strong-Gym-Maestro.xlsx";
+const FILENAME = "Power-Box-Gym-Maestro.xlsx";
 const DB_NAME = "strong-gym-export";
 const STORE = "handles";
 const KEY = "master-xlsx";
@@ -87,7 +87,7 @@ export function MasterExportButton({ label = "Exportar Excel maestro" }: { label
         }
         setMessage(
           result === "replaced"
-            ? "Listo: se actualizó el mismo archivo Strong-Gym-Maestro.xlsx."
+            ? "Listo: se actualizó el mismo archivo Power-Box-Gym-Maestro.xlsx."
             : "Listo: guardado. La próxima vez se actualizará este mismo archivo.",
         );
         return;

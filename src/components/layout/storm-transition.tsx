@@ -426,12 +426,12 @@ export function StormTransition() {
 
       <div className="storm-content">
         <span className="storm-halo" aria-hidden="true" />
-        {/* El emblema del cartel del gimnasio: triángulo rojo con el atleta.
-            Va como imagen fija (16 KB) para que no dependa de ningún dibujo
-            que haya que recalcular en cada visita. Sin `drop-shadow`: es un
-            filtro, y en Android los filtros dejan manchas. */}
+        {/* El emblema del gimnasio: guante rojo. Va como imagen fija para
+            que no dependa de ningún dibujo que haya que recalcular en cada
+            visita. Sin `drop-shadow`: es un filtro, y en Android los filtros
+            dejan manchas. */}
         <Image
-          src="/brand/emblema-strong.webp"
+          src="/brand/emblema.webp"
           alt=""
           width={408}
           height={444}
@@ -439,7 +439,7 @@ export function StormTransition() {
           sizes="(max-width: 640px) 48vw, 12rem"
           className="storm-emblem"
         />
-        <p className="storm-title">Strong Fitness Gym</p>
+        <p className="storm-title">Power Box Gym</p>
         <p className="storm-loading">Cargando…</p>
         {/* Barra de carga: el tramo dorado recorre el riel mientras se espera. */}
         <span className="storm-progress" aria-hidden="true">

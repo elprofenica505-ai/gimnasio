@@ -142,7 +142,7 @@ export function describeFilters(f: ExportFilters, maps: NameMaps): [string, stri
 export function exportFilename(f: ExportFilters, ext: "xlsx" | "csv"): string {
   const from = f.from ?? "inicio";
   const to = f.to ?? "hoy";
-  return `Strong-Gym-Reporte_${from}_a_${to}.${ext}`;
+  return `Power-Box-Gym-Reporte_${from}_a_${to}.${ext}`;
 }
 
 const stampFmt = new Intl.DateTimeFormat("sv-SE", {

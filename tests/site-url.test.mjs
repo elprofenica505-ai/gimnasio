@@ -24,9 +24,9 @@ function env(values, check) {
 }
 test("metadatos: producción sin variables usa el dominio público confirmado, no localhost", () => {
   env({ NODE_ENV: "production" }, () =>
-    assert.equal(getSiteUrl(), "https://strong-gym-gamma.vercel.app"),
+    assert.equal(getSiteUrl(), "https://gimnasio-wheat.vercel.app"),
   );
-  assert.equal(siteConfig.productionUrl, "https://strong-gym-gamma.vercel.app");
+  assert.equal(siteConfig.productionUrl, "https://gimnasio-wheat.vercel.app");
 });
 test("metadatos: desarrollo local sigue disponible", () => {
   env({ NODE_ENV: "development" }, () =>
@@ -61,7 +61,7 @@ test("metadatos: un Preview no se convierte en URL canónica por defecto", () =>
       VERCEL_URL: "preview-ejemplo.vercel.app",
       VERCEL_BRANCH_URL: "rama-ejemplo.vercel.app",
     },
-    () => assert.equal(getSiteUrl(), "https://strong-gym-gamma.vercel.app"),
+    () => assert.equal(getSiteUrl(), "https://gimnasio-wheat.vercel.app"),
   );
 });
 
@@ -73,7 +73,7 @@ test("metadatos: localhost de una plantilla vieja no se publica en producción",
     "http://prueba.localhost:3000",
   ]) {
     env({ NODE_ENV: "production", NEXT_PUBLIC_SITE_URL: url }, () =>
-      assert.equal(getSiteUrl(), "https://strong-gym-gamma.vercel.app"),
+      assert.equal(getSiteUrl(), "https://gimnasio-wheat.vercel.app"),
     );
   }
   env(
