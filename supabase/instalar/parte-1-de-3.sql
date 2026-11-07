@@ -51,7 +51,7 @@
 --      el panel del gimnasio, no por SQL.
 --
 --  Generado por scripts/build-install-sql.mjs — no editar a mano.
---  83 migraciones incluidas de 86.
+--  84 migraciones incluidas de 87.
 -- ============================================================
 
 
@@ -5076,6 +5076,59 @@ grant execute on function public.staff_save(uuid, text, jsonb), public.staff_set
 notify pgrst, 'reload schema';
 
 commit;
+
+-- ═══════════════════════════════════════════════════════════
+--  00050_coaches_vista_publica.sql
+-- ═══════════════════════════════════════════════════════════
+
+-- 00050 · Proteger datos del personal en la tabla coaches
+--
+-- Problema: la política "Authenticated can read coaches" dejaba leer TODAS las columnas
+-- (monthly_salary, phone, email, notes, hire_date, profile_id) a cualquier usuario con sesión.
+--
+-- Cambio (aditivo y reversible):
+--  1. Vista public.coaches_public con solo las columnas públicas: id, full_name, name (alias
+--     de full_name para el detalle de sesión), specialty, is_active.
+--  2. Se quita la política de lectura general. Queda solo la política de administrador
+--     (is_admin()), que ya existía para escribir y leer.
+--  3. La landing y el detalle de sesión leen la vista, no la tabla.
+--
+-- Reversión (copiar y pegar si hiciera falta):
+--   create policy "Authenticated can read coaches" on public.coaches
+--     for select to authenticated using (true);
+--   drop view if exists public.coaches_public;
+
+begin;
+
+create or replace view public.coaches_public as
+select
+  id,
+  full_name,
+  full_name as name,
+  specialty,
+  is_active
+from public.coaches;
+
+grant select on public.coaches_public to anon, authenticated;
+
+drop policy if exists "Authenticated can read coaches" on public.coaches;
+
+commit;
+
+-- ═══════════════════════════════════════════════════════════
+--  00051_coaches_vista_landing.sql
+-- ═══════════════════════════════════════════════════════════
+
+-- 00051 · La vista de entrenadores que usa la landing
+--
+-- Contexto: en producción la tabla coaches no tiene sort_order, role_es, bio_es, color,
+-- initials, slug ni specialties (ver 00050). La landing falla con 42703 porque ordena por sort_order.
+--
+-- Cambio (aditivo y reversible): se recrea la vista public.coaches_public con las columnas
+-- que espera la landing, calculadas a partir de lo que sí existe. Solo columnas públicas:
+-- no incluye monthly_salary, phone, email, notes, hire_date ni profile_id.
+--
+-- Reversión (copiar y pegar si hiciera falta): regresar a la vista de 00050:
 -- ============================================================
 --  FIN DE LA PARTE 1
 -- ============================================================

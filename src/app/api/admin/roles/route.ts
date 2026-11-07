@@ -20,6 +20,10 @@ const messages: Record<string, [string, number]> = {
   NOT_FOUND: ["No encontramos esa cuenta.", 404],
   INVALID_ROLE: ["Rol no válido.", 422],
   LAST_ADMIN: ["No se puede quitar el último administrador.", 409],
+  SUPERADMIN_PROTECTED: [
+    "La cuenta del súper administrador está protegida por la base: no se otorga ni se quita desde el panel.",
+    403,
+  ],
 };
 
 /**

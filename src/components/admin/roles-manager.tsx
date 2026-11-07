@@ -14,6 +14,7 @@ const ROLE_LABELS: Record<string, string> = {
   trainer: "Entrenador",
   admin: "Administrador",
   staff: "Personal anterior (sin acceso)",
+  superadmin: "Súper administrador (dueño del aplicativo)",
 };
 
 const SELECTABLE = ["member", "cashier", "trainer", "admin"] as const;
@@ -117,6 +118,9 @@ export function RolesManager({
           <tbody>
             {filtered.map((profile) => {
               const isSelf = profile.id === currentUserId;
+              // La cuenta del súper administrador (dueño del aplicativo) es
+              // intocable desde el panel: lo garantiza la base (00100).
+              const protegido = profile.role === "superadmin";
               const draft = drafts[profile.id] ?? profile.role;
               const options = SELECTABLE.includes(profile.role as (typeof SELECTABLE)[number])
                 ? SELECTABLE
@@ -126,6 +130,11 @@ export function RolesManager({
                   <td className="px-4 py-3 text-ink">
                     {profile.fullName || "Sin nombre"}
                     {isSelf ? <span className="ml-2 text-[0.6875rem] text-fog">(tú)</span> : null}
+                    {protegido ? (
+                      <span className="ml-2 rounded-full border border-ok/50 bg-ok/10 px-2 py-0.5 text-[0.6875rem] font-semibold text-ok">
+                        protegida
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3 text-mist">{ROLE_LABELS[profile.role] ?? profile.role}</td>
                   <td className="px-4 py-3">
@@ -135,7 +144,7 @@ export function RolesManager({
                     <select
                       id={`role-${profile.id}`}
                       value={draft}
-                      disabled={isSelf || busy === profile.id}
+                      disabled={isSelf || protegido || busy === profile.id}
                       onChange={(e) => setDrafts((prev) => ({ ...prev, [profile.id]: e.target.value }))}
                       className="h-9 rounded-lg border border-line bg-card px-2 text-[0.8125rem] text-ink disabled:opacity-50"
                     >
@@ -150,7 +159,7 @@ export function RolesManager({
                     <button
                       type="button"
                       onClick={() => save(profile)}
-                      disabled={isSelf || busy === profile.id || draft === profile.role}
+                      disabled={isSelf || protegido || busy === profile.id || draft === profile.role}
                       className="h-9 rounded-full bg-brand px-4 text-[0.8125rem] font-semibold text-onbrand disabled:opacity-40"
                     >
                       {busy === profile.id ? "Guardando…" : "Guardar"}

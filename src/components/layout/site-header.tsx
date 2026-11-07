@@ -6,6 +6,7 @@ import { isOpenAt } from "@/config/site";
 import { useDictionary } from "@/components/providers/dictionary-provider";
 import { useApp } from "@/components/providers/app-provider";
 import { ButtonLink } from "@/components/ui/button";
+import { isStaffRole } from "@/lib/auth/current-user";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "./language-switcher";
 import { Logo } from "./logo";
@@ -26,7 +27,7 @@ export function SiteHeader({
   const { dict, locale } = useDictionary();
   const { user } = useApp();
   // El personal no reserva clases: no se muestra el botón de reserva en el encabezado.
-  const staff = user?.role === "admin" || user?.role === "cashier" || user?.role === "trainer";
+  const staff = isStaffRole(user?.role);
   const [scrolled, setScrolled] = useState(false);
   const [abierto, setAbierto] = useState<boolean | null>(null);
 

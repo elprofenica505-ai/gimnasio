@@ -6,7 +6,7 @@ export type BookingStatus = "confirmed" | "cancelled" | "attended" | "no_show";
 
 export type SessionStatus = "scheduled" | "cancelled";
 
-export type UserRole = "member" | "cashier" | "trainer" | "admin";
+export type UserRole = "member" | "cashier" | "trainer" | "admin" | "superadmin";
 
 export interface GymClass {
   id: string;
