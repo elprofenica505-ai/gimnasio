@@ -8,14 +8,14 @@ const childIds = (mods, id) => mods.find((m) => m.id === id)?.children.map((c) =
 test("administrador ve todos los módulos y todas sus secciones", () => {
   const mods = visibleModules("admin");
   assert.deepEqual(ids(mods), ["inicio", "clientes", "finanzas", "operacion", "administracion"]);
-  assert.deepEqual(childIds(mods, "finanzas"), ["caja", "cuentas", "gastos", "productos", "reportes"]);
+  assert.deepEqual(childIds(mods, "finanzas"), ["caja", "ventas", "cuentas", "gastos", "productos", "reportes"]);
   assert.deepEqual(childIds(mods, "administracion"), ["roles", "entrenadores", "equipo", "disciplinas", "planes", "horarios", "categorias", "tarifas", "dinero", "importar", "herramientas", "ayuda"]);
 });
 
 test("caja ve Reportes en el menú (la página decide si muestra el cierre del día), pero no administración", () => {
   const mods = visibleModules("cashier");
   assert.deepEqual(ids(mods), ["inicio", "clientes", "finanzas", "operacion"]);
-  assert.deepEqual(childIds(mods, "finanzas"), ["caja", "cuentas", "gastos", "productos", "reportes"]);
+  assert.deepEqual(childIds(mods, "finanzas"), ["caja", "ventas", "cuentas", "gastos", "productos", "reportes"]);
   assert.equal(mods.some((m) => m.id === "administracion"), false);
 });
 

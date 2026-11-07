@@ -8,202 +8,6 @@
 --  Generado por scripts/build-install-sql.mjs — no editar a mano.
 -- ============================================================
 
-begin;
-set local lock_timeout = '5s';
-
--- 1) Ficha formal del personal.
-create table if not exists public.staff_members (
-  profile_id         uuid primary key references public.profiles(id) on delete restrict,
-  full_name          text not null check (char_length(btrim(full_name)) between 3 and 120),
-  national_id        text not null check (national_id ~ '^[0-9]{3}-[0-9]{6}-[0-9]{4}[A-Z]$'),
-  birth_date         date not null,
-  phone              text not null check (char_length(btrim(phone)) between 8 and 20),
-  address            text not null check (char_length(btrim(address)) between 5 and 250),
-  emergency_name     text not null check (char_length(btrim(emergency_name)) between 3 and 120),
-  emergency_phone    text not null check (char_length(btrim(emergency_phone)) between 8 and 20),
-  position_title     text not null check (char_length(btrim(position_title)) between 2 and 80),
-  hired_on           date not null,
-  responsibilities   text check (responsibilities is null or char_length(responsibilities) <= 800),
-  internal_notes     text check (internal_notes is null or char_length(internal_notes) <= 800),
-  status             text not null default 'activo' check (status in ('activo', 'inactivo')),
-  deactivated_on     date,
-  deactivation_reason text,
-  created_by         uuid references public.profiles(id) on delete set null,
-  created_at         timestamptz not null default now(),
-  updated_by         uuid references public.profiles(id) on delete set null,
-  updated_at         timestamptz not null default now(),
-  constraint staff_deactivation_consistent check (
-    (status = 'activo' and deactivated_on is null and deactivation_reason is null)
-    or (status = 'inactivo' and deactivated_on is not null and char_length(btrim(deactivation_reason)) >= 5)
-  )
-);
-
-alter table public.staff_members enable row level security;
-revoke all on public.staff_members from anon, authenticated;
-grant select on public.staff_members to authenticated;
-drop policy if exists staff_members_admin_read on public.staff_members;
-create policy staff_members_admin_read on public.staff_members
-  for select to authenticated using (public.is_admin());
-
--- 2) Auditoría sin valores sensibles.
-create table if not exists public.staff_audit (
-  id             bigint generated always as identity primary key,
-  profile_id     uuid not null references public.profiles(id) on delete cascade,
-  action         text not null check (action in ('alta', 'edicion', 'baja', 'reactivacion')),
-  changed_fields text[] not null default '{}',
-  changed_by     uuid references public.profiles(id) on delete set null,
-  changed_at     timestamptz not null default now()
-);
-alter table public.staff_audit enable row level security;
-revoke all on public.staff_audit from anon, authenticated;
-grant select on public.staff_audit to authenticated;
-drop policy if exists staff_audit_admin_read on public.staff_audit;
-create policy staff_audit_admin_read on public.staff_audit
-  for select to authenticated using (public.is_admin());
-
--- 3) Alta y edición.
-create or replace function public.staff_save(p_profile uuid, p_role text, p_data jsonb)
-returns uuid language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '5s' as $$
-declare
-  v_today date := (now() at time zone 'America/Managua')::date;
-  v_old public.staff_members;
-  v_new public.staff_members;
-  v_fields text[] := '{}';
-  v_action text;
-  v_name text; v_nid text; v_birth date; v_phone text; v_addr text; v_en text; v_ep text;
-  v_pos text; v_hired date; v_resp text; v_notes text;
-begin
-  if not public.is_admin() then raise exception 'AUTH'; end if;
-  if p_profile is null or p_profile = auth.uid() then raise exception 'SELF_STAFF_CHANGE'; end if;
-  if p_role not in ('trainer', 'cashier', 'admin') then raise exception 'INVALID_ROLE'; end if;
-  if not exists (select 1 from public.profiles where id = p_profile) then raise exception 'NOT_FOUND'; end if;
-
-  v_name  := btrim(coalesce(p_data->>'fullName', ''));
-  v_nid   := btrim(coalesce(p_data->>'nationalId', ''));
-  v_phone := btrim(coalesce(p_data->>'phone', ''));
-  v_addr  := btrim(coalesce(p_data->>'address', ''));
-  v_en    := btrim(coalesce(p_data->>'emergencyName', ''));
-  v_ep    := btrim(coalesce(p_data->>'emergencyPhone', ''));
-  v_pos   := btrim(coalesce(p_data->>'positionTitle', ''));
-  v_resp  := nullif(btrim(coalesce(p_data->>'responsibilities', '')), '');
-  v_notes := nullif(btrim(coalesce(p_data->>'internalNotes', '')), '');
-
-  if char_length(v_name) < 3 or char_length(v_name) > 120 then raise exception 'NAME_INVALID'; end if;
-  if v_nid !~ '^[0-9]{3}-[0-9]{6}-[0-9]{4}[A-Z]$' then raise exception 'NATIONAL_ID_INVALID'; end if;
-  begin
-    v_birth := (p_data->>'birthDate')::date;
-    v_hired := (p_data->>'hiredOn')::date;
-  exception when others then
-    raise exception 'DATE_INVALID';
-  end;
-  if v_birth < date '1920-01-01' or v_birth > v_today - interval '18 years' then raise exception 'BIRTH_INVALID'; end if;
-  if v_hired > v_today or v_hired < date '2000-01-01' then raise exception 'HIRE_DATE_INVALID'; end if;
-  if char_length(v_phone) < 8 or char_length(v_phone) > 20 then raise exception 'PHONE_INVALID'; end if;
-  if char_length(v_addr) < 5 or char_length(v_addr) > 250 then raise exception 'ADDRESS_INVALID'; end if;
-  if char_length(v_en) < 3 or char_length(v_en) > 120 then raise exception 'EMERGENCY_NAME_INVALID'; end if;
-  if char_length(v_ep) < 8 or char_length(v_ep) > 20 then raise exception 'EMERGENCY_PHONE_INVALID'; end if;
-  if char_length(v_pos) < 2 or char_length(v_pos) > 80 then raise exception 'POSITION_INVALID'; end if;
-  if v_resp is not null and char_length(v_resp) > 800 then raise exception 'RESPONSIBILITIES_TOO_LONG'; end if;
-  if v_notes is not null and char_length(v_notes) > 800 then raise exception 'NOTES_TOO_LONG'; end if;
-
-  -- Rol de personal: usa la misma regla y bitácora que el cambio de rol.
-  if (select role::text from public.profiles where id = p_profile) is distinct from p_role then
-    perform public.admin_set_role(p_profile, p_role);
-  end if;
-
-  select * into v_old from public.staff_members where profile_id = p_profile for update;
-  if not found then
-    v_action := 'alta';
-    insert into public.staff_members(profile_id, full_name, national_id, birth_date, phone, address,
-      emergency_name, emergency_phone, position_title, hired_on, responsibilities, internal_notes,
-      created_by, updated_by)
-    values (p_profile, v_name, v_nid, v_birth, v_phone, v_addr, v_en, v_ep, v_pos, v_hired, v_resp, v_notes,
-      auth.uid(), auth.uid())
-    returning * into v_new;
-    v_fields := array['fullName','nationalId','birthDate','phone','address','emergencyName','emergencyPhone','positionTitle','hiredOn','responsibilities','internalNotes','role'];
-  else
-    v_action := 'edicion';
-    update public.staff_members set
-      full_name = v_name, national_id = v_nid, birth_date = v_birth, phone = v_phone, address = v_addr,
-      emergency_name = v_en, emergency_phone = v_ep, position_title = v_pos, hired_on = v_hired,
-      responsibilities = v_resp, internal_notes = v_notes, updated_by = auth.uid(), updated_at = now()
-    where profile_id = p_profile
-    returning * into v_new;
-    if v_old.full_name is distinct from v_new.full_name then v_fields := array_append(v_fields, 'fullName'); end if;
-    if v_old.national_id is distinct from v_new.national_id then v_fields := array_append(v_fields, 'nationalId'); end if;
-    if v_old.birth_date is distinct from v_new.birth_date then v_fields := array_append(v_fields, 'birthDate'); end if;
-    if v_old.phone is distinct from v_new.phone then v_fields := array_append(v_fields, 'phone'); end if;
-    if v_old.address is distinct from v_new.address then v_fields := array_append(v_fields, 'address'); end if;
-    if v_old.emergency_name is distinct from v_new.emergency_name then v_fields := array_append(v_fields, 'emergencyName'); end if;
-    if v_old.emergency_phone is distinct from v_new.emergency_phone then v_fields := array_append(v_fields, 'emergencyPhone'); end if;
-    if v_old.position_title is distinct from v_new.position_title then v_fields := array_append(v_fields, 'positionTitle'); end if;
-    if v_old.hired_on is distinct from v_new.hired_on then v_fields := array_append(v_fields, 'hiredOn'); end if;
-    if v_old.responsibilities is distinct from v_new.responsibilities then v_fields := array_append(v_fields, 'responsibilities'); end if;
-    if v_old.internal_notes is distinct from v_new.internal_notes then v_fields := array_append(v_fields, 'internalNotes'); end if;
-  end if;
-
-  -- Nombre y teléfono visibles en el directorio.
-  update public.profiles set full_name = v_name, phone = v_phone, updated_at = now() where id = p_profile;
-
-  if v_action = 'edicion' and cardinality(v_fields) = 0 then
-    return p_profile; -- sin cambios: no se escribe bitácora vacía
-  end if;
-  insert into public.staff_audit(profile_id, action, changed_fields, changed_by)
-    values (p_profile, v_action, v_fields, auth.uid());
-  return p_profile;
-end;
-$$;
-
--- 4) Baja y reactivación.
-create or replace function public.staff_set_status(p_profile uuid, p_active boolean, p_reason text default null)
-returns text language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '5s' as $$
-declare
-  v_today date := (now() at time zone 'America/Managua')::date;
-  v_role text;
-  v_reason text := btrim(coalesce(p_reason, ''));
-  v_admins integer;
-begin
-  if not public.is_admin() then raise exception 'AUTH'; end if;
-  if p_profile is null or p_profile = auth.uid() then raise exception 'SELF_STAFF_CHANGE'; end if;
-  if not exists (select 1 from public.staff_members where profile_id = p_profile) then raise exception 'NOT_FOUND'; end if;
-  select role::text into v_role from public.profiles where id = p_profile for update;
-
-  if p_active then
-    update public.staff_members set status = 'activo', deactivated_on = null, deactivation_reason = null,
-      updated_by = auth.uid(), updated_at = now()
-      where profile_id = p_profile;
-    update auth.users set banned_until = null where id = p_profile;
-    insert into public.staff_audit(profile_id, action, changed_fields, changed_by)
-      values (p_profile, 'reactivacion', '{}', auth.uid());
-    return 'activo';
-  end if;
-
-  if char_length(v_reason) < 5 or char_length(v_reason) > 300 then raise exception 'REASON_REQUIRED'; end if;
-  if v_role = 'admin' then
-    select count(*) into v_admins from public.profiles p
-      join public.staff_members s on s.profile_id = p.id
-      where p.role = 'admin' and s.status = 'activo';
-    if v_admins <= 1 then raise exception 'LAST_ADMIN'; end if;
-  end if;
-
-  update public.staff_members set status = 'inactivo', deactivated_on = v_today, deactivation_reason = v_reason,
-    updated_by = auth.uid(), updated_at = now()
-    where profile_id = p_profile;
-  update auth.users set banned_until = 'infinity'::timestamptz where id = p_profile;
-  insert into public.staff_audit(profile_id, action, changed_fields, changed_by)
-    values (p_profile, 'baja', '{status}', auth.uid());
-  return 'inactivo';
-end;
-$$;
-
-revoke all on function public.staff_save(uuid, text, jsonb), public.staff_set_status(uuid, boolean, text)
-  from public, anon;
-grant execute on function public.staff_save(uuid, text, jsonb), public.staff_set_status(uuid, boolean, text)
-  to authenticated;
-
-notify pgrst, 'reload schema';
-
-commit;
 
 -- ═══════════════════════════════════════════════════════════
 --  00050_coaches_vista_publica.sql
@@ -6609,6 +6413,467 @@ commit;
 -- Reversión segura: eliminar `admin_save_session`, `admin_cancel_session` y
 -- `admin_schedule_sessions`. Las columnas nuevas de `sessions` son opcionales
 -- y quedan sin uso; no se borra ninguna clase ni ninguna reserva.
+
+begin;
+set local lock_timeout = '5s';
+
+do $$ begin
+  if to_regclass('public.sessions') is null
+     or to_regclass('public.bookings') is null
+     or to_regclass('public.classes') is null
+     or to_regprocedure('public.is_admin()') is null
+     or to_regprocedure('public.plan_local_today()') is null
+     or to_regprocedure('public._session_blocked(text, text, timestamptz, timestamptz)') is null then
+    raise exception 'SESSION_ADMIN_PREREQUISITE_MISSING';
+  end if;
+end $$;
+
+-- 1. Rastro en la clase: de dónde salió, quién la tocó y por qué se canceló.
+alter table public.sessions
+  add column if not exists origin text not null default 'grid',
+  add column if not exists note text,
+  add column if not exists created_by uuid references public.profiles (id) on delete set null,
+  add column if not exists updated_by uuid references public.profiles (id) on delete set null,
+  add column if not exists updated_at timestamptz,
+  add column if not exists cancel_reason text,
+  add column if not exists cancelled_by uuid references public.profiles (id) on delete set null,
+  add column if not exists cancelled_at timestamptz;
+
+do $$ begin
+  alter table public.sessions drop constraint if exists sessions_origin_chk;
+  alter table public.sessions
+    add constraint sessions_origin_chk check (origin in ('grid', 'manual'));
+  alter table public.sessions drop constraint if exists sessions_note_chk;
+  alter table public.sessions
+    add constraint sessions_note_chk
+    check (note is null or length(trim(note)) between 3 and 200);
+end $$;
+
+-- 2. Las clases de un período, con lo que cada una tiene encima.
+create or replace function public.admin_schedule_sessions(
+  p_from date default null,
+  p_to date default null
+) returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_today date := public.plan_local_today();
+  v_from date;
+  v_to date;
+begin
+  if not public.is_admin() then raise exception 'AUTH'; end if;
+
+  v_from := coalesce(p_from, v_today);
+  v_to := coalesce(p_to, v_today + 27);
+  if v_to < v_from then raise exception 'INVALID_RANGE'; end if;
+  if (v_to - v_from) > 120 then raise exception 'RANGE_TOO_LONG'; end if;
+
+  return jsonb_build_object(
+    'from', to_char(v_from, 'YYYY-MM-DD'),
+    'to', to_char(v_to, 'YYYY-MM-DD'),
+    'today', to_char(v_today, 'YYYY-MM-DD'),
+    'sessions', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', x.id,
+        'class_id', x.class_id,
+        'class_name', x.class_name,
+        'class_color', x.class_color,
+        'class_active', x.class_active,
+        'coach_id', x.coach_id,
+        'coach_name', x.coach_name,
+        'room', x.room,
+        'starts_at', x.starts_at,
+        'ends_at', x.ends_at,
+        'duration_min', (extract(epoch from (x.ends_at - x.starts_at)) / 60)::int,
+        'capacity', x.capacity,
+        'booked', x.booked,
+        'status', x.status,
+        'origin', x.origin,
+        'note', x.note,
+        'cancel_reason', x.cancel_reason,
+        'cancelled_at', x.cancelled_at,
+        'is_past', x.starts_at <= now()
+      ) order by x.starts_at, x.class_name)
+      from (
+        select
+          s.id,
+          s.class_id,
+          c.name_es as class_name,
+          c.color as class_color,
+          c.is_active as class_active,
+          s.coach_id,
+          coalesce(
+            nullif(to_jsonb(co) ->> 'full_name', ''),
+            nullif(to_jsonb(co) ->> 'name', ''),
+            s.coach_id
+          ) as coach_name,
+          s.room,
+          s.starts_at,
+          s.ends_at,
+          s.capacity,
+          s.status,
+          s.origin,
+          s.note,
+          s.cancel_reason,
+          s.cancelled_at,
+          (
+            select count(*)::int from public.bookings b
+             where b.session_id = s.id and b.status in ('confirmed', 'attended')
+          ) as booked
+        from public.sessions s
+        join public.classes c on c.id = s.class_id
+        left join public.coaches co on co.id = s.coach_id
+        where s.starts_at >= (v_from::timestamp at time zone 'America/Managua')
+          and s.starts_at <  ((v_to + 1)::timestamp at time zone 'America/Managua')
+        order by s.starts_at
+        limit 300
+      ) x
+    ), '[]'::jsonb)
+  );
+end $$;
+
+revoke all on function public.admin_schedule_sessions(date, date)
+  from public, anon, authenticated;
+grant execute on function public.admin_schedule_sessions(date, date)
+  to authenticated;
+
+-- 3. Crear o editar una clase con fecha, sin tocar la semana fija.
+create or replace function public.admin_save_session(
+  p_id text,
+  p_class_id text,
+  p_date text,
+  p_time text,
+  p_duration integer,
+  p_capacity integer,
+  p_room text,
+  p_coach text,
+  p_note text default null,
+  p_expected_starts text default null
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_id text := nullif(trim(coalesce(p_id, '')), '');
+  v_class public.classes;
+  v_day date;
+  v_clock time;
+  v_starts timestamptz;
+  v_ends timestamptz;
+  v_room text := trim(coalesce(p_room, ''));
+  v_note text := nullif(trim(coalesce(p_note, '')), '');
+  v_old public.sessions;
+  v_new public.sessions;
+  v_booked integer := 0;
+  v_action text;
+  v_fields text[] := '{}';
+begin
+  if not public.is_admin() then raise exception 'AUTH'; end if;
+
+  if p_class_id is null then raise exception 'INVALID_CLASS'; end if;
+  select * into v_class from public.classes where id = p_class_id;
+  if not found then raise exception 'INVALID_CLASS'; end if;
+
+  begin
+    v_day := (p_date)::date;
+  exception when others then
+    raise exception 'INVALID_DATE';
+  end;
+  begin
+    v_clock := (p_time)::time;
+  exception when others then
+    raise exception 'INVALID_TIME';
+  end;
+  if p_duration is null or p_duration not between 10 and 180 then
+    raise exception 'INVALID_DURATION';
+  end if;
+  if p_capacity is null or p_capacity not between 1 and 200 then
+    raise exception 'INVALID_CAPACITY';
+  end if;
+  if length(v_room) not between 2 and 60 then
+    raise exception 'INVALID_ROOM';
+  end if;
+  if p_coach is not null and not exists (
+    select 1 from public.coaches where id = p_coach and is_active
+  ) then
+    raise exception 'INVALID_COACH';
+  end if;
+  if v_note is not null and length(v_note) > 200 then
+    raise exception 'INVALID_NOTE';
+  end if;
+
+  -- Fecha y hora se interpretan en la hora del gimnasio, no en UTC.
+  v_starts := (v_day + v_clock) at time zone 'America/Managua';
+  v_ends := v_starts + make_interval(mins => p_duration);
+
+  perform pg_advisory_xact_lock(hashtext('strong_gym_admin_sessions'));
+
+  if v_id is null then
+    if not v_class.is_active then raise exception 'CLASS_INACTIVE'; end if;
+    if v_starts <= now() then raise exception 'PAST_SESSION'; end if;
+    if exists (
+      select 1 from public.sessions
+       where class_id = p_class_id and starts_at = v_starts and status = 'scheduled'
+    ) then
+      raise exception 'SESSION_EXISTS';
+    end if;
+  else
+    select * into v_old from public.sessions where id = v_id for update;
+    if not found then raise exception 'NOT_FOUND'; end if;
+    if v_old.status <> 'scheduled' then raise exception 'SESSION_CANCELLED'; end if;
+    if v_old.starts_at <= now() then raise exception 'PAST_SESSION'; end if;
+    if p_expected_starts is not null
+       and to_char(v_old.starts_at at time zone 'America/Managua', 'YYYY-MM-DD"T"HH24:MI')
+           <> p_expected_starts then
+      raise exception 'STALE_SESSION';
+    end if;
+
+    select count(*)::int into v_booked
+      from public.bookings
+     where session_id = v_id and status in ('confirmed', 'attended');
+
+    if p_capacity < v_booked then
+      raise exception 'CAPACITY_BELOW_BOOKINGS';
+    end if;
+    if v_old.class_id <> p_class_id and v_booked > 0 then
+      raise exception 'CLASS_CHANGE_WITH_BOOKINGS';
+    end if;
+  end if;
+
+  if public._session_blocked(p_class_id, p_coach, v_starts, v_ends) then
+    raise exception 'BLOCKED';
+  end if;
+
+  if exists (
+    select 1 from public.sessions s
+     where s.status = 'scheduled'
+       and s.id <> coalesce(v_id, '')
+       and s.room = v_room
+       and s.starts_at < v_ends
+       and s.ends_at > v_starts
+  ) then
+    raise exception 'SCHEDULE_CONFLICT';
+  end if;
+
+  if p_coach is not null and exists (
+    select 1 from public.sessions s
+     where s.status = 'scheduled'
+       and s.id <> coalesce(v_id, '')
+       and s.coach_id = p_coach
+       and s.starts_at < v_ends
+       and s.ends_at > v_starts
+  ) then
+    raise exception 'SCHEDULE_CONFLICT';
+  end if;
+
+  if v_id is null then
+    insert into public.sessions
+      (class_id, coach_id, starts_at, ends_at, capacity, room, origin, note,
+       created_by, updated_by, updated_at)
+    values
+      (p_class_id, p_coach, v_starts, v_ends, p_capacity, v_room, 'manual', v_note,
+       auth.uid(), auth.uid(), now())
+    returning * into v_new;
+
+    v_id := v_new.id;
+    v_action := 'alta';
+    v_fields := array['starts_at', 'duration_min', 'capacity', 'room'];
+  else
+    update public.sessions
+       set class_id = p_class_id,
+           coach_id = p_coach,
+           starts_at = v_starts,
+           ends_at = v_ends,
+           capacity = p_capacity,
+           room = v_room,
+           note = v_note,
+           updated_by = auth.uid(),
+           updated_at = now()
+     where id = v_id
+    returning * into v_new;
+
+    if v_old.class_id <> v_new.class_id then
+      v_fields := array_append(v_fields, 'class_id');
+    end if;
+    if v_old.starts_at <> v_new.starts_at then
+      v_fields := array_append(v_fields, 'starts_at');
+    end if;
+    if (v_new.ends_at - v_new.starts_at) <> (v_old.ends_at - v_old.starts_at) then
+      v_fields := array_append(v_fields, 'duration_min');
+    end if;
+    if v_old.capacity <> v_new.capacity then
+      v_fields := array_append(v_fields, 'capacity');
+    end if;
+    if v_old.room <> v_new.room then
+      v_fields := array_append(v_fields, 'room');
+    end if;
+    if v_old.coach_id is distinct from v_new.coach_id then
+      v_fields := array_append(v_fields, 'coach_id');
+    end if;
+    if v_old.note is distinct from v_new.note then
+      v_fields := array_append(v_fields, 'note');
+    end if;
+
+    if cardinality(v_fields) = 0 then
+      v_action := 'sin_cambios';
+    else
+      v_action := 'edicion';
+    end if;
+  end if;
+
+  return jsonb_build_object(
+    'ok', true,
+    'action', v_action,
+    'changed_fields', v_fields,
+    'session', jsonb_build_object(
+      'id', v_new.id,
+      'class_id', v_new.class_id,
+      'class_name', v_class.name_es,
+      'coach_id', v_new.coach_id,
+      'room', v_new.room,
+      'starts_at', v_new.starts_at,
+      'ends_at', v_new.ends_at,
+      'capacity', v_new.capacity,
+      'booked', v_booked,
+      'status', v_new.status,
+      'origin', v_new.origin,
+      'note', v_new.note
+    )
+  );
+end $$;
+
+revoke all on function public.admin_save_session(text, text, text, text, integer, integer, text, text, text, text)
+  from public, anon, authenticated;
+grant execute on function public.admin_save_session(text, text, text, text, integer, integer, text, text, text, text)
+  to authenticated;
+
+-- 4. Suspender una sola clase, sin borrar nada.
+create or replace function public.admin_cancel_session(
+  p_id text,
+  p_reason text,
+  p_confirmed boolean default false
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_session public.sessions;
+  v_reason text := trim(coalesce(p_reason, ''));
+  v_booked integer := 0;
+  v_cancelled integer := 0;
+begin
+  if not public.is_admin() then raise exception 'AUTH'; end if;
+
+  if length(v_reason) < 3 or length(v_reason) > 200 then
+    raise exception 'INVALID_REASON';
+  end if;
+
+  select * into v_session from public.sessions where id = p_id for update;
+  if not found then raise exception 'NOT_FOUND'; end if;
+
+  -- Cancelar dos veces no cambia nada: la pantalla puede reintentar segura.
+  if v_session.status = 'cancelled' then
+    return jsonb_build_object(
+      'ok', true,
+      'changed', false,
+      'session_id', v_session.id,
+      'cancelled_bookings', 0
+    );
+  end if;
+
+  if v_session.starts_at <= now() then
+    raise exception 'PAST_SESSION';
+  end if;
+
+  select count(*)::int into v_booked
+    from public.bookings
+   where session_id = p_id and status in ('confirmed', 'attended');
+
+  -- Con reservas encima, primero se ve a quién afecta y después se confirma.
+  if v_booked > 0 and not coalesce(p_confirmed, false) then
+    raise exception 'CONFIRM_REQUIRED';
+  end if;
+
+  update public.bookings
+     set status = 'cancelled',
+         cancelled_at = now(),
+         cancel_reason = v_reason,
+         cancelled_by = auth.uid()
+   where session_id = p_id
+     and status in ('confirmed', 'attended');
+  get diagnostics v_cancelled = row_count;
+
+  update public.sessions
+     set status = 'cancelled',
+         cancel_reason = v_reason,
+         cancelled_by = auth.uid(),
+         cancelled_at = now(),
+         updated_by = auth.uid(),
+         updated_at = now()
+   where id = p_id;
+
+  return jsonb_build_object(
+    'ok', true,
+    'changed', true,
+    'session_id', p_id,
+    'cancelled_bookings', v_cancelled
+  );
+end $$;
+
+revoke all on function public.admin_cancel_session(text, text, boolean)
+  from public, anon, authenticated;
+grant execute on function public.admin_cancel_session(text, text, boolean)
+  to authenticated;
+
+notify pgrst, 'reload schema';
+commit;
+
+-- ═══════════════════════════════════════════════════════════
+--  00079_entrenadores_admin.sql
+-- ═══════════════════════════════════════════════════════════
+
+-- 00079 · Entrenadores: catálogo y asignación con detección de choques
+--        (OP-05, sexta etapa)
+--
+-- Problema: `public.coaches` existía, pero sin manera de administrarla desde el
+-- panel. Para poner un entrenador había que tocar la base a mano. Además la
+-- lista `specialties` estaba vacía en los tres entrenadores, así que el
+-- generador de sesiones no podía asignar a nadie y las 79 clases quedaron sin
+-- entrenador; y el plan de generación enseñaba el entrenador del horario, no el
+-- que el generador realmente iba a poner.
+--
+-- Decisión de esta etapa:
+--   * `admin_save_coach()` crea y edita un entrenador: nombre, especialidad en
+--     texto y **disciplinas que dicta** (las de `classes`, elegidas de una
+--     lista, sin adivinar texto libre). Eso es lo que alimenta `specialties`.
+--   * `admin_set_coach_active()` es el único interruptor de alta/baja. No se
+--     borra ningún entrenador: se apaga, y sus clases quedan como están.
+--   * Toda alta o edición queda en `coach_audit`, con quién, cuándo y los
+--     NOMBRES de los campos cambiados. Nunca los valores.
+--   * `admin_slot_coach_plan()` y `admin_apply_slot_coach()` pasan el
+--     entrenador de un horario fijo a las clases que ya están en el calendario,
+--     mirando primero cuántas se asignan y cuáles chocan. Es una acción
+--     explícita: guardar un horario sigue sin tocar las clases existentes.
+--   * `_schedule_plan()` y `admin_apply_schedule()` resuelven el entrenador igual
+--     que el generador (el del horario y, si no hay, el primero activo que dicte
+--     esa disciplina), así la previsualización dice la verdad y también detecta
+--     los choques del entrenador que se va a asignar.
+--
+-- La tabla `coaches` no tiene las mismas columnas en todas las bases: la
+-- productiva usa `full_name` y no tiene `slug`, `name` ni `sort_order`; las
+-- migraciones del repo sí. Las altas y ediciones se arman según lo que exista,
+-- igual que se hizo con el nombre en 00073.
+--
+-- Reversión segura: eliminar `admin_save_coach`, `admin_set_coach_active`,
+-- `admin_coaches_catalog`, `admin_slot_coach_plan`, `admin_apply_slot_coach` y
+-- `coach_audit`, y volver a las versiones de `_schedule_plan` (00075) y
+-- `admin_apply_schedule` (00074). Los entrenadores creados siguen existiendo y
+-- ninguna clase ni reserva se toca.
 
 -- ============================================================
 --  FIN DE LA PARTE 2
