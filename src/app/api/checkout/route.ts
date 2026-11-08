@@ -83,6 +83,8 @@ export async function POST(request: Request) {
       TELEFONO_INVALIDO: 422,
       PLAN_NO_DISPONIBLE: 422,
       ORDEN_VACIA: 422,
+      // 00102: sin ningún método de pago activo en la base.
+      SIN_METODO_PAGO: 503,
     };
     return NextResponse.json(
       { error: map[codigo] ? codigo : "ERROR", message: error.message },

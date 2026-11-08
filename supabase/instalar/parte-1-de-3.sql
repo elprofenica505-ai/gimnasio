@@ -51,7 +51,7 @@
 --      el panel del gimnasio, no por SQL.
 --
 --  Generado por scripts/build-install-sql.mjs — no editar a mano.
---  85 migraciones incluidas de 88.
+--  86 migraciones incluidas de 89.
 -- ============================================================
 
 
@@ -5133,6 +5133,55 @@ commit;
 --   create view public.coaches_public as
 --     select id, full_name, full_name as name, specialty, is_active from public.coaches;
 --   grant select on public.coaches_public to anon, authenticated;
+
+begin;
+
+drop view if exists public.coaches_public;
+
+create view public.coaches_public as
+select
+  c.id::text                                                        as id,
+  c.id::text                                                        as slug,
+  c.full_name                                                       as name,
+  coalesce(c.specialty, '')                                         as role_es,
+  coalesce(c.specialty, '')                                         as role_en,
+  ''::text                                                          as bio_es,
+  ''::text                                                          as bio_en,
+  case when coalesce(c.specialty, '') = '' then '{}'::text[]
+       else array[c.specialty] end                                  as specialties,
+  upper(left(split_part(c.full_name, ' ', 1), 1)
+     || left(split_part(c.full_name, ' ', 2), 1))                   as initials,
+  '#d81a22'::text                                                   as color,
+  row_number() over (order by c.full_name)::int                     as sort_order,
+  c.full_name,
+  c.specialty,
+  c.is_active
+from public.coaches c;
+
+grant select on public.coaches_public to anon, authenticated;
+
+commit;
+
+-- ═══════════════════════════════════════════════════════════
+--  00052_altura_en_ficha.sql
+-- ═══════════════════════════════════════════════════════════
+
+-- 00052 · La altura se guarda una sola vez en la ficha del cliente
+--
+-- Antes, cada medición traía su propia altura. Ahora:
+--  1. gym_clients.height_cm guarda la altura una sola vez.
+--  2. Un disparador en body_measurements aplica la regla en todas las rutas de escritura
+--     (medición, calculadora y metas), sin cambiar esas funciones:
+--     - Si la ficha no tiene altura, la primera medición con altura la guarda.
+--     - Si la ficha ya tiene altura, una medición sin altura hereda la de la ficha.
+--     - Si una medición trae una altura distinta, se rechaza con un mensaje claro.
+--  3. Relleno inicial: la ficha toma la altura de la medición más reciente de cada cliente.
+--     Las mediciones anteriores no se modifican (son de solo lectura).
+--
+-- Reversión (copiar y pegar si hiciera falta):
+--   drop trigger if exists body_measurements_altura_ficha on public.body_measurements;
+--   drop function if exists public.body_measurements_altura_ficha();
+--   alter table public.gym_clients drop column if exists height_cm;
 
 -- ============================================================
 --  FIN DE LA PARTE 1
