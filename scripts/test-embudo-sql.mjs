@@ -16,6 +16,8 @@ const ok = (label, cond) => {
 const db = await createTestDb();
 await db.exec(sqlFile("supabase/migrations/00099_embudo_de_ventas.sql"));
 ok("00099 se aplica sobre la cadena completa sin error", true);
+await db.exec(sqlFile("supabase/migrations/00102_embudo_metodo_pago_resiliente.sql"));
+ok("00102 (método de pago resiliente) se aplica sin error", true);
 
 const row = async (query, args = []) => (await db.query(query, args)).rows[0];
 const rows = async (query, args = []) => (await db.query(query, args)).rows;
@@ -73,6 +75,37 @@ ok("hay un plan USD para probar el rechazo", Boolean(planBoxeo));
 const producto = (
   await row("insert into products(name, category, price) values ('PROTEINA EJEMPLO','suplementos',1500) returning id")
 ).id;
+
+// ── 00102: el método de pago por defecto no puede tumbar la orden ───────
+// Incidente del demo: sin la fila 'pm_sinpe', el default duro mataba TODA
+// orden con una FK críptica. Sin NINGÚN método activo el error debe ser
+// claro; con un método no-SINPE la orden debe salir con ese método.
+await db.query("delete from payment_methods");
+await denied(
+  "sin métodos de pago activos falla con SIN_METODO_PAGO (no con FK)",
+  rpcAnon("embudo_crear_orden", [JSON.stringify({ full_name: "NOE EJEMPLO", phone: "88886666", plan_id: planDia })]),
+  /SIN_METODO_PAGO/,
+);
+await db.query(
+  `insert into payment_methods (id, name, currency, fee_pct, is_active, display_order)
+   values ('pm_efectivo','Efectivo C$','NIO',0,true,1)`,
+);
+const ordenFallback = await rpcAnon("embudo_crear_orden", [
+  JSON.stringify({ full_name: "NOE EJEMPLO", phone: "88887777", plan_id: planDia }),
+]);
+ok(
+  "sin SINPE activo la orden sale con el mejor método disponible",
+  (await row("select pay_method from embudo_orders where public_id=$1", [ordenFallback.public_id]))
+    .pay_method === "pm_efectivo",
+);
+await db.query("delete from embudo_leads where phone='88887777'");
+await db.query("delete from embudo_orders where public_id=$1", [ordenFallback.public_id]);
+await db.query("delete from payment_methods where id='pm_efectivo'");
+// Se repone el SINPE canónico para el resto de la batería.
+await db.query(
+  `insert into payment_methods (id, name, currency, fee_pct, is_active, display_order)
+   values ('pm_sinpe','SINPE Móvil','NIO',0,true,7)`,
+);
 
 // ── 1. Crear orden ──────────────────────────────────────────────────────
 const orden = await rpcAnon("embudo_crear_orden", [
