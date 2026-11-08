@@ -53,7 +53,7 @@ const PERIODO_EN: Record<string, string> = {
 
 /**
  * Checkout: plan y/o productos del carrito → datos → pagar por
- * SINPE/transferencia → número de referencia. El visitante NUNCA se
+ * Transferencia/voucher → número de referencia. El visitante NUNCA se
  * registra para comprar: los datos se piden al generar la orden, y el
  * total lo confirma el servidor (nunca el navegador). El personal
  * activa la membresía con un toque cuando verifica el pago.
@@ -389,8 +389,8 @@ export function CheckoutFlow({
             <div className="rounded-2xl border border-line bg-card p-6 text-sm leading-relaxed text-mist">
               {orden.instrucciones ||
                 (es
-                  ? "Pagá por SINPE Móvil o transferencia y cargá el número de referencia acá abajo."
-                  : "Pay via SINPE or bank transfer and enter the reference number below.")}
+                  ? "Pagá por transferencia bancaria, Tigo Money o Claro Pay y cargá el número de referencia acá abajo."
+                  : "Pay by bank transfer, Tigo Money or Claro Pay and enter the reference number below.")}
             </div>
             <form
               className="space-y-3"
@@ -407,7 +407,7 @@ export function CheckoutFlow({
                 name="reference"
                 required
                 minLength={4}
-                placeholder={es ? "Ej: SINPE 123456" : "e.g. 123456"}
+                placeholder={es ? "Ej: número de comprobante 123456" : "e.g. 123456"}
                 value={referencia}
                 onChange={(e) => setReferencia(e.target.value)}
               />
