@@ -36,7 +36,7 @@ function client({ role = "admin", profileError = null, missing = false, authErro
   };
 }
 
-for (const role of ["admin", "cashier", "trainer", "member"]) {
+for (const role of ["admin", "cashier", "trainer", "member", "superadmin"]) {
   test(`rol ${role}: se lee desde profiles y determina acceso al panel/menú`, async () => {
     const user = await resolveCurrentUser(client({ role }));
     assert.equal(user.role, role);
