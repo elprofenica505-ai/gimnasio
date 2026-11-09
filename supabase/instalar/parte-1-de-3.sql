@@ -51,7 +51,7 @@
 --      el panel del gimnasio, no por SQL.
 --
 --  Generado por scripts/build-install-sql.mjs — no editar a mano.
---  86 migraciones incluidas de 89.
+--  87 migraciones incluidas de 90.
 -- ============================================================
 
 
@@ -5182,6 +5182,65 @@ commit;
 --   drop trigger if exists body_measurements_altura_ficha on public.body_measurements;
 --   drop function if exists public.body_measurements_altura_ficha();
 --   alter table public.gym_clients drop column if exists height_cm;
+
+begin;
+
+alter table public.gym_clients
+  add column if not exists height_cm numeric(5,1)
+  check (height_cm is null or (height_cm > 0 and height_cm <= 250));
+
+update public.gym_clients c
+   set height_cm = m.h
+  from (
+    select distinct on (client_id) client_id, height_cm as h
+      from public.body_measurements
+     where height_cm is not null
+     order by client_id, measured_on desc, created_at desc
+  ) m
+ where m.client_id = c.id
+   and c.height_cm is null;
+
+create or replace function public.body_measurements_altura_ficha()
+returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
+declare v_ficha numeric;
+begin
+  select height_cm into v_ficha from public.gym_clients where id = new.client_id for update;
+
+  if new.height_cm is null then
+    new.height_cm := v_ficha;
+    return new;
+  end if;
+
+  if v_ficha is null then
+    update public.gym_clients set height_cm = new.height_cm where id = new.client_id;
+  elsif v_ficha <> new.height_cm then
+    raise exception 'ALTURA_DISTINTA: la ficha ya tiene una altura de % cm. Para corregirla, consultá al administrador.', v_ficha;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists body_measurements_altura_ficha on public.body_measurements;
+create trigger body_measurements_altura_ficha
+  before insert on public.body_measurements
+  for each row execute function public.body_measurements_altura_ficha();
+
+commit;
+
+-- ═══════════════════════════════════════════════════════════
+--  00053_correccion_altura_admin.sql
+-- ═══════════════════════════════════════════════════════════
+
+-- 00053 · Corrección de la altura de la ficha (solo administrador)
+--
+-- La altura de la ficha (gym_clients.height_cm, ver 00052) no se cambia desde las mediciones.
+-- Esta función es la única vía para corregirla:
+--  - Solo el administrador con sesión verificada (is_admin: admin + aal2).
+--  - Exige un motivo de al menos 5 caracteres.
+--  - Registra el cambio en client_events (acción 'height_corrected') con valor anterior, nuevo y motivo.
+--  - No modifica mediciones anteriores (son de solo lectura).
+--
+-- Reversión (copiar y pegar si hiciera falta):
+--   drop function if exists public.admin_corregir_altura(uuid, numeric, text);
 
 -- ============================================================
 --  FIN DE LA PARTE 1

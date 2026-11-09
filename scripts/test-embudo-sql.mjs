@@ -240,4 +240,75 @@ await denied(
 ok("el personal sí lee las órdenes (panel)",
   (await asAdmin(`select count(*)::int as n from embudo_orders`)).rows[0].n >= 1);
 
+// ── 7. 00103: cuenta de cobro resiliente + rechazo de órdenes ───────────
+await db.exec(sqlFile("supabase/migrations/00103_embudo_cuenta_resiliente_y_rechazo.sql"));
+ok("00103 (cuenta resiliente + rechazo) se aplica sobre 00102 sin error", true);
+
+// Sin cuenta explícita, el confirm usa la mejor caja NIO activa aunque el
+// id canónico 'cta_caja_nio' no exista (incidente del demo: INVALID_ACCOUNT).
+// Desactivar en vez de borrar: las transacciones de la batería referencian
+// las cuentas y la FK lo prohíbe.
+await db.query(`update bank_accounts set is_active=false where currency='NIO'`);
+await db.query(
+  `insert into bank_accounts (id, name, account_type, currency, balance, is_active, display_order)
+   values ('billetera_demo','Billetera demo NIO','billetera','NIO',0,true,5)
+   on conflict (id) do update set is_active=true`,
+);
+const ordenFallbackCta = await rpcAnon("embudo_crear_orden", [
+  JSON.stringify({ full_name: "FALLA CTA EJEMPLO", phone: "88889001", plan_id: planDia }),
+]);
+await rpcAnon("embudo_informar_pago", [ordenFallbackCta.public_id, "REF-CTA-001", null]);
+const idFallbackCta = (await row(`select id from embudo_orders where public_id=$1`, [ordenFallbackCta.public_id])).id;
+await rpcAdmin("embudo_confirmar_orden", [idFallbackCta, null]);
+ok(
+  "sin caja canónica el cobro cae en la mejor cuenta NIO activa",
+  (await row(`select account_id from transactions where concept = 'Venta online ' || $1 limit 1`, [ordenFallbackCta.public_id]))
+    .account_id === "billetera_demo",
+);
+
+// Sin NINGUNA cuenta NIO activa el error es claro (no una FK críptica).
+await db.query(`update bank_accounts set is_active=false where currency='NIO'`);
+const ordenSinCta = await rpcAnon("embudo_crear_orden", [
+  JSON.stringify({ full_name: "SIN CTA EJEMPLO", phone: "88889002", plan_id: planDia }),
+]);
+await rpcAnon("embudo_informar_pago", [ordenSinCta.public_id, "REF-CTA-002", null]);
+const idSinCta = (await row(`select id from embudo_orders where public_id=$1`, [ordenSinCta.public_id])).id;
+await denied(
+  "sin cuentas NIO el confirm falla con SIN_CUENTA_NIO",
+  rpcAdmin("embudo_confirmar_orden", [idSinCta, null]),
+  /SIN_CUENTA_NIO/,
+);
+await db.query(`update bank_accounts set is_active=true where id='cta_caja_nio'`);
+await db.query(`update bank_accounts set is_active=false where id='billetera_demo'`);
+
+// Rechazo: pendiente/por_verificar → cancelada, idempotente, sin cobros.
+const ordenRechazo = await rpcAnon("embudo_crear_orden", [
+  JSON.stringify({ full_name: "RECHAZO EJEMPLO", phone: "88889003", plan_id: planDia }),
+]);
+const idRechazo = (await row(`select id from embudo_orders where public_id=$1`, [ordenRechazo.public_id])).id;
+const rechazo1 = await rpcAdmin("embudo_cancelar_orden", [idRechazo, "Cliente no completó el pago"]);
+ok("el personal rechaza la orden y queda cancelada", rechazo1.status === "cancelada" && rechazo1.ya_estaba === false);
+const rechazo2 = await rpcAdmin("embudo_cancelar_orden", [idRechazo, null]);
+ok("rechazar dos veces es inofensivo (idempotente)", rechazo2.ya_estaba === true);
+await denied(
+  "confirmar una orden cancelada se rechaza",
+  rpcAdmin("embudo_confirmar_orden", [idRechazo, null]),
+  /ORDEN_NO_CONFIRMABLE/,
+);
+await denied(
+  "un anónimo no puede rechazar órdenes",
+  asAnon(`select public.embudo_cancelar_orden($1,$2) as value`, [idRechazo, null]),
+  /AUTH|permission denied/,
+);
+ok(
+  "la orden rechazada no dejó cobros",
+  (await row(`select count(*)::int as n from transactions where concept = 'Venta online ' || $1`, [ordenRechazo.public_id])).n === 0,
+);
+// Rechazar una orden YA pagada no procede.
+await denied(
+  "rechazar una orden pagada se rechaza",
+  rpcAdmin("embudo_cancelar_orden", [idFallbackCta, null]),
+  /ORDEN_YA_PAGADA/,
+);
+
 console.log(`\n✅ ${checks} comprobaciones del embudo en verde.`);
