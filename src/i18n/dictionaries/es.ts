@@ -49,18 +49,18 @@ const es = {
   },
 
   hero: {
-    badge: "Los Cedros · Villa El Carmen",
+    badge: "Managua · Nicaragua",
     titleTop: "Entrená",
     titleAccent: "fuerte",
     titleBottom: "cerca de casa",
     subtitle:
-      "Máquinas modernas, pesas libres, boxeo para todas las edades y bailoterapia. Además vendemos suplementos y ropa deportiva. Estamos en el km 28½ de la Carretera Vieja a León.",
+      "Máquinas modernas, pesas libres, boxeo para todas las edades y bailoterapia. Además vendemos suplementos y ropa deportiva. Te esperamos en Managua, Nicaragua.",
     subtitleBoxingOnly:
-      "Máquinas modernas, pesas libres y boxeo para todas las edades. Además vendemos suplementos y ropa deportiva. Estamos en el km 28½ de la Carretera Vieja a León.",
+      "Máquinas modernas, pesas libres y boxeo para todas las edades. Además vendemos suplementos y ropa deportiva. Te esperamos en Managua, Nicaragua.",
     subtitleDanceOnly:
-      "Máquinas modernas, pesas libres y bailoterapia. Además vendemos suplementos y ropa deportiva. Estamos en el km 28½ de la Carretera Vieja a León.",
+      "Máquinas modernas, pesas libres y bailoterapia. Además vendemos suplementos y ropa deportiva. Te esperamos en Managua, Nicaragua.",
     subtitleWeightsOnly:
-      "Máquinas modernas y pesas libres. Además vendemos suplementos y ropa deportiva. Estamos en el km 28½ de la Carretera Vieja a León.",
+      "Máquinas modernas y pesas libres. Además vendemos suplementos y ropa deportiva. Te esperamos en Managua, Nicaragua.",
     primary: "Escribinos por WhatsApp",
     secondary: "Ver el gimnasio",
     scroll: "Deslizá para ver más",
@@ -88,13 +88,13 @@ const es = {
   features: {
     title: "Todo en un solo lugar",
     subtitle:
-      "Entrená, bailá, boxeá y conseguí tus suplementos sin salir de Los Cedros.",
+      "Entrená, bailá, boxeá y conseguí tus suplementos en un mismo lugar.",
     subtitleBoxingOnly:
-      "Entrená, boxeá y conseguí tus suplementos sin salir de Los Cedros.",
+      "Entrená, boxeá y conseguí tus suplementos en un mismo lugar.",
     subtitleDanceOnly:
-      "Entrená, bailá y conseguí tus suplementos sin salir de Los Cedros.",
+      "Entrená, bailá y conseguí tus suplementos en un mismo lugar.",
     subtitleWeightsOnly:
-      "Entrená y conseguí tus suplementos sin salir de Los Cedros.",
+      "Entrená y conseguí tus suplementos en un mismo lugar.",
     items: [
       {
         title: "Máquinas modernas",
@@ -365,7 +365,7 @@ const es = {
     items: [
       {
         q: "¿Dónde están?",
-        a: "En Los Cedros, km 28½ Carretera Vieja a León, municipio de Villa El Carmen, departamento de Managua. En la sección de contacto tenés el mapa y el botón de «Cómo llegar».",
+        a: "Estamos en Managua, Nicaragua. En la sección de contacto tenés el mapa y el botón de «Cómo llegar».",
       },
       {
         q: "¿Qué horario tienen?",
@@ -401,7 +401,7 @@ const es = {
   contact: {
     title: "Vení a entrenar",
     subtitle:
-      "Estamos sobre la Carretera Vieja a León, en Los Cedros. Pasá a conocer el gimnasio en el horario de atención.",
+      "Pasá a conocernos en el horario de atención. La dirección exacta la coordinamos por WhatsApp.",
     addressLabel: "Dirección",
     phoneLabel: "WhatsApp",
     emailLabel: "Email",
@@ -641,13 +641,13 @@ const es = {
   footer: {
     tagline: "Entrená fuerte.",
     about:
-      "Gimnasio en Los Cedros, Villa El Carmen. Máquinas modernas, pesas libres, boxeo para todas las edades, bailoterapia y venta de suplementos.",
+      "Gimnasio en Managua, Nicaragua. Máquinas modernas, pesas libres, boxeo para todas las edades, bailoterapia y venta de suplementos.",
     aboutBoxingOnly:
-      "Gimnasio en Los Cedros, Villa El Carmen. Máquinas modernas, pesas libres, boxeo para todas las edades y venta de suplementos.",
+      "Gimnasio en Managua, Nicaragua. Máquinas modernas, pesas libres, boxeo para todas las edades y venta de suplementos.",
     aboutDanceOnly:
-      "Gimnasio en Los Cedros, Villa El Carmen. Máquinas modernas, pesas libres, bailoterapia y venta de suplementos.",
+      "Gimnasio en Managua, Nicaragua. Máquinas modernas, pesas libres, bailoterapia y venta de suplementos.",
     aboutWeightsOnly:
-      "Gimnasio en Los Cedros, Villa El Carmen. Máquinas modernas, pesas libres y venta de suplementos.",
+      "Gimnasio en Managua, Nicaragua. Máquinas modernas, pesas libres y venta de suplementos.",
     quickLinks: "Navegación",
     servicesTitle: "Servicios",
     services: [
