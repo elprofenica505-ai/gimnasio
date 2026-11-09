@@ -122,7 +122,7 @@ export async function resolveCurrentUser(supabase: SupabaseClient): Promise<Auth
       return result;
     }
     if (!profile) return { ...result, profileStatus: "missing" };
-    if (!["member", "cashier", "trainer", "admin"].includes(profile.role)) {
+    if (!["member", "cashier", "trainer", "admin", "superadmin"].includes(profile.role)) {
       console.error("[auth/profile] Rol inválido en public.profiles");
       return result;
     }
