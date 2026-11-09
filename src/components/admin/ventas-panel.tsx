@@ -124,6 +124,34 @@ export function VentasPanel({
     }
   }
 
+  async function rechazar(o: OrdenRow) {
+    if (
+      !window.confirm(
+        `¿Rechazar la orden ${o.public_id} de ${o.full_name}? Queda cancelada: no se cobra ni se activa nada.`,
+      )
+    ) {
+      return;
+    }
+    setOcupado(o.id);
+    setAviso(null);
+    try {
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) return setAviso("Sin Supabase conectado.");
+      const { error } = await supabase.rpc("embudo_cancelar_orden", {
+        p_order_id: o.id,
+        p_nota: null,
+      });
+      if (error) {
+        setAviso(`No se pudo rechazar: ${error.message}`);
+      } else {
+        setAviso(`Orden ${o.public_id} rechazada (cancelada).`);
+        router.refresh();
+      }
+    } finally {
+      setOcupado(null);
+    }
+  }
+
   async function avanzar(l: LeadRow, stage: LeadRow["stage"]) {
     setOcupado(l.id);
     setAviso(null);
@@ -269,6 +297,14 @@ export function VentasPanel({
                         <CheckCircle2 className="size-4" aria-hidden="true" />
                       )}
                       Confirmar pago y activar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="dark"
+                      disabled={ocupado === o.id}
+                      onClick={() => rechazar(o)}
+                    >
+                      Rechazar
                     </Button>
                     <a
                       href={wa(o.phone, `Hola ${o.full_name}, recibimos tu pago de la orden ${o.public_id}. ¡Bienvenido/a a Power Box Gym!`)}
