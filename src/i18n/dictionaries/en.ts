@@ -49,18 +49,18 @@ const en = {
   },
 
   hero: {
-    badge: "Los Cedros · Villa El Carmen",
+    badge: "Managua · Nicaragua",
     titleTop: "Train",
     titleAccent: "hard",
     titleBottom: "close to home",
     subtitle:
-      "Modern machines, free weights, boxing for all ages and dance cardio. We also sell supplements and sportswear. Find us at km 28½ of the Old Road to León.",
+      "Modern machines, free weights, boxing for all ages and dance cardio. We also sell supplements and sportswear. We are in Managua, Nicaragua.",
     subtitleBoxingOnly:
-      "Modern machines, free weights and boxing for all ages. We also sell supplements and sportswear. Find us at km 28½ of the Old Road to León.",
+      "Modern machines, free weights and boxing for all ages. We also sell supplements and sportswear. We are in Managua, Nicaragua.",
     subtitleDanceOnly:
-      "Modern machines, free weights and dance cardio. We also sell supplements and sportswear. Find us at km 28½ of the Old Road to León.",
+      "Modern machines, free weights and dance cardio. We also sell supplements and sportswear. We are in Managua, Nicaragua.",
     subtitleWeightsOnly:
-      "Modern machines and free weights. We also sell supplements and sportswear. Find us at km 28½ of the Old Road to León.",
+      "Modern machines and free weights. We also sell supplements and sportswear. We are in Managua, Nicaragua.",
     primary: "Message us on WhatsApp",
     secondary: "See the gym",
     scroll: "Scroll for more",
@@ -87,13 +87,13 @@ const en = {
 
   features: {
     title: "Everything in one place",
-    subtitle: "Train, dance, box and get your supplements without leaving Los Cedros.",
+    subtitle: "Train, dance, box and get your supplements all in one place.",
     subtitleBoxingOnly:
-      "Train, box and get your supplements without leaving Los Cedros.",
+      "Train, box and get your supplements all in one place.",
     subtitleDanceOnly:
-      "Train, dance and get your supplements without leaving Los Cedros.",
+      "Train, dance and get your supplements all in one place.",
     subtitleWeightsOnly:
-      "Train and get your supplements without leaving Los Cedros.",
+      "Train and get your supplements all in one place.",
     items: [
       {
         title: "Modern machines",
@@ -362,7 +362,7 @@ const en = {
     items: [
       {
         q: "Where are you?",
-        a: "In Los Cedros, km 28½ Old Road to León, municipality of Villa El Carmen, department of Managua. The contact section has the map and a 'Get directions' button.",
+        a: "We are in Managua, Nicaragua. The contact section has the map and a 'Get directions' button.",
       },
       {
         q: "What are your opening hours?",
@@ -398,7 +398,7 @@ const en = {
   contact: {
     title: "Come and train",
     subtitle:
-      "We are on the Old Road to León, in Los Cedros. Drop by during opening hours to see the gym.",
+      "Drop by during opening hours to meet us. We coordinate visits over WhatsApp.",
     addressLabel: "Address",
     phoneLabel: "WhatsApp",
     emailLabel: "Email",
@@ -635,13 +635,13 @@ const en = {
   footer: {
     tagline: "Train hard.",
     about:
-      "Gym in Los Cedros, Villa El Carmen. Modern machines, free weights, boxing for all ages, dance cardio and sports supplements.",
+      "Gym in Managua, Nicaragua. Modern machines, free weights, boxing for all ages, dance cardio and sports supplements.",
     aboutBoxingOnly:
-      "Gym in Los Cedros, Villa El Carmen. Modern machines, free weights, boxing for all ages and sports supplements.",
+      "Gym in Managua, Nicaragua. Modern machines, free weights, boxing for all ages and sports supplements.",
     aboutDanceOnly:
-      "Gym in Los Cedros, Villa El Carmen. Modern machines, free weights, dance cardio and sports supplements.",
+      "Gym in Managua, Nicaragua. Modern machines, free weights, dance cardio and sports supplements.",
     aboutWeightsOnly:
-      "Gym in Los Cedros, Villa El Carmen. Modern machines, free weights and sports supplements.",
+      "Gym in Managua, Nicaragua. Modern machines, free weights and sports supplements.",
     quickLinks: "Navigation",
     servicesTitle: "Services",
     services: ["Weights and machines", "Boxing", "Zumba and dance cardio", "Supplements and sportswear"],

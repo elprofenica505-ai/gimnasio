@@ -4,6 +4,8 @@ import { todayInManagua, validBirthDate } from "@/lib/age/birth-date";
 import Link from "next/link";
 import { validNewPassword, NEW_PASSWORD_MAX } from "@/lib/auth/password-recovery";
 import { safeAuthRedirect } from "@/lib/auth/redirects";
+import { isStaffRole } from "@/lib/auth/current-user";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AlertTriangle, ArrowRight, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -13,6 +15,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 
 type Mode = "login" | "register";
+
+/** Destino por defecto tras el login: el personal cae en su Panel
+ * (con MFA ya verificado); el resto, en Mi cuenta. El redirect explícito
+ * (deep-link a checkout, etc.) siempre gana sobre esto. */
+async function destinoTrasLogin(locale: string): Promise<string> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) return `/${locale}/mi-cuenta`;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return `/${locale}/mi-cuenta`;
+  const [{ data: perfil }, { data: niveles }] = await Promise.all([
+    supabase.from("profiles").select("role").eq("id", user.id).single(),
+    supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+  ]);
+  return isStaffRole(perfil?.role) && niveles?.currentLevel === "aal2"
+    ? `/${locale}/panel`
+    : `/${locale}/mi-cuenta`;
+}
 
 export function AuthForm({ mode, redirectTo }: { mode: Mode; redirectTo?: string }) {
   const { dict, locale } = useDictionary();
@@ -77,8 +98,9 @@ export function AuthForm({ mode, redirectTo }: { mode: Mode; redirectTo?: string
       return;
     }
 
-    // Login/registro exitoso: al panel del cliente o a la página pedida.
-    const target = safeAuthRedirect(redirectTo, locale) || `/${locale}/mi-cuenta`;
+    // Login/registro exitoso: el personal va a su Panel, el resto a Mi
+    // cuenta — salvo que venga de un deep-link explícito.
+    const target = safeAuthRedirect(redirectTo, locale) || (await destinoTrasLogin(locale));
     router.replace(target);
     router.refresh();
   }

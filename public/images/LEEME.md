@@ -1,9 +1,9 @@
 # Fotos del gimnasio
 
-Acá van las fotos reales de **Power Box Gym**. Las actuales son imágenes
-neutras de relleno para la demo (sin personas reconocibles ni marcas ajenas).
-Apenas subas la foto real con el mismo nombre, reemplaza a la neutra sin tocar
-nada de código.
+Las fotos actuales son **imágenes de relleno generadas digitalmente**
+(sin personas, sin marcas y sin texto): sirven para la maqueta y para la
+demo. Apenas el gimnasio suba su foto real con el mismo nombre, reemplaza
+a la de relleno sin tocar nada de código.
 
 **Importante:** el nombre del archivo tiene que ser exactamente el de la lista
 (en minúsculas y terminado en `.jpg`). Apenas la subís con ese nombre, aparece
@@ -11,22 +11,22 @@ sola en la página, sin tocar nada de código.
 
 ## Lista de fotos
 
-| Archivo           | Dónde se ve                                       |
-| ----------------- | ------------------------------------------------- |
+| Archivo           | Dónde se ve                                        |
+| ----------------- | -------------------------------------------------- |
 | `fachada.jpg`     | Portada: el frente del local de noche              |
-| `boxeo.jpg`       | Sección Boxeo: alguien entrenando                  |
+| `boxeo.jpg`       | Sección Boxeo: guantes colgados                    |
 | `sacos.jpg`       | Sección Boxeo: los sacos colgados                  |
 | `supl1.jpg`       | Sección Suplementos: la vitrina de productos       |
-| `grupo.jpg`       | Comunidad: foto grupal                             |
-| `cambio.jpg`      | Comunidad: el antes y después (2022 → 2026)        |
-| `pareja1.jpg`     | Comunidad: socios entrenando                       |
+| `grupo.jpg`       | Comunidad: sala de clases en grupo                 |
+| `cambio.jpg`      | Comunidad: detalle de barra cargada                |
+| `pareja1.jpg`     | Comunidad: bodegón de entrenamiento (toallas, guantes, shaker) |
 | `sala1.jpg`       | Galería + pantalla de ingreso: vista de la sala    |
 | `sala2.jpg`       | Galería: otra vista de la sala                     |
 | `pesas.jpg`       | Galería: el área de pesas libres                   |
 | `triceps.jpg`     | Galería: máquina de tríceps                        |
 | `pantorrilla.jpg` | Galería: máquina de pantorrilla                    |
 | `abs.jpg`         | Galería: zona de abdominales                       |
-| `dip.jpg`         | Galería: máquina de abdominales                    |
+| `dip.jpg`         | Galería: estación de fondos (paralelas)            |
 
 ## Cómo subirlas desde el celular
 
@@ -41,3 +41,4 @@ sola en la página, sin tocar nada de código.
 - Que pesen menos de 1 MB cada una, así la página carga rápido en datos móviles.
 - Todas horizontales (apaisadas), salvo `dip.jpg`, `pantorrilla.jpg` y `triceps.jpg` que son verticales.
 - Que se vean bien iluminadas: son la primera impresión del gimnasio.
+- Sin personas reconocibles sin su permiso y sin marcas o logos ajenos.
