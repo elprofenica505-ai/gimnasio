@@ -66,6 +66,8 @@ export function retryText(template: string, retryAfterSeconds: number): string {
 export const WRITE_RULES = {
   /** Formularios públicos: pocos y separados en el tiempo. */
   publicForm: { limit: 5, windowMs: 10 * 60 * 1000 },
+  /** Mensajes del chat del asistente (ARM): conversar es normal, martillar no. */
+  chat: { limit: 40, windowMs: 10 * 60 * 1000 },
   /** Reservar o cancelar una clase desde la cuenta. */
   booking: { limit: 30, windowMs: 10 * 60 * 1000 },
   /** Registrar medidas y progreso. */

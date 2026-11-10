@@ -1,3 +1,5 @@
+import { whatsappLink } from "@/config/site";
+
 const en = {
   meta: {
     title: "Power Box Gym | Managua, Nicaragua",
@@ -683,6 +685,33 @@ const en = {
   errors: {
     generic: "Something went wrong. Please try again in a moment.",
     supabaseMissing: "Supabase credentials are not configured.",
+  },
+
+  /** ARM: the assistant (web bubble + Messages in My account). */
+  arm: {
+    burbuja: "Open help chat",
+    cerrar: "Close chat",
+    titulo: "Assistant",
+    subtitulo: "Answers with the gym's own information",
+    placeholder: "Type your question…",
+    enviar: "Send message",
+    pensando: "Thinking…",
+    saludo:
+      "Hi! 👋 I'm the gym's assistant. Ask me about prices, schedule, classes or the store.",
+    noDisponible: "The assistant is unavailable right now; reach us on WhatsApp 👇",
+    error: "I couldn't send the message. Please try again in a moment.",
+    recibido: "Got it ✅ A team member will answer you right here or on WhatsApp.",
+    whatsapp: "Chat on WhatsApp",
+    whatsappHref: whatsappLink("Hi! I'm coming from the website chat."),
+    sugerencias: {
+      precios: "Prices",
+      horarios: "Schedule",
+      clases: "Classes",
+      humano: "Talk to a person",
+    },
+    mensajesTitulo: "Messages with the gym",
+    mensajesSubtitulo:
+      "Write to the team whenever you need: we'll answer right here or on WhatsApp.",
   },
 };
 

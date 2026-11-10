@@ -10,6 +10,7 @@ import { SiteShell } from "@/components/layout/site-shell";
 import { DayBoundary } from "@/components/layout/day-boundary";
 import { StormTransition } from "@/components/layout/storm-transition";
 import { SwRegister } from "@/components/sw-register";
+import { ArmWidget } from "@/components/arm/arm-widget";
 import { AppProvider } from "@/components/providers/app-provider";
 import { DictionaryProvider } from "@/components/providers/dictionary-provider";
 import { CartProvider } from "@/components/cart/cart-provider";
@@ -193,6 +194,9 @@ export default async function LocaleLayout({
             {/* Mientras se abre otra pantalla, una capa de fuego a pantalla
                 completa cubre la espera y se retira sola al terminar. */}
             <StormTransition />
+            {/* ARM: la burbuja del asistente en toda la web pública
+                (el panel y la pantalla de Mensajes se la montan aparte). */}
+            <ArmWidget locale={locale as Locale} />
             {/* OP-07: cuando cambia el día en Managua, las pantallas abiertas
                 se refrescan solas, sin recargar ni perder lo escrito. */}
             <DayBoundary />

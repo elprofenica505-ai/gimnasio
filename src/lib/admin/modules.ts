@@ -69,9 +69,9 @@ export const PANEL_MODULES: PanelModule[] = [
   {
     id: "operacion",
     label: "Operación",
-    description: "Reservas, mensajes de contacto y estado de las clases.",
+    description: "Reservas, asistente de mensajes, contactos y estado de las clases.",
     href: "/panel/operacion",
-    children: [],
+    children: [{ id: "asistente", label: "Asistente", href: "/panel/asistente" }],
   },
   {
     id: "administracion",

@@ -1,3 +1,5 @@
+import { whatsappLink } from "@/config/site";
+
 const es = {
   meta: {
     title: "Power Box Gym | Managua, Nicaragua",
@@ -694,6 +696,33 @@ const es = {
   errors: {
     generic: "Algo salió mal. Intentá de nuevo en un momento.",
     supabaseMissing: "Falta configurar las credenciales de Supabase.",
+  },
+
+  /** ARM: el asistente (burbuja en la web + Mensajes en Mi cuenta). */
+  arm: {
+    burbuja: "Abrir chat de ayuda",
+    cerrar: "Cerrar chat",
+    titulo: "Asistente",
+    subtitulo: "Responde con la información del gimnasio",
+    placeholder: "Escribí tu pregunta…",
+    enviar: "Enviar mensaje",
+    pensando: "Pensando…",
+    saludo:
+      "¡Hola! 👋 Soy el asistente del gimnasio. Preguntame por precios, horarios, clases o la tienda.",
+    noDisponible: "El asistente no está disponible en este momento; escríbenos por WhatsApp 👇",
+    error: "No pude enviar el mensaje. Intentá de nuevo en un momento.",
+    recibido: "Recibido ✅ Una persona del equipo te responde aquí mismo o por WhatsApp.",
+    whatsapp: "Escribir por WhatsApp",
+    whatsappHref: whatsappLink("¡Hola! Vengo del chat de la web."),
+    sugerencias: {
+      precios: "Precios",
+      horarios: "Horarios",
+      clases: "Clases",
+      humano: "Hablar con una persona",
+    },
+    mensajesTitulo: "Mensajes con el gimnasio",
+    mensajesSubtitulo:
+      "Escribile al equipo lo que necesites: te respondemos aquí mismo o por WhatsApp.",
   },
 };
 

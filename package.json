@@ -15,7 +15,7 @@
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
-    "test:sql": "node scripts/test-sql.mjs && node scripts/test-crm-sql.mjs && node scripts/test-crm-compat-sql.mjs && node scripts/test-finance-write-sql.mjs && node scripts/test-account-plan-sql.mjs && node scripts/test-booking-read-sql.mjs && node scripts/test-booking-status-sql.mjs && node scripts/test-rate-limit-sql.mjs && node scripts/test-message-read-sql.mjs && node scripts/test-class-active-sql.mjs && node scripts/test-future-sessions-sql.mjs && node scripts/test-client-finance-sql.mjs && node scripts/test-debts-sql.mjs && node scripts/test-access-hardening-sql.mjs && node scripts/test-cli01-sql.mjs && node scripts/test-cli06-sql.mjs && node scripts/test-cli02-sql.mjs && node scripts/test-op05-sql.mjs && node scripts/test-op05-classes-sql.mjs && node scripts/test-op05-sessions-sql.mjs && node scripts/test-op05-coaches-sql.mjs && node scripts/test-embudo-sql.mjs && node scripts/test-superadmin-sql.mjs && node scripts/test-tienda-sql.mjs",
+    "test:sql": "node scripts/test-sql.mjs && node scripts/test-crm-sql.mjs && node scripts/test-crm-compat-sql.mjs && node scripts/test-finance-write-sql.mjs && node scripts/test-account-plan-sql.mjs && node scripts/test-booking-read-sql.mjs && node scripts/test-booking-status-sql.mjs && node scripts/test-rate-limit-sql.mjs && node scripts/test-message-read-sql.mjs && node scripts/test-class-active-sql.mjs && node scripts/test-future-sessions-sql.mjs && node scripts/test-client-finance-sql.mjs && node scripts/test-debts-sql.mjs && node scripts/test-access-hardening-sql.mjs && node scripts/test-cli01-sql.mjs && node scripts/test-cli06-sql.mjs && node scripts/test-cli02-sql.mjs && node scripts/test-op05-sql.mjs && node scripts/test-op05-classes-sql.mjs && node scripts/test-op05-sessions-sql.mjs && node scripts/test-op05-coaches-sql.mjs && node scripts/test-embudo-sql.mjs && node scripts/test-superadmin-sql.mjs && node scripts/test-tienda-sql.mjs && node scripts/test-arm-sql.mjs",
     "typecheck": "tsc --noEmit",
     "test:metadata": "node scripts/test-metadata.mjs",
     "test:finance:rsc": "node scripts/test-finance-rsc.mjs",
@@ -34,7 +34,8 @@
     "test:ejercicios": "node --experimental-strip-types --test tests/exercises-terms.test.mjs tests/exercises-import.test.mjs tests/exercises-attribution.test.mjs tests/exercises-figure.test.mjs tests/exercises-second-catalog.test.mjs tests/exercises-api.test.mjs tests/exercises-photo-map.test.mjs tests/exercises-figure-retry.test.mjs tests/back-link.test.mjs && node scripts/test-exercises-sql.mjs",
     "test:cuentas": "node --experimental-strip-types --test tests/finance-accounts.test.mjs tests/day-boundary.test.mjs && node scripts/test-cuentas-sql.mjs",
     "test:superadmin": "node scripts/test-superadmin-sql.mjs",
-    "test:tienda": "node scripts/test-tienda-sql.mjs"
+    "test:tienda": "node scripts/test-tienda-sql.mjs",
+    "test:arm": "node scripts/test-arm-sql.mjs && node --experimental-strip-types --test tests/arm-brain.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
