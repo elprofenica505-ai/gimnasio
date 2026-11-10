@@ -10,147 +10,6 @@
 
 begin;
 
-create or replace function public.admin_corregir_altura(p_client uuid, p_height numeric, p_motivo text)
-returns numeric language plpgsql security definer set search_path = public, pg_temp as $$
-declare
-  v_old numeric;
-  v_motivo text := nullif(trim(coalesce(p_motivo, '')), '');
-begin
-  if not public.is_admin() then raise exception 'AUTH'; end if;
-  if p_height is null or p_height <= 0 or p_height > 250 then raise exception 'ALTURA_INVALIDA'; end if;
-  if v_motivo is null or length(v_motivo) < 5 then raise exception 'MOTIVO_REQUERIDO'; end if;
-
-  select height_cm into v_old from public.gym_clients where id = p_client for update;
-  if not found then raise exception 'NOT_FOUND'; end if;
-  if v_old = p_height then return v_old; end if;
-
-  update public.gym_clients set height_cm = p_height where id = p_client;
-  insert into public.client_events(client_id, action, details, actor_id)
-    values (p_client, 'height_corrected',
-            jsonb_build_object('from', v_old, 'to', p_height, 'reason', v_motivo),
-            auth.uid());
-  return p_height;
-end $$;
-
-revoke all on function public.admin_corregir_altura(uuid, numeric, text) from public, anon;
-grant execute on function public.admin_corregir_altura(uuid, numeric, text) to authenticated;
-
-commit;
-
--- ═══════════════════════════════════════════════════════════
---  00054_mi_progreso_altura_ficha.sql
--- ═══════════════════════════════════════════════════════════
-
--- 00054 · «Mi progreso» devuelve la altura guardada en la ficha
---
--- Desde 00052 la altura vive una sola vez en gym_clients.height_cm (el
--- administrador puede corregirla con bitácora, 00053), y el panel la lee de
--- ahí. La vista del propio cliente usaba la altura y el IMC con la última
--- medición, porque la función my_progress (00040) no incluía la de la ficha:
--- si el administrador corregía la altura, el cliente seguía viendo la vieja
--- hasta su próxima medición.
---
--- Este cambio solo agrega 'ficha_height_cm' a la respuesta JSON, con el valor
--- de gym_clients.height_cm de la PROPIA ficha del que llama (misma fila que ya
--- se resolvía por profile_id = auth.uid()). No cambia permisos ni expone
--- datos de terceros: las mediciones históricas conservan su height_cm.
---
--- Reversión: re-aplicar la definición de supabase/migrations/00040_mi_progreso_cliente.sql.
-
-begin;
-
-create or replace function public.my_progress()
-returns jsonb
-language plpgsql
-stable
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  v_client uuid := (select id from public.gym_clients where profile_id = auth.uid());
-begin
-  if v_client is null then
-    return null;
-  end if;
-
-  return jsonb_build_object(
-    'client_name', (select full_name from public.gym_clients where id = v_client),
-    'ficha_height_cm', (select height_cm from public.gym_clients where id = v_client),
-    'measurements', coalesce((
-      select jsonb_agg(
-               jsonb_build_object(
-                 'id', m.id,
-                 'measured_on', m.measured_on,
-                 'weight_kg', m.weight_kg,
-                 'height_cm', m.height_cm,
-                 'values', jsonb_build_object(
-                   'cintura_cm', m.cintura_cm,
-                   'pecho_cm', m.pecho_cm,
-                   'biceps_relajado_cm', m.biceps_relajado_cm,
-                   'biceps_contraido_cm', m.biceps_contraido_cm,
-                   'antebrazo_cm', m.antebrazo_cm,
-                   'gluteo_cm', m.gluteo_cm,
-                   'muslo_cm', m.muslo_cm,
-                   'pantorrilla_cm', m.pantorrilla_cm
-                 )
-               )
-               order by m.measured_on desc, m.created_at desc)
-        from public.body_measurements m
-       where m.client_id = v_client
-    ), '[]'::jsonb),
-    'goal', (
-      select jsonb_build_object(
-               'id', g.id,
-               'goal_type', g.goal_type,
-               'other_label', g.other_label,
-               'starts_on', g.starts_on,
-               'target_date', g.target_date,
-               'target_weight_kg', g.target_weight_kg)
-        from public.client_goals g
-       where g.client_id = v_client and g.status = 'activa'
-       limit 1
-    ),
-    'routine', (
-      select jsonb_build_object(
-               'id', r.id,
-               'name', r.name,
-               'days', r.days,
-               'exercises', r.exercises,
-               'starts_on', r.starts_on)
-        from public.client_routines r
-       where r.client_id = v_client and r.status = 'activa'
-       limit 1
-    )
-  );
-end;
-$$;
-
-revoke all on function public.my_progress() from public, anon;
-grant execute on function public.my_progress() to authenticated;
-
-commit;
-
--- ═══════════════════════════════════════════════════════════
---  00055_menores_rutas_personal.sql
--- ═══════════════════════════════════════════════════════════
-
--- 00055 · La protección de menores también aplica a las rutas del personal
---
--- La calculadora del cliente ya exigía ser adulto y tener fecha de nacimiento.
--- Sin embargo, las funciones usadas por el administrador o el entrenador para
--- guardar y aprobar un plan no repetían ese control. Esta migración cierra ese
--- hueco en la base de datos reutilizando client_age_status():
---   - minor  => MINOR
---   - unknown => NO_BIRTHDATE
---
--- No se modifica nutrition_get(): el personal sigue pudiendo leer la ficha y
--- ver la edad del cliente. No cambian tablas, datos ni otros permisos.
---
--- Reversión: volver a ejecutar las definiciones de nutrition_save() y
--- nutrition_approve() de 00047_menores_consentimiento_aprobacion.sql.
-
-begin;
-
 create or replace function public.nutrition_save(
   p_client uuid, p_goal text, p_inputs jsonb, p_results jsonb, p_meal_plan jsonb, p_routine jsonb, p_guide jsonb
 ) returns uuid language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '5s' as $$
@@ -7467,6 +7326,40 @@ grant execute on function public.admin_apply_schedule(date, integer)
 
 notify pgrst, 'reload schema';
 commit;
+
+-- ═══════════════════════════════════════════════════════════
+--  00080_anulacion_controlada.sql
+-- ═══════════════════════════════════════════════════════════
+
+-- 00080 · FIN-01: anulación controlada de un movimiento
+--
+-- Problema: un cobro o un gasto cargado por error no se podía deshacer. La
+-- única salida era tocar el saldo a mano o borrar la fila, y ninguna de las dos
+-- deja rastro de quién lo hizo ni por qué. El interruptor `cashier_can_void`
+-- existía desde la 00033 pero no hacía nada.
+--
+-- Decisión de esta etapa:
+--   * Anular **no borra nada**: se inserta un movimiento de reversa con el
+--     signo contrario, en la misma cuenta, moneda, método y cliente, y la
+--     cuenta vuelve al saldo que tenía. El movimiento original queda como está.
+--   * Un original solo se puede anular **una vez**: `finance_voids.original_id`
+--     es único y una reversa no se puede volver a anular.
+--   * Quién puede: administración siempre; caja **solo si** el interruptor
+--     `cashier_can_void` está encendido, **solo sus propios movimientos** y
+--     **solo los del día en curso** (America/Managua). Si el interruptor está
+--     apagado, caja no ve el botón y la base igual lo rechaza.
+--   * Motivo obligatorio (5 a 300 caracteres), actor, rol y fecha quedan
+--     guardados en `finance_voids`.
+--   * Idempotente por `request_id`: el mismo pedido repetido devuelve el mismo
+--     comprobante; un pedido con el mismo id y otro contenido se rechaza.
+--   * La reversa se puede leer desde Caja como «anulada», pero no se puede
+--     editar ni borrar: la tabla solo tiene `select` para el personal.
+--
+-- Reversión segura: eliminar `finance_void_movement`, `finance_void_plan`,
+-- `finance_voids_recent` y `finance_voids`. Los movimientos de reversa ya
+-- creados quedan como movimientos normales y los saldos no cambian; no se
+-- borra ningún dato existente.
+
 -- ============================================================
 --  FIN DE LA PARTE 2
 -- ============================================================

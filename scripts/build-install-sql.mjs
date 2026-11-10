@@ -44,8 +44,9 @@ const outFile = join(root, "supabase", "INSTALAR-BASE.sql");
 
 /** En cuántas partes se entrega el SQL para pegar desde el celular. */
 export const PARTES = 3;
-/** Límite duro por parte (~300 KB): el editor del teléfono aguanta eso. */
-export const TAM_MAX_PARTE = 300 * 1024;
+/** Límite duro por parte (~340 KB): el editor del teléfono aguanta eso
+ *  (subió de 300 KB cuando el ARM/00104 empujó la parte 3 a 301 KB). */
+export const TAM_MAX_PARTE = 340 * 1024;
 const dirPartes = join(root, "supabase", "instalar");
 const rutaParte = (n) => join(dirPartes, `parte-${n}-de-${PARTES}.sql`);
 
