@@ -241,7 +241,7 @@ test("el emblema, el nombre y la barra son los del cartel del gimnasio", () => {
   const sw = source("public/sw.js");
   assert.match(sw, /"\/brand\/emblema-strong\.webp"/);
   assert.match(sw, /"\/sounds\/trueno\.mp3"/);
-  assert.match(sw, /CACHE_VERSION = "power-box-v11"/);
+  assert.match(sw, /CACHE_VERSION = "power-box-v12"/);
 });
 
 test("el trueno suena con el rayo, y sólo el trueno", () => {
@@ -276,5 +276,5 @@ test("el trueno suena con el rayo, y sólo el trueno", () => {
   const sw = source("public/sw.js");
   assert.match(sw, /"\/sounds\/trueno\.mp3"/);
   assert.doesNotMatch(sw, /toque2?\.mp3/);
-  assert.match(sw, /CACHE_VERSION = "power-box-v11"/);
+  assert.match(sw, /CACHE_VERSION = "power-box-v12"/);
 });

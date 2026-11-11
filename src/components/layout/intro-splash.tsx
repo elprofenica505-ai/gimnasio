@@ -6,9 +6,9 @@ import { useDictionary } from "@/components/providers/dictionary-provider";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { cn } from "@/lib/utils";
 
-const KEY = "intro-v6";
-/** El video termina en negro a los ~3.54s; el logo entra a los 3.25s. */
-const LOGO_ENTRA_S = 3.25;
+const KEY = "intro-v7";
+/** El video termina en negro a los ~3.54s; el logo entra a los 3.2s. */
+const LOGO_ENTRA_S = 3.2;
 
 type Fase = "fuera" | "cine" | "logo" | "saliendo";
 
@@ -60,8 +60,25 @@ export function IntroSplash() {
     if (fase !== "cine") return;
     const red = setTimeout(() => {
       if (!arrancóRef.current) setFase("logo");
-    }, 2200);
+    }, 1800);
     return () => clearTimeout(red);
+  }, [fase]);
+
+  // Anti-trabas: si el video se queda sin avanzar (buffering largo en red
+  // floja), NO congelamos la intro — la saltamos elegante al logo.
+  useEffect(() => {
+    if (fase !== "cine") return;
+    const video = videoRef.current;
+    if (!video) return;
+    let ultima = -1;
+    const reloj = setInterval(() => {
+      const t = video.currentTime;
+      if (t === ultima && !video.ended) {
+        setFase("logo");
+      }
+      ultima = t;
+    }, 1200);
+    return () => clearInterval(reloj);
   }, [fase]);
 
   useEffect(() => {
@@ -107,6 +124,12 @@ export function IntroSplash() {
           onPlaying={() => {
             arrancóRef.current = true;
           }}
+          onCanPlay={() => {
+            // Algunos navegadores necesitan el empujón explícito (muted lo
+            // permite sin gesto en todos los modernos).
+            void videoRef.current?.play().catch(() => {});
+          }}
+          onEnded={() => setFase("logo")}
           onTimeUpdate={() => {
             const t = videoRef.current?.currentTime ?? 0;
             if (t >= LOGO_ENTRA_S) setFase("logo");
