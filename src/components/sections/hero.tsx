@@ -50,6 +50,16 @@ export function Hero({
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(1100px_600px_at_15%_100%,#22330a_0%,transparent_62%)]" />
 
+        {/* Auroras: luz viva detrás del título — nivel Vercel/Linear. */}
+        <div
+          className="aurora-a absolute -top-24 right-[-12%] size-[26rem] rounded-full bg-brand/25 blur-[100px]"
+          aria-hidden="true"
+        />
+        <div
+          className="aurora-b absolute bottom-[-10rem] left-[-12%] size-[30rem] rounded-full bg-[#3d7a2f]/30 blur-[110px]"
+          aria-hidden="true"
+        />
+
         {fachada ? (
           <Image
             src="/images/fachada.jpg"
@@ -83,7 +93,7 @@ export function Hero({
             <Reveal delay={80}>
               <h1 className="display-xl mt-6 text-[3.25rem] leading-[0.86] sm:text-[4.5rem] lg:text-[6.5rem] xl:text-[7.5rem]">
                 <span className="block text-white">{dict.hero.titleTop}</span>
-                <span className="block text-gradient-brand">{dict.hero.titleAccent}</span>
+                <span className="titulo-brillo block text-gradient-brand">{dict.hero.titleAccent}</span>
                 <span className="block text-white/35">{dict.hero.titleBottom}</span>
               </h1>
             </Reveal>
@@ -103,7 +113,7 @@ export function Hero({
                 <ButtonLink
                   href={`/${locale}#planes`}
                   size="lg"
-                  className="w-full sm:w-auto"
+                  className="cta-energia w-full sm:w-auto"
                 >
                   {dict.hero.primary}
                 </ButtonLink>

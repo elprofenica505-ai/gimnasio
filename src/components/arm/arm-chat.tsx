@@ -188,33 +188,39 @@ export function ArmChat({ locale, variante }: { locale: string; variante: "burbu
   if (variante === "burbuja" && !abierto) {
     return (
       <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6 print:hidden">
-        {teaser ? (
-          <div className="absolute right-0 bottom-full mb-3 rounded-2xl border border-line bg-card px-3.5 py-2.5 shadow-lg shadow-black/30">
+        {/* .robot-ruta es el alcance del hover (pausa la coreografía);
+            el globo y el botón viajan dentro de la capa de ruta. */}
+        <div className="robot-ruta">
+          <div className="robot-ruta-anim relative">
+            {teaser ? (
+              <div className="absolute right-0 bottom-full mb-3 rounded-2xl border border-line bg-card px-3.5 py-2.5 shadow-lg shadow-black/30">
+                <button
+                  type="button"
+                  onClick={() => abrirChat()}
+                  className="max-w-[230px] text-left text-[0.8125rem] leading-snug font-medium text-ink"
+                >
+                  {arm.teaser}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTeaser(false)}
+                  aria-label={arm.cerrar}
+                  className="mt-0.5 ml-1 inline-block rounded-full p-0.5 align-top text-fog hover:text-ink"
+                >
+                  <X className="size-3.5" aria-hidden="true" />
+                </button>
+              </div>
+            ) : null}
             <button
               type="button"
               onClick={() => abrirChat()}
-              className="max-w-[230px] text-left text-[0.8125rem] leading-snug font-medium text-ink"
+              aria-label={arm.burbuja}
+              className="robot-giro-anim relative flex size-14 items-center justify-center rounded-full border border-brand/40 bg-night/90 text-brand shadow-[0_0_28px_rgba(200,247,59,0.28)] transition-transform hover:scale-105"
             >
-              {arm.teaser}
-            </button>
-            <button
-              type="button"
-              onClick={() => setTeaser(false)}
-              aria-label={arm.cerrar}
-              className="mt-0.5 ml-1 inline-block rounded-full p-0.5 align-top text-fog hover:text-ink"
-            >
-              <X className="size-3.5" aria-hidden="true" />
+              <RobotCara className="robot-vivo size-10" />
             </button>
           </div>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => abrirChat()}
-          aria-label={arm.burbuja}
-          className="relative flex size-14 items-center justify-center rounded-full border border-brand/40 bg-night/90 text-brand shadow-[0_0_28px_rgba(200,247,59,0.28)] transition-transform hover:scale-105"
-        >
-          <RobotCara className="robot-vivo size-10" />
-        </button>
+        </div>
       </div>
     );
   }
