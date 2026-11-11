@@ -63,8 +63,17 @@ const es = {
       "Máquinas modernas, pesas libres y bailoterapia. Además vendemos suplementos y ropa deportiva. Te esperamos en Managua, Nicaragua.",
     subtitleWeightsOnly:
       "Máquinas modernas y pesas libres. Además vendemos suplementos y ropa deportiva. Te esperamos en Managua, Nicaragua.",
-    primary: "Escribinos por WhatsApp",
-    secondary: "Ver el gimnasio",
+    primary: "Ver planes y precios",
+    secondary: "Empezá hoy",
+    /** Microcopio de confianza bajo los botones. */
+    garantia: "Pagás online y te activamos el mismo día. Lo que ves es lo que pagás.",
+    /** Accesos directos de la primera pantalla. */
+    quick: {
+      horarios: "Horarios",
+      clases: "Clases",
+      tienda: "Tienda",
+      whatsapp: "WhatsApp",
+    },
     scroll: "Deslizá para ver más",
     stats: [
       { value: "6", label: "Días abiertos por semana" },
@@ -72,6 +81,21 @@ const es = {
       { value: "06:00", label: "Abrimos de lunes a viernes" },
       { value: "$20", label: "Boxeo al mes" },
     ],
+  },
+
+  /** El flujo de compra en 3 pasos, visible desde el primer scroll. */
+  pasos: {
+    eyebrow: "Sin trámites",
+    title: "Empezar toma 3 pasos",
+    subtitle:
+      "Todo desde el celular: elegís, pagás y a entrenar. Si te trabas en algo, el asistente te responde al instante.",
+    s1t: "Elegí tu plan",
+    s1d: "Precios claros: mensual, semanal o pase del día. Lo que ves es lo que pagás.",
+    s2t: "Pagá online",
+    s2d: "Transferencia BAC o LAFISE, Tigo Money, Claro Pay o efectivo en recepción.",
+    s3t: "Te activamos al toque",
+    s3d: "Confirmamos tu pago y tu membresía queda activa el mismo día. ¡A entrenar!",
+    cta: "Ver planes y precios",
   },
 
   marquee: [
@@ -714,6 +738,8 @@ const es = {
     recibido: "Recibido ✅ Una persona del equipo te responde aquí mismo o por WhatsApp.",
     whatsapp: "Escribir por WhatsApp",
     whatsappHref: whatsappLink("¡Hola! Vengo del chat de la web."),
+    /** Globo que muestra el robot a los pocos segundos. */
+    teaser: "¿Precios? ¿Horarios? Preguntame 👋",
     sugerencias: {
       precios: "Precios",
       horarios: "Horarios",

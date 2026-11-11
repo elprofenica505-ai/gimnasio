@@ -724,3 +724,52 @@
     }
   }
 }
+
+/* ── ARM: el robot del asistente, con vida propia ──────────────────────
+   Flota suave, se mece de vez en cuando y parpadea. El guard global de
+   prefers-reduced-motion de arriba los anula para quien lo pide. */
+@keyframes robot-flotar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes robot-mecer {
+  0%,
+  86%,
+  100% {
+    transform: rotate(0deg);
+  }
+  90% {
+    transform: rotate(-8deg);
+  }
+  94% {
+    transform: rotate(7deg);
+  }
+  98% {
+    transform: rotate(-3deg);
+  }
+}
+@keyframes robot-parpadeo {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.12);
+  }
+}
+.robot-vivo {
+  animation:
+    robot-flotar 3.2s ease-in-out infinite,
+    robot-mecer 7s ease-in-out infinite;
+}
+.robot-ojo {
+  animation: robot-parpadeo 4.6s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}

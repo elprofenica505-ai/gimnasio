@@ -19,6 +19,25 @@ interface ArmAccion {
 }
 
 const STORAGE_KEY = "arm-token";
+const TEASER_KEY = "arm-teaser-v1";
+
+/** La carita del robot: cabeza volt, ojos que parpadean y antena. */
+function RobotCara({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+      {/* antena */}
+      <rect x="22" y="5" width="4" height="9" rx="2" className="fill-current opacity-70" />
+      <circle cx="24" cy="5" r="3.4" className="fill-current" />
+      {/* cabeza */}
+      <rect x="7" y="14" width="34" height="27" rx="11" className="fill-current" />
+      {/* ojos (parpadean con .robot-ojo) */}
+      <circle cx="17.5" cy="27" r="3.6" className="robot-ojo fill-[#0c0c0e]" />
+      <circle cx="30.5" cy="27" r="3.6" className="robot-ojo fill-[#0c0c0e]" />
+      {/* boca */}
+      <rect x="19" y="34.5" width="10" height="2.6" rx="1.3" className="fill-[#0c0c0e] opacity-80" />
+    </svg>
+  );
+}
 
 function nuevoToken(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
@@ -45,8 +64,15 @@ export function ArmChat({ locale, variante }: { locale: string; variante: "burbu
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [teaser, setTeaser] = useState(false);
   const tokenRef = useRef<string | null>(null);
   const finalRef = useRef<HTMLDivElement | null>(null);
+
+  function abrirChat() {
+    setAbierto(true);
+    setTeaser(false);
+    window.sessionStorage.setItem(TEASER_KEY, "1");
+  }
 
   const cargar = useCallback(
     async (leer: boolean) => {
@@ -103,6 +129,22 @@ export function ArmChat({ locale, variante }: { locale: string; variante: "burbu
     finalRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
   }, [mensajes, abierto]);
 
+  // El globo teaser: una sola vez por sesión, a los 6 segundos, y se va
+  // solo a los 20. Clic en él = abrir el chat.
+  useEffect(() => {
+    if (variante !== "burbuja") return;
+    if (window.sessionStorage.getItem(TEASER_KEY)) return;
+    const aparecer = setTimeout(() => {
+      setTeaser(true);
+      window.sessionStorage.setItem(TEASER_KEY, "1");
+    }, 6000);
+    const irse = setTimeout(() => setTeaser(false), 26000);
+    return () => {
+      clearTimeout(aparecer);
+      clearTimeout(irse);
+    };
+  }, [variante]);
+
   async function enviar(consulta: string) {
     const limpio = consulta.trim();
     const token = tokenRef.current;
@@ -145,14 +187,35 @@ export function ArmChat({ locale, variante }: { locale: string; variante: "burbu
 
   if (variante === "burbuja" && !abierto) {
     return (
-      <button
-        type="button"
-        onClick={() => setAbierto(true)}
-        aria-label={arm.burbuja}
-        className="fixed bottom-4 right-4 z-50 flex size-14 items-center justify-center rounded-full bg-brand text-onbrand shadow-lg shadow-black/40 transition-transform hover:scale-105 sm:bottom-6 sm:right-6 print:hidden"
-      >
-        <MessageCircle className="size-6" aria-hidden="true" />
-      </button>
+      <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6 print:hidden">
+        {teaser ? (
+          <div className="absolute right-0 bottom-full mb-3 rounded-2xl border border-line bg-card px-3.5 py-2.5 shadow-lg shadow-black/30">
+            <button
+              type="button"
+              onClick={() => abrirChat()}
+              className="max-w-[230px] text-left text-[0.8125rem] leading-snug font-medium text-ink"
+            >
+              {arm.teaser}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTeaser(false)}
+              aria-label={arm.cerrar}
+              className="mt-0.5 ml-1 inline-block rounded-full p-0.5 align-top text-fog hover:text-ink"
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => abrirChat()}
+          aria-label={arm.burbuja}
+          className="relative flex size-14 items-center justify-center rounded-full border border-brand/40 bg-night/90 text-brand shadow-[0_0_28px_rgba(200,247,59,0.28)] transition-transform hover:scale-105"
+        >
+          <RobotCara className="robot-vivo size-10" />
+        </button>
+      </div>
     );
   }
 

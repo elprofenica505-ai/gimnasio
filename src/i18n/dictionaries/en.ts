@@ -63,8 +63,17 @@ const en = {
       "Modern machines, free weights and dance cardio. We also sell supplements and sportswear. We are in Managua, Nicaragua.",
     subtitleWeightsOnly:
       "Modern machines and free weights. We also sell supplements and sportswear. We are in Managua, Nicaragua.",
-    primary: "Message us on WhatsApp",
-    secondary: "See the gym",
+    primary: "See plans and prices",
+    secondary: "Start today",
+    /** Microcopio de confianza bajo los botones. */
+    garantia: "Pay online and we activate your membership the same day. What you see is what you pay.",
+    /** Accesos directos de la primera pantalla. */
+    quick: {
+      horarios: "Schedule",
+      clases: "Classes",
+      tienda: "Store",
+      whatsapp: "WhatsApp",
+    },
     scroll: "Scroll for more",
     stats: [
       { value: "6", label: "Days open per week" },
@@ -72,6 +81,21 @@ const en = {
       { value: "06:00", label: "We open Monday to Friday" },
       { value: "$20", label: "Boxing per month" },
     ],
+  },
+
+  /** The buying flow in 3 steps, visible from the first scroll. */
+  pasos: {
+    eyebrow: "No paperwork",
+    title: "Starting takes 3 steps",
+    subtitle:
+      "Everything from your phone: pick, pay and train. If you get stuck, the assistant answers instantly.",
+    s1t: "Pick your plan",
+    s1d: "Clear prices: monthly, weekly or day pass. What you see is what you pay.",
+    s2t: "Pay online",
+    s2d: "BAC or LAFISE transfer, Tigo Money, Claro Pay or cash at the front desk.",
+    s3t: "We activate you right away",
+    s3d: "We confirm your payment and your membership is active the same day. Let's train!",
+    cta: "See plans and prices",
   },
 
   marquee: [
@@ -703,6 +727,8 @@ const en = {
     recibido: "Got it ✅ A team member will answer you right here or on WhatsApp.",
     whatsapp: "Chat on WhatsApp",
     whatsappHref: whatsappLink("Hi! I'm coming from the website chat."),
+    /** Balloon the robot shows after a few seconds. */
+    teaser: "Prices? Schedule? Ask me 👋",
     sugerencias: {
       precios: "Prices",
       horarios: "Schedule",
