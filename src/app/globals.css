@@ -773,3 +773,201 @@
   transform-origin: center;
   transform-box: fill-box;
 }
+
+/* ── ARM: robot viajero — zip-zap entre esquinas con giro al llegar ─────
+   Tres capas sincronizadas (44 s el ciclo completo):
+   1. .robot-ruta-anim mueve el contenedor por el PERÍMETRO (no cruza el
+      centro: nunca tapa contenido) con zigzag suave.
+   2. .robot-giro-anim gira la carita 360° justo al llegar a cada esquina,
+      siempre hacia adelante (0→360→720…) para no retroceder.
+   3. La cara (.robot-vivo) sigue flotando y parpadeando como siempre.
+   El guard global de prefers-reduced-motion los anula para quien lo pide. */
+@keyframes robot-ruta {
+  0%,
+  9% {
+    transform: translate(0, 0);
+    animation-timing-function: ease-in-out;
+  }
+  /* sube por la derecha con zigzag (BR → TR) */
+  14% {
+    transform: translate(0, -9vh);
+  }
+  17% {
+    transform: translate(-2.5vw, -15vh);
+  }
+  20% {
+    transform: translate(0, -21vh);
+  }
+  23%,
+  26% {
+    transform: translate(calc(-100vw + 100% + 3rem), calc(-100vh + 100% + 7rem));
+    animation-timing-function: ease-in-out;
+  }
+  /* cruza la parte superior en zigzag (TR → TL) */
+  31% {
+    transform: translate(calc(-66vw + 67% + 2rem), calc(-100vh + 100% + 9.5rem));
+  }
+  36% {
+    transform: translate(calc(-33vw + 33% + 1rem), calc(-100vh + 100% + 7rem));
+  }
+  41%,
+  44% {
+    transform: translate(0, calc(-100vh + 100% + 7rem));
+    animation-timing-function: ease-in-out;
+  }
+  /* baja por la izquierda con zigzag (TL → BL) */
+  49% {
+    transform: translate(-2.5vw, calc(-100vh + 100% + 21vh));
+  }
+  52% {
+    transform: translate(0, calc(-100vh + 100% + 15vh));
+  }
+  55%,
+  58% {
+    transform: translate(0, 0);
+    animation-timing-function: ease-in-out;
+  }
+  /* cruza la parte baja en zigzag (BL → BR) */
+  63% {
+    transform: translate(-33vw, -9vh);
+  }
+  68% {
+    transform: translate(-66vw, -4vh);
+  }
+  73%,
+  100% {
+    transform: translate(0, 0);
+    animation-timing-function: ease-in-out;
+  }
+}
+@keyframes robot-giro {
+  0%,
+  1.5% {
+    transform: rotate(0deg) scale(1);
+    filter: drop-shadow(0 0 0 rgba(200, 247, 59, 0));
+  }
+  5% {
+    transform: rotate(360deg) scale(1.22);
+    filter: drop-shadow(0 0 18px rgba(200, 247, 59, 0.95));
+  }
+  8% {
+    transform: rotate(360deg) scale(1);
+    filter: drop-shadow(0 0 0 rgba(200, 247, 59, 0));
+  }
+  24.5%,
+  26% {
+    transform: rotate(360deg) scale(1);
+    filter: drop-shadow(0 0 0 rgba(200, 247, 59, 0));
+  }
+  29% {
+    transform: rotate(720deg) scale(1.22);
+    filter: drop-shadow(0 0 18px rgba(200, 247, 59, 0.95));
+  }
+  32% {
+    transform: rotate(720deg) scale(1);
+    filter: drop-shadow(0 0 0 rgba(200, 247, 59, 0));
+  }
+  42.5%,
+  44% {
+    transform: rotate(720deg) scale(1);
+    filter: drop-shadow(0 0 0 rgba(200, 247, 59, 0));
+  }
+  47% {
+    transform: rotate(1080deg) scale(1.22);
+    filter: drop-shadow(0 0 18px rgba(200, 247, 59, 0.95));
+  }
+  50% {
+    transform: rotate(1080deg) scale(1);
+    filter: drop-shadow(0 0 0 rgba(200, 247, 59, 0));
+  }
+  56.5%,
+  58% {
+    transform: rotate(1080deg) scale(1);
+    filter: drop-shadow(0 0 0 rgba(200, 247, 59, 0));
+  }
+  61% {
+    transform: rotate(1440deg) scale(1.22);
+    filter: drop-shadow(0 0 18px rgba(200, 247, 59, 0.95));
+  }
+  64% {
+    transform: rotate(1440deg) scale(1);
+    filter: drop-shadow(0 0 0 rgba(200, 247, 59, 0));
+  }
+  74%,
+  100% {
+    transform: rotate(1440deg) scale(1);
+    filter: drop-shadow(0 0 0 rgba(200, 247, 59, 0));
+  }
+}
+.robot-ruta-anim {
+  animation: robot-ruta 44s linear infinite;
+}
+.robot-giro-anim {
+  animation: robot-giro 44s linear infinite;
+}
+/* Si atrapás al robot con el cursor, se queda quieto para que le pegues. */
+.robot-ruta:hover .robot-ruta-anim,
+.robot-ruta:hover .robot-giro-anim {
+  animation-play-state: paused;
+}
+
+/* ── Toques futuristas de la primera pantalla ─────────────────────────── */
+/* Auroras: manchas de luz que respiran detrás del título. */
+@keyframes aurora-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(6vw, 4vh) scale(1.15);
+    opacity: 0.85;
+  }
+}
+@keyframes aurora-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(-7vw, -3vh) scale(0.95);
+    opacity: 0.7;
+  }
+}
+.aurora-a {
+  animation: aurora-a 11s ease-in-out infinite;
+}
+.aurora-b {
+  animation: aurora-b 14s ease-in-out infinite;
+}
+/* Brillo que barre la palabra acentuada del título. */
+@keyframes brillo-barrido {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+.titulo-brillo {
+  background-size: 220% auto;
+  animation: brillo-barrido 6s linear infinite;
+}
+/* Pulso de energía en el botón principal: llama al clic sin gritar. */
+@keyframes cta-energia {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(200, 247, 59, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 26px 4px rgba(200, 247, 59, 0.5);
+  }
+}
+.cta-energia {
+  animation: cta-energia 2.8s ease-in-out infinite;
+}
+::selection {
+  background: #c8f73b;
+  color: #0c0c0e;
+}
