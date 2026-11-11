@@ -2,22 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { siteConfig } from "@/config/site";
+import { useDictionary } from "@/components/providers/dictionary-provider";
 import { cn } from "@/lib/utils";
 
-const KEY = "intro-v1";
+const KEY = "intro-v2";
 
 type Fase = "fuera" | "montando" | "saliendo";
 
 /**
- * La intro de entrada: una pesa girando con estallido neón volt y la marca
- * — y se retira sola. Reglas para que sea cine y no molestia:
- *  · dura ~2 segundos y se desvanece;
+ * La intro de estudio: tipografía cinética. «POWER» y «BOX» entran a golpes
+ * (blur-slam), «BOX» aterriza con onda expansiva de puñetazo y un
+ * micro-temblor de pantalla; la barra volt se barre debajo y el eslogan
+ * aparece con aire. Reglas de cine sin molestia:
+ *  · ~2 segundos, se retira sola con fundido;
  *  · UNA vez por sesión (sessionStorage);
- *  · un toque/clic la salta;
+ *  · un toque en cualquier lado la salta;
  *  · con prefers-reduced-motion ni aparece.
- * Se monta sólo en la landing: entrar directo a /horarios no la dispara.
+ * Se monta sólo en la landing.
  */
 export function IntroSplash() {
+  const { locale, dict } = useDictionary();
   // SSR y primer render: nada (sin destello). El gate decide tras hidratar.
   const [fase, setFase] = useState<Fase>("fuera");
 
@@ -27,8 +31,8 @@ export function IntroSplash() {
     window.sessionStorage.setItem(KEY, "1");
     // eslint-disable-next-line react-hooks/set-state-in-effect -- gate síncrono a propósito (storage + motion), patrón del carrito
     setFase("montando");
-    const salir = setTimeout(() => setFase("saliendo"), 1900);
-    const fuera = setTimeout(() => setFase("fuera"), 2600);
+    const salir = setTimeout(() => setFase("saliendo"), 2050);
+    const fuera = setTimeout(() => setFase("fuera"), 2750);
     return () => {
       clearTimeout(salir);
       clearTimeout(fuera);
@@ -37,46 +41,82 @@ export function IntroSplash() {
 
   if (fase === "fuera") return null;
 
+  // POWER / BOX en la calle grande; el resto del nombre abajo, con aire.
+  const palabras = siteConfig.name.split(" ");
+  const linea1 = (palabras[0] ?? "POWER").toUpperCase();
+  const linea2 = (palabras[1] ?? "BOX").toUpperCase();
+  const resto = palabras.slice(2).join(" ");
+  const sub = resto
+    ? resto
+        .toUpperCase()
+        .split("")
+        .join(" ")
+    : `${dict.hero.titleTop} ${dict.hero.titleAccent} ${dict.hero.titleBottom}`.toUpperCase();
+
   return (
     <button
       type="button"
-      aria-label="Saltar la introducción"
+      aria-label={locale === "es" ? "Saltar la introducción" : "Skip intro"}
       onClick={() => {
         if (fase === "montando") setFase("saliendo");
       }}
       className={cn(
-        "fixed inset-0 z-[90] flex w-full flex-col items-center justify-center gap-8 bg-night",
+        "fixed inset-0 z-[90] flex w-full items-center justify-center overflow-hidden bg-night",
         fase === "saliendo" && "intro-saliendo pointer-events-none",
       )}
     >
-      <span className="relative grid place-items-center">
-        {/* Onda neón que se expande */}
-        <span
-          className="intro-onda absolute size-52 rounded-full border-2 border-brand/60 sm:size-64"
-          aria-hidden="true"
-        />
-        {/* La pesa girando */}
-        <svg
-          viewBox="0 0 120 120"
-          className="intro-giro size-40 text-brand sm:size-52"
-          aria-hidden="true"
-          style={{ filter: "drop-shadow(0 0 22px rgba(200, 247, 59, 0.45))" }}
-        >
-          <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" strokeWidth="3" opacity="0.95" />
-          <circle cx="60" cy="60" r="42" fill="#0c0c0e" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-          {[45, 135, 225, 315].map((a) => {
-            const x = 60 + 30 * Math.cos((a * Math.PI) / 180);
-            const y = 60 + 30 * Math.sin((a * Math.PI) / 180);
-            return <circle key={a} cx={x} cy={y} r="3.5" fill="currentColor" opacity="0.9" />;
-          })}
-          <circle cx="60" cy="60" r="16" fill="none" stroke="currentColor" strokeWidth="3" />
-          <circle cx="60" cy="60" r="5" fill="currentColor" />
-        </svg>
-      </span>
+      {/* Visor de cámara: cuatro marcas en las esquinas */}
+      <span
+        aria-hidden="true"
+        className="intro-tick absolute top-5 left-5 size-7 border-t-2 border-l-2 border-brand/40"
+      />
+      <span
+        aria-hidden="true"
+        className="intro-tick absolute top-5 right-5 size-7 border-t-2 border-r-2 border-brand/40"
+      />
+      <span
+        aria-hidden="true"
+        className="intro-tick absolute bottom-5 left-5 size-7 border-b-2 border-l-2 border-brand/40"
+      />
+      <span
+        aria-hidden="true"
+        className="intro-tick absolute right-5 bottom-5 size-7 border-r-2 border-b-2 border-brand/40"
+      />
 
-      <span className="intro-texto text-[0.875rem] font-bold text-white/85" style={{ letterSpacing: "0.35em" }}>
-        {siteConfig.name.toUpperCase()}
-      </span>
+      {/* Línea de escaneo que barre la pantalla */}
+      <span
+        aria-hidden="true"
+        className="intro-escaneo absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand to-transparent"
+      />
+
+      {/* La marca, entrando a golpes */}
+      <div className="intro-golpe flex flex-col items-center px-6">
+        <span
+          className="display-xl intro-slida text-center text-[clamp(3.25rem,15vw,8rem)] leading-[0.88] text-white"
+          style={{ animationDelay: "0.35s" }}
+        >
+          {linea1}
+        </span>
+        <span
+          className="display-xl intro-slida relative text-center text-[clamp(3.25rem,15vw,8rem)] leading-[0.88] text-brand"
+          style={{ animationDelay: "0.52s" }}
+        >
+          {linea2}
+          {/* Onda expansiva del impacto */}
+          <span
+            aria-hidden="true"
+            className="intro-onda-puno absolute top-1/2 left-1/2 -z-10 size-56 rounded-full border-2 border-brand/70"
+          />
+        </span>
+
+        <span className="intro-barra mt-6 h-[3px] w-[min(72vw,26rem)] origin-left bg-brand" />
+        <span
+          className="intro-sub mt-6 max-w-[86vw] text-center text-[0.625rem] font-semibold text-white/60 sm:text-[0.8125rem]"
+          style={{ letterSpacing: "0.42em" }}
+        >
+          {sub}
+        </span>
+      </div>
     </button>
   );
 }
