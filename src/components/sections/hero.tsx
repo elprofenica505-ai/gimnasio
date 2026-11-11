@@ -67,17 +67,20 @@ export function Hero({
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center opacity-70"
+            className="object-cover object-center opacity-90 brightness-110 saturate-125"
           />
         ) : null}
 
-        <div className="absolute inset-0 bg-gradient-to-b from-night/85 via-night/60 to-night" />
-        <div className="absolute inset-0 bg-gradient-to-r from-night via-night/75 to-transparent" />
+        {/* Velos livianos: la foto del gym SE VE; el texto sigue mandando. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-night/70 via-night/45 to-night" />
+        <div className="absolute inset-0 bg-gradient-to-r from-night/90 via-night/55 to-transparent" />
         <div className="absolute inset-0 bg-grid-dark opacity-50" />
       </div>
 
       <div className="container-x">
-        <div className="flex min-h-[calc(100svh-4rem)] flex-col justify-center py-14 sm:py-20 lg:min-h-[44rem] lg:py-24">
+        {/* En ordenador: dos columnas — el texto manda a la izquierda y un
+            panel de cifras llena el vacío a la derecha. En móvil, apilado. */}
+        <div className="grid min-h-[calc(100svh-4rem)] items-center gap-10 py-14 sm:py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:py-24">
           <div className="max-w-3xl">
             {/* Dónde estamos */}
             <Reveal>
@@ -172,10 +175,10 @@ export function Hero({
               </p>
             </Reveal>
 
-            {/* Datos reales del gimnasio */}
+            {/* Datos reales del gimnasio (móvil/tablet) */}
             <Reveal delay={320}>
               <dl
-                className={`mt-12 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-7 border-t border-white/15 pt-8 sm:gap-x-4 ${showBoxing ? "sm:grid-cols-4" : "sm:grid-cols-2"}`}
+                className={`mt-12 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-7 border-t border-white/15 pt-8 sm:gap-x-4 lg:hidden ${showBoxing ? "sm:grid-cols-4" : "sm:grid-cols-2"}`}
               >
                 {stats.map((stat) => (
                   <div key={stat.label}>
@@ -193,6 +196,24 @@ export function Hero({
               </dl>
             </Reveal>
           </div>
+
+          {/* Panel de cifras (ordenador): vidrio esmerilado 2×2, llena el
+              vacío derecho y muestra las fortalezas de un vistazo. */}
+          <Reveal delay={200} className="hidden lg:block">
+            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-md">
+              {stats.map((stat) => (
+                <div key={stat.label} className="bg-night/50 px-6 py-7">
+                  <dt className="sr-only">{stat.label}</dt>
+                  <dd>
+                    <span className="display-xl block text-[2.25rem] text-brand">{stat.value}</span>
+                    <span className="mt-1.5 block text-[0.75rem] leading-snug text-white/55">
+                      {stat.label}
+                    </span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </Reveal>
         </div>
       </div>
 
