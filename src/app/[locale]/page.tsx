@@ -10,6 +10,7 @@ import { Features } from "@/components/sections/features";
 import { Gallery } from "@/components/sections/gallery";
 import { Hero } from "@/components/sections/hero";
 import { Marquee } from "@/components/sections/marquee";
+import { Pasos } from "@/components/sections/pasos";
 import { Plans } from "@/components/sections/plans";
 import { Rules } from "@/components/sections/rules";
 import { Supplements } from "@/components/sections/supplements";
@@ -66,6 +67,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         showBoxing={visibility.showBoxing}
         showZumba={visibility.showZumba}
       />
+      {/* El flujo de compra visible desde el primer scroll: la secuencia
+          lógica de la página (elegir → pagar → activación) a la vista. */}
+      <Pasos locale={safeLocale} />
       <Marquee
         locale={safeLocale}
         showBoxing={visibility.showBoxing}
@@ -79,8 +83,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       {visibility.showBoxing ? <Boxing locale={safeLocale} /> : null}
       <ClassesGrid locale={safeLocale} />
       <Plans locale={safeLocale} activeClassSlugs={activeClassSlugs} />
-      <Store locale={safeLocale} />
+      {/* El gancho justo donde la intención está caliente: recién vistos los
+          precios, capturamos al que aún no decide (→ leads del CRM). */}
       <LeadCapture locale={safeLocale} />
+      <Store locale={safeLocale} />
       <Supplements locale={safeLocale} />
       <Gallery locale={safeLocale} />
       <Community locale={safeLocale} />

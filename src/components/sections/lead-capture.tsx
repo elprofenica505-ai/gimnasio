@@ -52,11 +52,11 @@ export function LeadCapture({ locale }: { locale: Locale }) {
     <Section id="interesado" className="border-b border-line">
       <SectionHeading
         eyebrow={es ? "Empezá hoy" : "Start today"}
-        title={es ? "¿Te da vueltas entrenar con nosotros?" : "Thinking about training with us?"}
+        title={es ? "¿Listo para empezar? Dejá tu número" : "Ready to start? Leave your number"}
         subtitle={
           es
-            ? "Dejanos tu número y te escribimos por WhatsApp: te contamos los horarios, respondemos tus dudas y coordinamos tu primera visita. Sin compromiso."
-            : "Leave your number and we'll message you on WhatsApp with schedules, answers and your first visit. No strings attached."
+            ? "Te escribimos HOY por WhatsApp: resolvemos tus dudas, coordinamos tu primera visita y te esperamos con todo listo. Sin compromiso: si no te convence, no pasa nada."
+            : "We message you TODAY on WhatsApp: we answer your questions, set up your first visit and welcome you with everything ready. No strings attached."
         }
       />
       <Reveal>
@@ -139,7 +139,7 @@ export function LeadCapture({ locale }: { locale: Locale }) {
                 ) : (
                   <Send className="size-4" aria-hidden="true" />
                 )}
-                {es ? "Quiero que me escriban" : "Message me, please"}
+                {es ? "Quiero que me escriban hoy" : "Message me today"}
               </Button>
             </form>
           )}

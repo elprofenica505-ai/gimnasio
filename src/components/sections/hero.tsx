@@ -1,7 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronDown, MapPin, MessageCircle } from "lucide-react";
+import {
+  ChevronDown,
+  Clock,
+  Dumbbell,
+  MapPin,
+  MessageCircle,
+  ShoppingBag,
+} from "lucide-react";
 import { useDictionary } from "@/components/providers/dictionary-provider";
 import { ButtonLink } from "@/components/ui/button";
 import { Reveal } from "@/components/ui/reveal";
@@ -88,26 +95,21 @@ export function Hero({
               </p>
             </Reveal>
 
-            {/* Botones */}
+            {/* Botones: el primario convierte (precios), el secundario captura
+                (lead). El WhatsApp pasa a acceso directo: sirve a quien ya
+                decidió hablar, no al que recién aterriza. */}
             <Reveal delay={240}>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <ButtonLink
-                  href={whatsappLink(
-                    locale === "es"
-                    ? "Hola, quiero información de Power Box Gym."
-                    : "Hi, I would like information about Power Box Gym.",
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`/${locale}#planes`}
                   size="lg"
                   className="w-full sm:w-auto"
                 >
-                  <MessageCircle className="size-4.5" aria-hidden="true" />
                   {dict.hero.primary}
                 </ButtonLink>
 
                 <ButtonLink
-                  href={`/${locale}#galeria`}
+                  href={`/${locale}#interesado`}
                   variant="outline-dark"
                   size="lg"
                   className="w-full sm:w-auto"
@@ -115,6 +117,49 @@ export function Hero({
                   {dict.hero.secondary}
                 </ButtonLink>
               </div>
+
+              {/* Accesos directos: la primera pantalla ofrece todo sin scroll. */}
+              <nav
+                aria-label={
+                  locale === "es" ? "Accesos directos" : "Quick links"
+                }
+                className="mt-4 flex flex-wrap items-center gap-2"
+              >
+                {(
+                  [
+                    { href: `/${locale}/horarios`, label: dict.hero.quick.horarios, Icon: Clock },
+                    { href: `/${locale}#clases`, label: dict.hero.quick.clases, Icon: Dumbbell },
+                    { href: `/${locale}#tienda`, label: dict.hero.quick.tienda, Icon: ShoppingBag },
+                  ] as const
+                ).map(({ href, label, Icon }) => (
+                  <a
+                    key={href}
+                    href={href}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-1.5 text-[0.8125rem] font-semibold text-white/80 transition-colors hover:border-brand/50 hover:bg-brand/10 hover:text-brand"
+                  >
+                    <Icon className="size-3.5" aria-hidden="true" />
+                    {label}
+                  </a>
+                ))}
+                <a
+                  href={whatsappLink(
+                    locale === "es"
+                      ? "Hola, quiero información de Power Box Gym."
+                      : "Hi, I would like information about Power Box Gym.",
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-1.5 text-[0.8125rem] font-semibold text-white/80 transition-colors hover:border-brand/50 hover:bg-brand/10 hover:text-brand"
+                >
+                  <MessageCircle className="size-3.5" aria-hidden="true" />
+                  {dict.hero.quick.whatsapp}
+                </a>
+              </nav>
+
+              {/* Microcopio de confianza: la promesa que SÍ cumplimos. */}
+              <p className="mt-4 text-[0.8125rem] leading-relaxed text-white/60">
+                {dict.hero.garantia}
+              </p>
             </Reveal>
 
             {/* Datos reales del gimnasio */}
