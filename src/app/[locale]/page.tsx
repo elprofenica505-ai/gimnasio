@@ -9,7 +9,6 @@ import { Faq } from "@/components/sections/faq";
 import { Features } from "@/components/sections/features";
 import { Gallery } from "@/components/sections/gallery";
 import { Hero } from "@/components/sections/hero";
-import { IntroSplash } from "@/components/layout/intro-splash";
 import { Marquee } from "@/components/sections/marquee";
 import { Pasos } from "@/components/sections/pasos";
 import { Plans } from "@/components/sections/plans";
@@ -55,8 +54,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
-      {/* La intro de entrada: pesa neón, una vez por sesión, saltable. */}
-      <IntroSplash />
       <script
         type="application/ld+json"
         // Datos estructurados para Google (negocio local)
