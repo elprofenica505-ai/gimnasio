@@ -9,6 +9,7 @@ import { Faq } from "@/components/sections/faq";
 import { Features } from "@/components/sections/features";
 import { Gallery } from "@/components/sections/gallery";
 import { Hero } from "@/components/sections/hero";
+import { IntroEnsamble } from "@/components/layout/intro-ensamble";
 import { Marquee } from "@/components/sections/marquee";
 import { Pasos } from "@/components/sections/pasos";
 import { Plans } from "@/components/sections/plans";
@@ -54,6 +55,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
+      {/* «El Ensamble»: piezas del logo real + partículas vivas — una vez
+          por dispositivo, saltable, sin reduced-motion. */}
+      <IntroEnsamble />
       <script
         type="application/ld+json"
         // Datos estructurados para Google (negocio local)

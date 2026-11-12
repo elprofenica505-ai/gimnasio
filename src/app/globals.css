@@ -971,3 +971,104 @@
   background: #c8f73b;
   color: #0c0c0e;
 }
+
+/* ── Intro «EL ENSAMBLE»: piezas del logo real + partículas en canvas ───
+   El vuelo y acople de cada pieza con rebote (spring), costuras que se
+   cosen (stroke-dashoffset), pulso del ensamble y letras escalonadas.
+   Las partículas vivas las dibuja el componente en canvas. El guard de
+   prefers-reduced-motion de arriba los anula (y el componente ni arranca). */
+@keyframes ens-pieza-vuelo {
+  0% {
+    transform: translate(var(--x, -120px), var(--y, -90px)) rotate(var(--r, -140deg)) scale(1.6);
+    opacity: 0;
+    filter: blur(7px) drop-shadow(0 0 0 rgba(200, 247, 59, 0));
+  }
+  30% {
+    opacity: 1;
+  }
+  82% {
+    filter: blur(0) drop-shadow(0 0 16px rgba(200, 247, 59, 0.55));
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+    filter: blur(0) drop-shadow(0 0 8px rgba(200, 247, 59, 0.35));
+  }
+}
+.ens-pieza {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ens-pieza-vuelo 0.8s cubic-bezier(0.2, 1.2, 0.3, 1) var(--d, 0.5s) both;
+}
+@keyframes ens-anillo {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.4);
+    opacity: 0;
+  }
+}
+.ens-anillo {
+  animation: ens-anillo 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) 2.28s both;
+}
+@keyframes ens-costura {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.ens-costura {
+  stroke-dasharray: 42;
+  stroke-dashoffset: 42;
+  animation: ens-costura 0.45s ease-out 2.3s both;
+}
+@keyframes ens-letra {
+  0% {
+    transform: translateY(14px) scale(1.3);
+    opacity: 0;
+    filter: blur(7px);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+.ens-letra {
+  display: inline-block;
+  animation: ens-letra 0.32s cubic-bezier(0.2, 1.3, 0.3, 1) var(--d, 2.6s) both;
+}
+@keyframes ens-marca {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.ens-marca {
+  animation: ens-marca 0.3s ease 0.1s both;
+}
+@keyframes ens-sub {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ens-sub {
+  animation: ens-sub 0.4s ease 3.05s both;
+}
+.ens-saliendo {
+  opacity: 0;
+  transform: scale(1.04);
+  visibility: hidden;
+  transition:
+    opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.45s;
+}
