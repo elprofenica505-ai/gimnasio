@@ -35,12 +35,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // El storage sólo existe en el navegador: la primera carga hidrata
-    // acá. Síncrono a propósito (un solo pase, sin parpadeo de contador).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setItems(loadCart(window.localStorage));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setReady(true);
+    // El storage sólo existe en el navegador. Diferir la hidratación evita
+    // alterar el árbol durante el efecto y conserva el render SSR inicial.
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      setItems(loadCart(window.localStorage));
+      setReady(true);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
