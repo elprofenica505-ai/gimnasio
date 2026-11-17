@@ -10,6 +10,10 @@ crean tareas nuevas.
 Última auditoría completa: **1 de noviembre de 2026**, sobre producción
 `main@08fc0da` (PR #125) y Supabase `hcnuepdxmbsmlzdmvwhx`.
 
+Validación técnica de Fase 0 posterior: **17 de noviembre de 2026**, sobre el
+preview `714753b` y el mismo proyecto de Supabase. Sus hallazgos operativos se
+registran en **CAL-06**; no sustituyen la aceptación con personas y celular.
+
 ## Cómo mantener esta lista
 
 1. **Una tarea, un solo ID.** No se crea otra lista por fase, módulo o PR.
@@ -82,23 +86,40 @@ Según el caso, debe cumplir:
 - Supabase Auth verificado: JWT de 1200 segundos, TOTP activo, SMTP propio
   sin configurar (SEG-02) y `password_min_length = 12` desde el cierre de
   SEG-01.
+- **Validación remota de Fase 0 (17 de noviembre):** Supabase registra la
+  `00098` (`limites_de_abuso`) como última migración. Sin embargo, las tablas,
+  RLS, políticas y marcadores finales de las funciones de **00099–00104** ya
+  existen en producción —incluidos Embudo, superadministrador, Tienda y ARM—
+  aunque sus nombres no aparecen en ese historial. La inspección encontró las
+  seis tablas con RLS activo, las guardas `SIN_METODO_PAGO` y `SIN_CUENTA_NIO`,
+  el superadministrador y el canal ARM interno activo. **No volver a ejecutar
+  00099–00104** hasta reconciliar formalmente el historial y las definiciones
+  (CAL-06). No se leyeron datos personales ni se escribió SQL remoto.
+- Vercel: el preview de `714753b` quedó READY y compiló con Next **16.4.6**;
+  el callback exacto de ese preview se agregó a la allowlist de Supabase sin
+  quitar destinos anteriores. El proyecto sigue configurado con Node 26, pero
+  por `engines >=22 <25` Vercel ejecutó Node 24 y emitió el aviso de desalineación.
+  Realtime de Supabase respondió UNHEALTHY; la aplicación no usa canales
+  Realtime, pero su salud debe revisarse antes de depender de ese servicio.
 
 ## Orden recomendado de trabajo
 
 | Orden | Trabajo | Motivo |
 |---:|---|---|
-| 1 | **QA-08** (celular) | Cierra Zumba: grilla pública, cobro del plan y horarios del panel. Es lo último que se publicó. |
-| 2 | **QA-03, QA-04 y QA-05** (celular y cuentas reales) | Son aceptaciones de cosas ya desplegadas; sin ellas no se puede decir «terminado». |
-| 3 | **QA-09 y QA-06** (celular) | Aceptar lo que ya está desplegado: vigencias, categorías, calendario, el uso y el historial de precios de los planes (CLI-07) y **abrir, contar y cerrar la caja** (FIN-04). |
-| 4 | **OP-06, FIN-05 a FIN-07, CAL-01/03, LEG-01 y NEG-01** | Reglas de negocio y entrega; no bloquean la operación diaria de hoy. |
+| 1 | **CAL-06** (sin escribir remoto) | La base tiene objetos de 00099–00104 sin registro de migración. Reaplicarlos a ciegas puede alterar producción. |
+| 2 | **QA-08** (celular) | Cierra Zumba: grilla pública, cobro del plan y horarios del panel. Es lo último que se publicó. |
+| 3 | **QA-03, QA-04 y QA-05** (celular y cuentas reales) | Son aceptaciones de cosas ya desplegadas; sin ellas no se puede decir «terminado». |
+| 4 | **QA-09 y QA-06** (celular) | Aceptar lo que ya está desplegado: vigencias, categorías, calendario, el uso y el historial de precios de los planes (CLI-07) y **abrir, contar y cerrar la caja** (FIN-04). |
+| 5 | **OP-06, FIN-05 a FIN-07, CAL-01/03, LEG-01 y NEG-01** | Reglas de negocio y entrega; no bloquean la operación diaria de hoy. |
 
 ## Resumen de avance al 2 de noviembre de 2026
 
-**73 tareas listadas: 33 cerradas y 40 abiertas.** De las 40 abiertas, **7 son
+**74 tareas listadas: 33 cerradas y 41 abiertas.** De las 41 abiertas, **7 son
 aceptaciones** en celular o con cuenta real (QA-03 a QA-09), **5 son de
-entrega** (ENT-01 a ENT-05, aplazadas a propósito) y **8 son opcionales del
-futuro** (FUT-01 a FUT-08). Quedan **20 de producto o negocio** por resolver,
-**ninguna** en Administración → Planes ni en Administración → Dinero.
+entrega** (ENT-01 a ENT-05, aplazadas a propósito), **8 son opcionales del
+futuro** (FUT-01 a FUT-08) y **1 es de integridad operativa** (CAL-06). Quedan
+**20 de producto o negocio** por resolver, **ninguna** en Administración →
+Planes ni en Administración → Dinero.
 
 | Fase o bloque | Estado | Qué falta |
 |---|---|---|
@@ -1221,6 +1242,20 @@ La evidencia principal está en `src/components/admin/admin-panel.tsx`,
   `braces`.** Solo cuando exista una versión corregida aguas arriba o
   `micromatch` deje de depender de `braces`: actualizar, retirar
   `patches/braces+3.0.3.patch` si ya no hace falta y repetir pruebas.
+- [ ] **CAL-06 · Alta · Integridad operativa — Conciliar las migraciones
+  remotas 00099–00104.** El 17 de noviembre la historia remota termina en
+  `00098_limites_de_abuso`, pero ya existen sus objetos finales: las tablas
+  `embudo_*` y `arm_*`, RLS/policies, `superadmin`, `tienda_productos()`, las
+  guardas resilientes de Embudo y el canal ARM interno. No reejecutar archivos
+  por el nombre ausente: varias migraciones crean tablas, redefinen RPC y
+  cambian triggers/enum. Cierre: respaldar antes; comparar por objeto las
+  definiciones, firmas, grants, políticas, triggers, constraints e índices con
+  los seis archivos locales; identificar el origen de la aplicación previa;
+  registrar la evidencia y normalizar el historial mediante el procedimiento
+  aprobado de Supabase, sin repetir DDL ni tocar datos existentes. La salud de
+  Realtime —UNHEALTHY en la misma lectura, aunque la app no lo consume— y la
+  configuración de Node de Vercel (26 configurado, 24 efectivo) se confirman
+  por separado antes de declarar el entorno alineado.
 
 ## 7. Datos del negocio, contenido y legal
 

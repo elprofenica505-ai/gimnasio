@@ -1,5 +1,11 @@
 # Seguridad 1C — Acceso y recuperación de contraseña
 
+> **Actualización operativa — 17 de noviembre de 2026:** la URL de producción
+> vigente es `https://gimnasio-wheat.vercel.app`. El detalle de esta guía se
+> conserva como evidencia del bloque original de octubre; los destinos de la
+> sección 2 se corrigieron al dominio actual. Para un preview, sólo se autoriza
+> su origen exacto y nunca un comodín nuevo sin aprobación explícita.
+
 18 de octubre de2026. Base: PR12 mergeado (`538101e`). Rama:
 `arena/1e67d1fd-strong-gym`. Código/documentación, pruebas aisladas y revisión Auth
 en sólo lectura; no SQL,
@@ -57,15 +63,15 @@ no una instrucción para añadirlos repetidos al patrón existente.
 
 Antes de dar por operativo el correo real, revisar en Authentication → URL Configuration:
 
-- Site URL del dominio confirmado: `https://strong-gym-gamma.vercel.app`.
+- Site URL vigente: `https://gimnasio-wheat.vercel.app`.
 - Conservar destinos anteriores durante transición. Agregar, si faltan, estos destinos
   concretos a Redirect URLs (no autoriza al agente a cambiarlos remotamente):
 
 ```text
-https://strong-gym-gamma.vercel.app/api/auth/callback?locale=es&flow=signup
-https://strong-gym-gamma.vercel.app/api/auth/callback?locale=en&flow=signup
-https://strong-gym-gamma.vercel.app/api/auth/callback?locale=es&flow=recovery
-https://strong-gym-gamma.vercel.app/api/auth/callback?locale=en&flow=recovery
+https://gimnasio-wheat.vercel.app/api/auth/callback?locale=es&flow=signup
+https://gimnasio-wheat.vercel.app/api/auth/callback?locale=en&flow=signup
+https://gimnasio-wheat.vercel.app/api/auth/callback?locale=es&flow=recovery
+https://gimnasio-wheat.vercel.app/api/auth/callback?locale=en&flow=recovery
 ```
 
 El SDK actual usa PKCE legacy compatible por defecto; no se habilitó el flag
