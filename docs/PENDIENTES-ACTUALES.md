@@ -1243,16 +1243,18 @@ La evidencia principal está en `src/components/admin/admin-panel.tsx`,
   `micromatch` deje de depender de `braces`: actualizar, retirar
   `patches/braces+3.0.3.patch` si ya no hace falta y repetir pruebas.
 - [ ] **CAL-06 · Alta · Integridad operativa — Conciliar las migraciones
-  remotas 00099–00104.** El 17 de noviembre la historia remota termina en
-  `00098_limites_de_abuso`, pero ya existen sus objetos finales: las tablas
-  `embudo_*` y `arm_*`, RLS/policies, `superadmin`, `tienda_productos()`, las
-  guardas resilientes de Embudo y el canal ARM interno. No reejecutar archivos
-  por el nombre ausente: varias migraciones crean tablas, redefinen RPC y
-  cambian triggers/enum. Cierre: respaldar antes; comparar por objeto las
-  definiciones, firmas, grants, políticas, triggers, constraints e índices con
-  los seis archivos locales; identificar el origen de la aplicación previa;
-  registrar la evidencia y normalizar el historial mediante el procedimiento
-  aprobado de Supabase, sin repetir DDL ni tocar datos existentes. La salud de
+  remotas 00099–00104.** La investigación de sólo lectura quedó documentada en
+  [`CONCILIACION-MIGRACIONES-00099-00104.md`](CONCILIACION-MIGRACIONES-00099-00104.md):
+  la última entrada histórica es `20261102174311_limites_de_abuso` (local
+  00098), pero el estado funcional completo de 00099–00104 ya existe. Se
+  cotejaron seis tablas, RLS/policies, enum, veinte funciones, firmas, grants y
+  marcadores finales; los cuatro cuerpos que no coinciden byte a byte difieren
+  sólo en comentarios. No reejecutar archivos por el nombre ausente: varias
+  migraciones crean tablas, redefinen RPC y cambian triggers/enum. Cierre:
+  respaldar antes; repetir las huellas inmediatamente previas a la reparación;
+  ensayar el procedimiento oficial de Supabase en una rama/proyecto desechable
+  y, sólo con aprobación explícita, normalizar los metadatos sin DDL ni datos
+  de negocio. No insertar directamente en `schema_migrations`. La salud de
   Realtime —UNHEALTHY en la misma lectura, aunque la app no lo consume— y la
   configuración de Node de Vercel (26 configurado, 24 efectivo) se confirman
   por separado antes de declarar el entorno alineado.
