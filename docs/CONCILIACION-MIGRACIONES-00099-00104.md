@@ -84,7 +84,35 @@ Todo terminó correctamente. Esto verifica que la secuencia local se aplica y
 que el instalador generado incluye las migraciones 00099–00104; no sustituye la
 trazabilidad histórica del proyecto remoto.
 
-## Plan seguro pendiente de aprobación
+## Ensayo autorizado: resultado y límite de la herramienta
+
+Con la autorización recibida el 17 de noviembre se creó la rama temporal de
+Supabase `migration-repair-validation-20261117`, asociada a esta rama Git. El
+proveedor la reportó como no persistente, sin datos y con el preview saludable.
+No se ejecutó SQL contra ella ni contra producción.
+
+El ensayo no pudo continuar sin arriesgar producción por dos límites técnicos
+comprobados:
+
+- La respuesta de branching expone el mismo `project_ref` que producción y la
+  herramienta de consultas sólo acepta ese `project_ref`; no ofrece un selector
+  de rama. Una consulta de prueba por ese camino podría terminar en la base
+  principal, por lo que no se usó.
+- La CLI oficial actual sí tiene `supabase migration repair`: valida un número
+  de versión, lee el archivo local correspondiente y hace un `UPSERT` de sus
+  metadatos en una transacción. No ejecuta el DDL del archivo. Pero el historial
+  remoto existente usa timestamps de 14 dígitos, mientras que estos archivos
+  locales usan `00099`–`00104`. Marcarlos directamente dejaría dos convenciones
+  de versión en el mismo historial, no una reconciliación verificable. Además,
+  la conexión de la CLI al host remoto fue rechazada en este entorno por IPv6 y
+  no se recuperó ni solicitó ninguna contraseña o secreto.
+
+Por eso no se usó `migration repair` en producción ni se creó una migración
+vacía de "baseline": cualquiera de las dos alternativas aparentaría resolver
+la historia sin definir el mapeo correcto entre los timestamps remotos y los
+números lógicos del repositorio.
+
+## Plan seguro pendiente de un entorno de ensayo direccionable
 
 1. **Congelar la situación actual.** No correr `db push`, no ejecutar los seis
    archivos por SQL Editor, no crear una migración que los replique y no insertar
@@ -98,10 +126,11 @@ trazabilidad histórica del proyecto remoto.
    Debe confirmar cómo representa Supabase las versiones: este proyecto usa
    identificadores de 14 dígitos en la tabla remota, mientras que el repositorio
    conserva números lógicos de cinco dígitos.
-4. Sólo tras ese ensayo y una **confirmación explícita del usuario**, aplicar el
-   procedimiento oficial soportado para marcar el baseline verificado. Debe
-   registrar el origen, fecha, operador, las seis huellas revisadas y no ejecutar
-   ningún `CREATE`, `ALTER`, `DROP`, `INSERT` de negocio ni cambio de datos.
+4. Tras un ensayo auditable en una base realmente aislada —la autorización del
+   usuario ya fue recibida— aplicar el procedimiento oficial soportado para
+   marcar el baseline verificado. Debe registrar el origen, fecha, operador, las
+   seis huellas revisadas y no ejecutar ningún `CREATE`, `ALTER`, `DROP`,
+   `INSERT` de negocio ni cambio de datos.
 5. Verificar después que el historial quede coherente y que las huellas antes y
    después sean idénticas. Si no se puede obtener ese procedimiento soportado,
    conservar el historial como está, bloquear el replay de 00099–00104 en la

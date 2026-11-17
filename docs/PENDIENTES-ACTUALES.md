@@ -99,14 +99,15 @@ Según el caso, debe cumplir:
   el callback exacto de ese preview se agregó a la allowlist de Supabase sin
   quitar destinos anteriores. El proyecto sigue configurado con Node 26, pero
   por `engines >=22 <25` Vercel ejecutó Node 24 y emitió el aviso de desalineación.
-  Realtime de Supabase respondió UNHEALTHY; la aplicación no usa canales
-  Realtime, pero su salud debe revisarse antes de depender de ese servicio.
+  Realtime de Supabase respondió UNHEALTHY en la primera lectura, pero una
+  comprobación posterior del 17 de noviembre devolvió ACTIVE_HEALTHY. La app
+  no usa canales Realtime; confirmar su salud de nuevo antes de depender de él.
 
 ## Orden recomendado de trabajo
 
 | Orden | Trabajo | Motivo |
 |---:|---|---|
-| 1 | **CAL-06** (sin escribir remoto) | La base tiene objetos de 00099–00104 sin registro de migración. Reaplicarlos a ciegas puede alterar producción. |
+| 1 | **CAL-06** (ensayo aislado pendiente) | La base tiene objetos de 00099–00104 sin registro de migración. Reaplicarlos a ciegas puede alterar producción. |
 | 2 | **QA-08** (celular) | Cierra Zumba: grilla pública, cobro del plan y horarios del panel. Es lo último que se publicó. |
 | 3 | **QA-03, QA-04 y QA-05** (celular y cuentas reales) | Son aceptaciones de cosas ya desplegadas; sin ellas no se puede decir «terminado». |
 | 4 | **QA-09 y QA-06** (celular) | Aceptar lo que ya está desplegado: vigencias, categorías, calendario, el uso y el historial de precios de los planes (CLI-07) y **abrir, contar y cerrar la caja** (FIN-04). |
@@ -1250,14 +1251,16 @@ La evidencia principal está en `src/components/admin/admin-panel.tsx`,
   cotejaron seis tablas, RLS/policies, enum, veinte funciones, firmas, grants y
   marcadores finales; los cuatro cuerpos que no coinciden byte a byte difieren
   sólo en comentarios. No reejecutar archivos por el nombre ausente: varias
-  migraciones crean tablas, redefinen RPC y cambian triggers/enum. Cierre:
-  respaldar antes; repetir las huellas inmediatamente previas a la reparación;
-  ensayar el procedimiento oficial de Supabase en una rama/proyecto desechable
-  y, sólo con aprobación explícita, normalizar los metadatos sin DDL ni datos
-  de negocio. No insertar directamente en `schema_migrations`. La salud de
-  Realtime —UNHEALTHY en la misma lectura, aunque la app no lo consume— y la
-  configuración de Node de Vercel (26 configurado, 24 efectivo) se confirman
-  por separado antes de declarar el entorno alineado.
+  migraciones crean tablas, redefinen RPC y cambian triggers/enum. El usuario
+  autorizó el ensayo; se creó la rama temporal de Supabase
+  `migration-repair-validation-20261117`, pero el conector no expone un ref
+  distinto para dirigirle SQL y no se arriesgó producción. Cierre: respaldar
+  antes; repetir las huellas inmediatamente previas a la reparación y ensayar
+  el procedimiento oficial en una base realmente aislada y direccionable; luego
+  normalizar sólo metadatos, sin DDL ni datos de negocio. No insertar
+  directamente en `schema_migrations`. Realtime tuvo una segunda lectura
+  ACTIVE_HEALTHY; la configuración de Node de Vercel (26 configurado, 24
+  efectivo) se confirma por separado antes de declarar el entorno alineado.
 
 ## 7. Datos del negocio, contenido y legal
 
