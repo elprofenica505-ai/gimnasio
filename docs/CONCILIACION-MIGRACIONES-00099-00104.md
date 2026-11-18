@@ -1,7 +1,7 @@
 # Conciliación de migraciones 00099–00104
 
-**Estado:** investigación de solo lectura completada; **no hay autorización para
-escribir en Supabase**.
+**Estado:** baseline histórico verificado y protegido en el repositorio; no se
+ha escrito SQL ni metadatos de migración en producción.
 
 **Fecha de evidencia:** 17 de noviembre de 2026  
 **Proyecto:** `hcnuepdxmbsmlzdmvwhx`  
@@ -27,7 +27,9 @@ y los grants de ejecución son equivalentes.
 Por tanto, **no se deben reejecutar 00099–00104**. Reaplicar los archivos puede
 intentar recrear políticas sin guardia, volver a hacer DDL sobre objetos que ya
 existen o alterar funciones ya verificadas. El problema restante es de
-**trazabilidad de historial**, no de ausencia de esquema.
+**trazabilidad de historial**, no de ausencia de esquema. La protección local y
+la operación de futuras migraciones se definen en
+[`MIGRACIONES-PRODUCCION.md`](MIGRACIONES-PRODUCCION.md).
 
 No fue posible demostrar con una lectura de catálogos cuál fue el mecanismo
 original de aplicación. El instalador completo del repositorio contiene las seis
@@ -76,8 +78,9 @@ base PGlite desechable:
 npm run test:embudo       42 comprobaciones
 npm run test:superadmin   21 comprobaciones
 npm run test:tienda        5 comprobaciones
-npm run test:arm          42 comprobaciones SQL + 20 pruebas del asistente
+npm run test:arm                    42 comprobaciones SQL + 20 pruebas del asistente
 npm run build:install:check
+npm run check:migration-baseline     hashes y presencia en el instalador
 ```
 
 Todo terminó correctamente. Esto verifica que la secuencia local se aplica y
@@ -137,5 +140,7 @@ números lógicos del repositorio.
    operación y documentar el hueco: una entrada inventada es peor que una brecha
    conocida.
 
-La escritura de metadatos de migración sigue siendo una escritura remota y por
-ello requiere la confirmación final solicitada para CAL-06.
+La autorización para investigar ya fue recibida, pero no se escribe ningún
+metadato remoto mientras no exista un ensayo aislado y un mapeo histórico
+verificable. El guard de CI evita mientras tanto que estos seis archivos se
+editen, desaparezcan o queden fuera del instalador de un proyecto nuevo.

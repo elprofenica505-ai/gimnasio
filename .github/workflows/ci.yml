@@ -81,6 +81,13 @@ jobs:
       - name: El SQL de instalación tiene que estar sincronizado y sin datos ajenos
         run: node scripts/build-install-sql.mjs --check
 
+      # 00099–00104 ya están presentes en producción sin seis asientos
+      # individuales de historial. Este guard impide editar, borrar o sacar del
+      # instalador el baseline que ya fue cotejado; una corrección va en una
+      # migración nueva, no reescribiendo el pasado.
+      - name: Proteger el baseline histórico de migraciones
+        run: npm run check:migration-baseline
+
       - name: Probar el SQL con PGlite (una conexión)
         run: npm run test:sql
 

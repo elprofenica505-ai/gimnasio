@@ -1250,8 +1250,11 @@ La evidencia principal está en `src/components/admin/admin-panel.tsx`,
   00098), pero el estado funcional completo de 00099–00104 ya existe. Se
   cotejaron seis tablas, RLS/policies, enum, veinte funciones, firmas, grants y
   marcadores finales; los cuatro cuerpos que no coinciden byte a byte difieren
-  sólo en comentarios. No reejecutar archivos por el nombre ausente: varias
-  migraciones crean tablas, redefinen RPC y cambian triggers/enum. El usuario
+  sólo en comentarios. `npm run check:migration-baseline` y CI ahora fijan los
+  hashes de las seis fuentes y su presencia en el instalador; la operación
+  futura está en [`MIGRACIONES-PRODUCCION.md`](MIGRACIONES-PRODUCCION.md). No
+  reejecutar archivos por el nombre ausente: varias migraciones crean tablas,
+  redefinen RPC y cambian triggers/enum. El usuario
   autorizó el ensayo; se creó la rama temporal de Supabase
   `migration-repair-validation-20261117`, pero el conector no expone un ref
   distinto para dirigirle SQL y no se arriesgó producción. Cierre: respaldar
