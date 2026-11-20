@@ -112,17 +112,15 @@ Según el caso, debe cumplir:
 | 3 | **QA-03, QA-04 y QA-05** (celular y cuentas reales) | Son aceptaciones de cosas ya desplegadas; sin ellas no se puede decir «terminado». |
 | 4 | **QA-09 y QA-06** (celular) | Aceptar lo que ya está desplegado: vigencias, categorías, calendario, el uso y el historial de precios de los planes (CLI-07) y **abrir, contar y cerrar la caja** (FIN-04). |
 | 5 | **OP-06, FIN-05 a FIN-07, CAL-01/03, LEG-01 y NEG-01** | Reglas de negocio y entrega; no bloquean la operación diaria de hoy. |
-| 6 | **CAL-07** (dependencias de desarrollo) | No afecta el bundle productivo, pero el audit completo reporta avisos altos nuevos en herramientas de lint. |
 
 ## Resumen de avance al 2 de noviembre de 2026
 
-**75 tareas listadas: 33 cerradas y 42 abiertas.** De las 42 abiertas, **7 son
+**75 tareas listadas: 34 cerradas y 41 abiertas.** De las 41 abiertas, **7 son
 aceptaciones** en celular o con cuenta real (QA-03 a QA-09), **5 son de
 entrega** (ENT-01 a ENT-05, aplazadas a propósito), **8 son opcionales del
-futuro** (FUT-01 a FUT-08), **1 es de integridad operativa** (CAL-06) y **1 es
-de higiene de dependencias de desarrollo** (CAL-07). Quedan **20 de producto o
-negocio** por resolver, **ninguna** en Administración → Planes ni en
-Administración → Dinero.
+futuro** (FUT-01 a FUT-08) y **1 es de integridad operativa** (CAL-06). Quedan
+**20 de producto o negocio** por resolver, **ninguna** en Administración →
+Planes ni en Administración → Dinero.
 
 | Fase o bloque | Estado | Qué falta |
 |---|---|---|
@@ -1266,17 +1264,18 @@ La evidencia principal está en `src/components/admin/admin-panel.tsx`,
   directamente en `schema_migrations`. Realtime tuvo una segunda lectura
   ACTIVE_HEALTHY; la configuración de Node de Vercel (26 configurado, 24
   efectivo) se confirma por separado antes de declarar el entorno alineado.
-- [ ] **CAL-07 · Media · Higiene de herramientas — Resolver los avisos de
-  dependencias de desarrollo.** El 17 de noviembre, `npm audit --omit=dev`
-  reportó **0 vulnerabilidades de producción**, pero el audit completo reportó
-  16 altas en la cadena de lint/desarrollo (`picomatch`, `micromatch`,
-  `fast-glob`, `tinyglobby`, TypeScript-ESLint y `patch-package`). El
-  `npm audit fix --dry-run` no ofreció una actualización directa y segura; no
-  usar `--force`, ni bajar paquetes a ciegas. Cierre: identificar la versión
-  compatible corregida aguas arriba, actualizar lockfile y parches si hiciera
-  falta, y repetir auditoría completa, lint, build y CI. No bloquea el bundle
-  productivo actual, pero debe resolverse antes de declarar higiene total de
-  dependencias.
+- [x] **CAL-07 · Media · Higiene de herramientas — Cerrado el 17 de noviembre.**
+  Se reconstruyó la instalación bloqueada con `npm ci` y se repitieron tanto
+  `npm audit` como `npm audit --omit=dev`: ambos reportan **0 vulnerabilidades**
+  (`0` info, low, moderate, high y critical), por lo que no se cambió una
+  dependencia sin una corrección compatible demostrable. El aviso que había
+  motivado la revisión, `GHSA-fc5q-39xc-vjpf` para `picomatch`, fue retirado por
+  GitHub como problema de seguridad; las cadenas actuales de lint/desarrollo
+  están ya en las últimas versiones publicadas compatibles. Pasaron `lint`,
+  `typecheck`, `check:migration-baseline` y `build:install:check`. Se conserva
+  la política: no usar `npm audit fix --force` ni bajar paquetes a ciegas; todo
+  aviso nuevo debe verificarse primero contra la advisory vigente y con ambos
+  perfiles de auditoría.
 
 ## 7. Datos del negocio, contenido y legal
 
